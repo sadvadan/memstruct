@@ -1,4 +1,3 @@
-![memstruct banner](logo.png)
+![memstruct banner](logo.png) # memstruct README
 
-# memstruct
 C memory safety framework for performant, large scale applications

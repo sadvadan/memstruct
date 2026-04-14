@@ -1,0 +1,2 @@
+CompileFlags:
+  Add: [-xc, -std=gnu99, -target, x86_64-pc-linux-gnu]

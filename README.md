@@ -1,3 +1,3 @@
 ![memstruct banner](logo.png) 
 # memstruct README
-C memory safety framework for performant, large scale applications
+A single file .h lib to cover memory safety in your performant, large scale applications

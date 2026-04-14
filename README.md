@@ -2,7 +2,7 @@
 ![memstruct banner](logo.png) 
 # memstruct README
 
-Welocome to Memory Safe C!
+Welcome to Memory Safe C!
 
 
 🎯 Features

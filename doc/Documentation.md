@@ -24,7 +24,7 @@ This document explains how to configure and use the memstruct.h library.
 ## Features and design
 
 - Single‑header; no separate `.c` file needed.
-- No external dependencies (only standard C headers).
+- No external dependencies (only standard `C` headers).
 - Designed to be inlined heavily by the compiler.
 - Safe to include in multiple translation units.
 - Thread safe: for mutable 8B size global metadata (`addr`), the library implements -

@@ -169,7 +169,7 @@ static void mstrct_shadow() {
 }
 
 // memstruct
-#define MSTRCT_T(type, card, size, line)  \
+#define MSTRCT_T(type, card, range, line)  \
 struct {  \
   union { \
     uint32_t id; \
@@ -178,19 +178,19 @@ struct {  \
       uint16_t _s; \
       type typ[0] __attribute__((packed)); \
       struct {char a[line];} lin[0];   \
-      MSTRCT_SIZ(size); \
+      MSTRCT_SIZ(range); \
       MSTRCT_FAC(card); \
     };   \
   };  \
 } __attribute__((aligned(4)))
 
-#define MSTRCT_SIZ(size) MSTRCT_CAT2(MSTRCT_SIZ_, MSTRCT_O)(size)
-#define MSTRCT_SIZ_0(size) struct {char a[0];} siz[0]
-#define MSTRCT_SIZ_1(size) struct {char a[(__builtin_constant_p(size)) * size];} siz[0]
+#define MSTRCT_SIZ(range) MSTRCT_CAT2(MSTRCT_SIZ_, MSTRCT_O)(range)
+#define MSTRCT_SIZ_0(range) struct {char a[0];} ran[0]
+#define MSTRCT_SIZ_1(range) struct {char a[(__builtin_constant_p(range)) * range];} ran[0]
 
 #define MSTRCT_FAC(card) MSTRCT_CAT2(MSTRCT_FAC_, MSTRCT_X)(card)
-#define MSTRCT_FAC_0(card) struct {char a[card];} fac[0] // gcc
-#define MSTRCT_FAC_1(card) struct {char a[((__builtin_constant_p(card) == 0) || (card + 1)) - 1];} fac[0] // clang
+#define MSTRCT_FAC_0(card) struct {char a[card];} car[0] // gcc
+#define MSTRCT_FAC_1(card) struct {char a[((__builtin_constant_p(card) == 0) || (card + 1)) - 1];} car[0] // clang
 
 typedef struct {
   union {
@@ -204,7 +204,7 @@ typedef struct {
 
 typedef struct  {
   uint64_t addr;  // ptr addr
-  const uint64_t  range; // range value
+  const uint64_t  size; // range value
   const uint64_t  base; // base addr
 } mstrct_meta;
 
@@ -481,19 +481,19 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 
 
 #define MSTRCT_$1(name) \
-  (*(typeof(typeof(name.typ[0]) *))(mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.fac[0])))))
+  (*(typeof(typeof(name.typ[0]) *))(mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])))))
 
-#define MSTRCT_$2$10(name, empty) ((mstrct_meta *)mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.fac[0]))))
+#define MSTRCT_$2$10(name, empty) ((mstrct_meta *)mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0]))))
 
 #define MSTRCT_GET(name, index) MSTRCT_CAT2(MSTRCT_GET__, MSTRCT_C)(name, index)
 
 #define MSTRCT_GET__2(name, index)  \
-   (*((typeof(name.typ[0]))(mstrct_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.fac[0])))) + (index)))
+   (*((typeof(name.typ[0]))(mstrct_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])))) + (index)))
 
 
 #define MSTRCT_GET__1(name, index) (*((typeof(name.typ[0])) (  \
-  mstrct_check(sizeof(name.siz[0]), sizeof(name.fac[0]), index, __LINE__, __FILE__, sizeof(name.lin[0]), name._s, name._d, \
-  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(name._s, name._d, (sizeof(name.fac[0])))) + index)) \
+  mstrct_check(sizeof(name.ran[0]), sizeof(name.car[0]), index, __LINE__, __FILE__, sizeof(name.lin[0]), name._s, name._d, \
+  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(name._s, name._d, (sizeof(name.car[0])))) + index)) \
 )))
 
 #define MSTRCT_$3$110(typ, name, empty) MSTRCT_T(typ, sizeof(struct {char name;}), 0, __LINE__) name
@@ -528,7 +528,7 @@ __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE_
 #define MSTRCT_PRAG_OFF _Pragma("GCC diagnostic pop")
 
 #define MSTRCT_LET(name, range, allo_size) {   \
-  enum {enm = __COUNTER__, card = sizeof(name.fac[0])}; uint16_t off = (MSTRCT_OFF(enm))/8; char a;  \
+  enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8; char a;  \
   MSTRCT_PRAG_ON if (card == 1) {name._s = enm; MSTRCT_DEF_META(enm, 24);} else {MSTRCT_DEF_META(enm, 32);} MSTRCT_PRAG_OFF   \
   if (((int64_t)(&a - mstrct_ptr)) < 0) {MSTRCT_CLEANUP(__LINE__, off);} \
   mstrct_u64 = MSTRCT_BASE(name, card); uint64_t size = (sizeof(*(name.typ[0])) * card * range); \

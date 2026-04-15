@@ -1,7 +1,7 @@
 
 # ![memstruct banner](banner.svg) memstruct README
 
-Welcome to memstruct, a memory safety framework for performant, large scale C applications !
+Welcome to memstruct -- a memory safety framework for performant, large scale C applications !
 
 ## 🎯 Features
 
@@ -41,13 +41,13 @@ Welcome to memstruct, a memory safety framework for performant, large scale C ap
     // share memory with callee
     callee(foo.id, other_inputs);
      ```
-- Access meta-data:
+- Access meta-data (uint: uit64_t):
      ```
-    // address:
+    // address (ptr addr, mutable):
     $(foo,)->addr
 
-    // range(immutable):
-    $(foo,)->range
+    // size(total bytes, immutable):
+    $(foo,)->size
 
     // base address(immutable):
     $(foo,)->base
@@ -62,7 +62,7 @@ Welcome to memstruct, a memory safety framework for performant, large scale C ap
       ```
 - De-allocate memory:
      ```
-    // automatic for on-stack memories.
+    // automatic metadata update for on-stack memories.
     // free & munmap are thinly wrapped so that double frees are redundant (instead of causing corruption) and can be used freely as the redundant frees are elided by compiler.
     free(foo);
      ```

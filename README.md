@@ -51,7 +51,15 @@ Welcome to memstruct, a memory safety framework for performant, large scale C ap
 
     // base address(immutable):
     $(foo,)->base
- 
+      ```
+- Raw access:
+     ```
+    // ptr arithmetic
+    $(foo)++
+
+    // access (L value) without memory checks:
+    $(foo)[5] = 10;
+      ```
 - De-allocate memory:
      ```
     // automatic for on-stack memories.

@@ -71,4 +71,5 @@ Welcome to memstruct -- a memory safety framework for performant, large scale C 
     free(foo);
      ```
 📖 Documentation 
+    [Documentation](doc/Documentation.md)
 

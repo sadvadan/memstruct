@@ -15,7 +15,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- This project complements C with memory safety as error mechanism mostly orthogonal to C's performance. This makes it possible - going forward in the future - to have reliable, large scale, collaborative projects in C while still leveraging the language itself and also its legacy codebase.
+- This project provides C with memory safety as an error mechanism largely orthogonal to C's performance, making it possible in future to have reliable, large scale, collaborative projects in C that still leverage the language itself and its legacy codebase.
     
 - The core idea is to replicate efficiet stack layouts in a custom bss segment, such that metadata accesses are as fast as offset based accesses in the stack. Once this is out of the way, cache locality of addresses + metadata kicks in to make the baseline layout performant. This is further enhanced with a custom error mechanism made to respond to compiler optimization stages, before degrading to runtime checks utilizing constant foldings through compiler and assembler stages.
 

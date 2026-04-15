@@ -6,7 +6,7 @@ This document explains how to configure and use the memstruct.h library.
 ## Table of contents
 
 - [Overview](#overview)  
-- [Installation](#installation)  
+- [Features and design](#features and design)  
 - [Configuration](#configuration)  
 - [Usage](#usage)  
 - [API reference](#api-reference)  
@@ -15,10 +15,16 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- This project provides C with memory safety as an error mechanism largely orthogonal to C's performance, making it possible in future to have reliable, large scale, collaborative projects in C that still leverage the language itself and its legacy codebase.
+- This project provides memory safety as an error mechanism to complement C's performance, making it possible (going forward) to have reliable, large scale, collaborative projects in C that still leverage the language and its codebase.
     
-- The core idea is to replicate efficient stack layouts in a custom bss segment, such that metadata accesses are as fast as offset based accesses in the stack. Once this is out of the way, cache locality of addresses + metadata kicks in to make the baseline layout performant. This is further enhanced with a custom error mechanism made to respond to compiler optimization stages, before degrading to runtime checks utilizing constant foldings through compiler and assembler stages.
+- The core working principle is to have efficient custom static segment for metadata, such that accesses are as fast as in the stack. Then cache locality kicks in, further helped by a custom error reporting made to respond to compiler optimizations.
 
-- A "safe ptr" is basically a unique, anonymous struct type on the 'outside' but also of the size of a plain int (like a memory-ID, possibly compile time constant) that is casually passed around among multiple partners, including callee functions. '$' is a thin macro wrapper over this 'memstruct', and underneath transparent is plain old C and ASM code.   
+- A "safe ptr" is basically a unique, anonymous struct type on the 'outside' but also of the size of a plain int (like a memory-ID) casually passed around among ptrs and functions. '$' is a thin macro wrapper over this 'memstruct', and underneath transparent is plain old C and ASM code.   
 
+## Features and design
+
+- Single‑header; no separate `.c` file needed.
+- No external dependencies (only standard C headers).
+- Designed to be inlined heavily by the compiler.
+- Safe to include in multiple translation units.
 

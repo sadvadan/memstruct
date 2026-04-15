@@ -14,7 +14,7 @@ Welcome to memstruct -- a memory safety framework for performant, large scale C 
 ## 🚀 Quick Start
 
 - Include `mstrct.h` in your file.
-- Declare a name and bind a memory to it `$(ptr-type, name, range, addr)`:
+- Declare a name and bind a memory to it `$(ptr-type, name, range, addr)` like so:
     ```
     // on-heap arr of 10 longs
     $(long int *, foo, 10, malloc(40));
@@ -25,6 +25,10 @@ Welcome to memstruct -- a memory safety framework for performant, large scale C 
     // declare safe ptr w/o defining; could be inside struct type declaration
     $(float *, cux, );
     ```
+ - Re-assign memory `$(,name, range, addr)`:
+    ```
+    $(, var, 16, (int [16]){0});
+     ```
 - Define memory `$(name, index) = value`:
     ```
     // single dim array types

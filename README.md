@@ -8,7 +8,8 @@ Welcome to memstruct!
 - `memory safe` - deterministically covers: UAF, NULL deref, OOB, leaks, double free.
 - `performant` - lightweight single file lib: leverages comptime checks, const folding, builtins & asm.
 - `user ease` - exposes a thin macro `$(...)`, substituting e.g. `arr[i]` that is `*(arr + i)` with `$(arr, i)`.
-- `target` - large scale sytem critical and performant systems. for resource critical applications memory checks can be switched off in prod.
+- `applcation` - large scale sytem critical, performant systems. toggle memory checks off for resource critical prods.
+- `target` - gcc, clang: -std=gnu99 ONWS; x86_64
 
 ## 🚀 Quick Start
 

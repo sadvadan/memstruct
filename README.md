@@ -14,7 +14,7 @@ Welcome to memstruct !
 ## 🚀 Quick Start
 
 - include `mstrct.h` in your file.
-- declare a name and bind a memory to it: `$(ptr-type, name, range, addr)`
+- declare a name and bind a memory to it `$(ptr-type, name, range, addr)`:
     ```
     // on-heap arr of 10 longs
     $(long int *, foo, 10, malloc(40));
@@ -25,13 +25,13 @@ Welcome to memstruct !
     // declare safe ptr w/o defining; could be inside struct type declaration
     $(float *, cux, );
     ```
-- define memory: `$(name, index) = value`
+- define memory `$(name, index) = value`:
     ```
     // single dim array types
     $(foo, 5) = 10;
 
     // multi-dim array types
-    $(bar[2][3], 5) = 10;
+    $(bar[1][2], 5) = 10;
      ```
 - share memory:
      ```
@@ -41,9 +41,10 @@ Welcome to memstruct !
     // share memory with callee
     callee(foo.id, other_inputs);
      ```
-- de-allocating memory:
-    use free, unmap. automatic for on-stack memories.
-    free & unmap are thinly wrapped so that double frees are redundant (instead of causing corruption) and can be used freely as the redundant frees are elided by compiler.
-
+- de-allocate memory:
+     ```
+    // automatic for on-stack memories.
+    // free & unmap are thinly wrapped so that double frees are redundant (instead of causing corruption) and can be used freely as the redundant frees are elided by compiler.
+     ```
 📖 Documentation 
 

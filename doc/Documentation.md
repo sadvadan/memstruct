@@ -27,4 +27,8 @@ This document explains how to configure and use the memstruct.h library.
 - No external dependencies (only standard C headers).
 - Designed to be inlined heavily by the compiler.
 - Safe to include in multiple translation units.
+- Thread safe: for mutable 8B size global metadata (addr, here), the library implements -
+    a) strict 8B alignment (through ASM) to rely on hardware level atomicity in x86,
+    b) '=m' ASM constraint to enforce cache coherency of relevant region through x86 MESI.
+- Logical concurrency: as access to data is through metadata (addr, here), mutexes or locks covering data accesses cover metadata automatically. Thus no atomics or locks have been separately implemented in memstruct.
 

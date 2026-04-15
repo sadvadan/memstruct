@@ -6,7 +6,7 @@ This document explains how to configure and use the memstruct.h library.
 ## Table of contents
 
 - [Overview](#overview)  
-- [Features and design](#features and design)  
+- [Features and design](#features-and-design)  
 - [Configuration](#configuration)  
 - [Usage](#usage)  
 - [API reference](#api-reference)  

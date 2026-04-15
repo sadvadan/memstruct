@@ -93,7 +93,7 @@ MSTRCT_$4$, MSTRCT_ARG_COUNT(typ), MSTRCT_ARG_COUNT(name), MSTRCT_ARG_COUNT(size
 #define MSTRCT_$4$0101(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 
 #define MSTRCT_$4$0011(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
-#define MSTRCT_$4$1100(typ, name, size, addr) MSTRCT_$3$110(typ, name, empty)
+#define MSTRCT_$4$1100(typ, name, size, addr) MSTRCT_$3$110(typ, name, size)
 
 #define MSTRCT_$4$1110(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$1011(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})

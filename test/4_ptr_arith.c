@@ -1,4 +1,4 @@
-// create heap memory, assign value, free
+// create heap memory, assign value, do ptr arithmetic, free
 
 #include <stdio.h>
 #include "../src/mstrct.h"

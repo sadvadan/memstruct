@@ -1,5 +1,5 @@
 
-# ![memstruct banner](logo.png) memstruct README
+# ![memstruct banner](banner.svg) memstruct README
 
 Welcome to Memory Safe C!
 

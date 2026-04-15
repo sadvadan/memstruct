@@ -354,7 +354,7 @@ static void mstrct_user_free(mstrct_proto *arg, int flag) {
     case 0: {
       mstrct_proto name = *arg;
       void *addr = (void *)mstrct_get20(name._d); 
-      if (addr != NULL) {(free)(addr);}
+      if (addr != NULL) {(free)((void *)mstrct_get22(name._d));}
       MSTRCT_SET((uint64_t)0, name._d, 0); break;
     }
     case 1: {
@@ -379,7 +379,7 @@ static uint64_t mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
   mstrct_proto name = *arg; int temp = 0;
   void *addr = (void *)mstrct_get20(name._d); 
   if (addr != NULL) {
-    if ((munmap)(addr, mstrct_get21(name._d)) == 0) {
+    if ((munmap)((void *)mstrct_get22(name._d), mstrct_get21(name._d)) == 0) {
       MSTRCT_SET((uint64_t)0, name._d, 0); MSTRCT_SET((uint64_t)0, name._d, 8); return temp;
     } else {
        temp = 1; mstrct_error("de-allocation failed!!", MSTRCT_DE_ALLOC_FAIL, line, file); return temp;
@@ -412,8 +412,7 @@ static inline uint64_t mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f
     case 0:
       switch (f_size) {
         case 0: return 0; // clang multidim VLA
-        case 1: return mstrct_meta_addr2(id_d); // cardinality = 1
-        default: {return mstrct_get30(id_d, (f_size * id_s));} // name factory; ret R value; no L value here
+        default: return mstrct_meta_addr2(id_d);
       }
     default: __builtin_unreachable();
   }
@@ -481,9 +480,8 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 }
 
 
-#define MSTRCT_$1(name) (__builtin_choose_expr(sizeof(name.fac[0]) == 1,   \
-  (*(typeof(typeof(name.typ[0]) *))(mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, 1))), \
-  ((typeof(name.typ[0]))(mstrct_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.fac[0])))))))
+#define MSTRCT_$1(name) \
+  (*(typeof(typeof(name.typ[0]) *))(mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.fac[0])))))
 
 #define MSTRCT_$2$10(name, empty) ((mstrct_meta *)mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.fac[0]))))
 

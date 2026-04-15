@@ -1,6 +1,6 @@
 // create stack memory, assign value, try using in outer scope
 #include <stdio.h>
-#include "mstrct.h"
+#include "../src/mstrct.h"
 
 int main(void) {
   $(int *, foo,); // declare safe ptr

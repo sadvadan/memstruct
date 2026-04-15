@@ -1,7 +1,7 @@
 // create on stack memory, assign multidim name
 
 #include <stdio.h>
-#include "mstrct.h"
+#include "../src/mstrct.h"
 
 int main(void) {
 

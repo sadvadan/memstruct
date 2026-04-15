@@ -1,7 +1,7 @@
 // create heap memory, assign value, free
 
 #include <stdio.h>
-#include "mstrct.h"
+#include "../src/mstrct.h"
 
 int main(void) {
   $(int * const, var, 12, malloc(48)); // declare heap memory

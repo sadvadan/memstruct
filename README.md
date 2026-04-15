@@ -1,20 +1,20 @@
 
 # ![memstruct banner](banner.svg) memstruct README
 
-Welcome to memstruct!
+Welcome to memstruct !
 
 ## 🎯 Features
 
-- `memory safe` - deterministically covers: UAF, NULL deref, OOB, leaks, double free.
-- `performant` - lightweight single file lib: leverages comptime checks, const folding, builtins & asm.
-- `user ease` - exposes a thin macro `$(...)`, substituting e.g. `arr[i]` that is `*(arr + i)` with `$(arr, i)`.
-- `applcation` - large scale sytem critical, performant systems. toggle memory checks off for resource critical prods.
-- `target` - gcc, clang: -std=gnu99 ONWS; x86_64
+- `memory safe` - Deterministically covers: UAF, NULL deref, OOB, leaks, double free.
+- `performant`  - Lightweight single file lib: leverages comptime checks, const folding, builtins & asm.
+- `user ease`   - Exposes a thin macro `$(...)`, substituting e.g. `arr[i]` that is `*(arr + i)` with `$(arr, i)`.
+- `suited for`  - Large scale sytem critical, performant systems. Toggle mem-checks off for resource scarce prods.
+- `target`      - gcc, clang: -std=gnu99 ONWS; x86_64.
 
 ## 🚀 Quick Start
 
 - include `mstrct.h` in your file.
-- declare a name and bind a memory to it: `$(ptr-type, name, range, addr)`; sample:
+- declare a name and bind a memory to it: `$(ptr-type, name, range, addr)`:
     ```
     // on-heap arr of 10 longs
     $(long int *, foo, 10, malloc(40));

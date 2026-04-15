@@ -41,7 +41,7 @@ Welcome to memstruct -- a memory safety framework for performant, large scale C 
     // share memory with callee
     callee(foo.id, other_inputs);
      ```
-- Access meta-data (uint: uit64_t):
+- Access meta-data (unit: uint64_t):
      ```
     // address (ptr addr, mutable):
     $(foo,)->addr

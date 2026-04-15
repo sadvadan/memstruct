@@ -41,6 +41,17 @@ Welcome to memstruct !
     // share memory with callee
     callee(foo.id, other_inputs);
      ```
+- Access meta-data:
+     ```
+    // address:
+    $(foo,)->addr
+
+    // range(immutable):
+    $(foo,)->range
+
+    // base address(immutable):
+    $(foo,)->base
+ 
 - De-allocate memory:
      ```
     // automatic for on-stack memories.

@@ -1,13 +1,19 @@
 
-![memstruct banner](logo.png) 
-# memstruct README
+# ![memstruct banner](logo.png) memstruct README
 
 Welcome to Memory Safe C!
 
+## 🎯 Features
 
-🎯 Features
+- `memory safe` - deterministically covers: UAF, NULL deref, OOB, leaks, double free.
+- `performant` - lightweight single file lib: leverages comptime checks, const folding, builtins & asm.
+- `user ease` - exposes a thin macro ($), substituting e.g. arr[i] aka *(arr, i) with $(arr, i).
 
-🚀 Quick Start 
+## 🚀 Quick Start
+
+- include `mstrct.h` in your file
+
+
 
 📖 Documentation 
 

@@ -513,9 +513,9 @@ MSTRCT_LET(name, range, sizeof(addr))
 
 #define MSTRCT_$4$0111(empty, name, range, addr) MSTRCT_CAT2(MSTRCT_RET_, MSTRCT_C)(empty, name, range, addr)
 
-#define MSTRCT_RET_0(empty, name, range, addr) mstrct_u64 = (uint64_t)(addr); MSTRCT_LET(name, range, sizeof(addr))
+#define MSTRCT_RET_0(empty, name, range, addr) mstrct_ptr = (char *)(addr); MSTRCT_LET(name, range, sizeof(addr))
 
-#define MSTRCT_RET_1(empty, name, range, addr) mstrct_u64 = (uint64_t)(addr);  \
+#define MSTRCT_RET_1(empty, name, range, addr) mstrct_ptr = (char *)(addr);  \
 __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0; MSTRCT_LET(name, range, sizeof(addr))
 
 
@@ -570,6 +570,9 @@ inline static void mstrct_checksum(uint64_t size, uint64_t allosize, int line, c
   } else if (allosize != sizeof(void *)) {
     mstrct_warn((allosize != size), MSTRCT_BAD_CHECKSUM,
     "checksum: (type_size) x (name_cardinality) x (range) = total_syze_in_bytes, SEEMS OFF!", line, file);
+  } else if (allosize < sizeof(void *)) {
+    mstrct_warn((allosize < sizeof(void *)), MSTRCT_ALLOC_FAIL,
+    "allocation failed because of invalid addr input (must be a 64-bit valid address)!", line, file);
   }
 }
 
@@ -577,7 +580,6 @@ static void mstrct_let( // helper func
   char *oob, uint64_t size, uint16_t off, int line, const char *file, uint64_t card, int enm) {
 
   mstrct_warn((enm > UINT16_MAX), MSTRCT_ALLOC_FAIL, "name cardinality __COUNT__ can't exceed UINT16_MAX!!", line, file);
-  mstrct_warn((mstrct_ptr <= (char *)UINT16_MAX), MSTRCT_ALLOC_FAIL, "allocation failed with invalid addr!", line, file);
   mstrct_warn((card > UINT16_MAX), MSTRCT_ALLOC_FAIL, "multi-dim name cardinality CAN'T exceed UINT16_MAX!", line, file);
   mstrct_warn((card == 0), MSTRCT_BAD_SYNTAX, "mstrct.h doesn't support multidim VLAs in clang (try gcc)!!", line, file); 
 

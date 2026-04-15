@@ -20,13 +20,22 @@ Welcome to memstruct !
     $(long int *, foo, 10, malloc(40));
 
     // on-stack multi-dim arr of range 10
-    $(int * const, var[2][3], 10, (int [60]){0});
+    $(int * const, bar[2][3], 10, (int [60]){0});
 
     // declare safe ptr w/o defining; could be inside struct type declaration
     $(float *, cux, );
-
     ```
+- define memory: `$(name, index) = value`:
+    ```
+    // single dim array types
+    $(foo, 5) = 10;
 
+    // multi-dim array types
+    $(bar[2][3], 5) = 10;
+
+    // share memory with another safe type
+    foo.id = baz.id;
+     ```
 
 
 📖 Documentation 

@@ -4,7 +4,7 @@ CFLAG = -O0 -g -Wall -Wextra
 TARGET = out
 
 # source and header files
-SRCS = 5_metadata.c
+SRCS = 6_reassign.c
 DEPS = ../src/mstrct.h
 
 # default rule

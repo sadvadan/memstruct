@@ -57,7 +57,7 @@ Welcome to memstruct, a memory safety framework for performant, large scale C ap
     // ptr arithmetic
     $(foo)++
 
-    // access (L value) without memory checks:
+    // access (as L value) without memory checks:
     $(foo)[5] = 10;
       ```
 - De-allocate memory:

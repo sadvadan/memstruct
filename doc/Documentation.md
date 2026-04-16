@@ -79,7 +79,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## API reference
 
-- Memstruct layout:
+- memstruct API:
 
 mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
@@ -107,7 +107,7 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
        sizeof(foo.car[0]): cardinality of name, 1 if not multidim
 
 ```
-- Metadata layout: metadata fields are accessed as `$(foo,)->size` etc. This API is mainly for internal use, but also made available to the occasional user needing metadata.
+- metadata API: metadata fields are accessed as `$(foo,)->size` etc. This API is mainly for internal use, but also made available to the occasional user needing metadata.
 
 ```
     // meta data struct layout (lives in custom static segment)
@@ -119,7 +119,7 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
 ```
 
 ##  Troubleshooting
-    LTS for memstruct is ensured as mstrct.h will be used in an forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here, and will be promptly responded to!
+LTS for memstruct is ensured as mstrct.h will be used in an forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here, and will be promptly responded to!
 
 ## Contributing guidelines
 

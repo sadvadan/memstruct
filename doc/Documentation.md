@@ -124,6 +124,7 @@ LTS for memstruct is ensured as mstrct.h will be used in an forthcoming project.
 ## Contributing guidelines
 
 NOTE: early contributors and adopters
+TODO: CONTRIBUTING.md
 
 ### How to help
 
@@ -142,3 +143,10 @@ NOTE: early contributors and adopters
    ```bash
    git checkout -b fix/foo-bug
    ```
+Issues:
+Search existing issues before opening a new one.
+
+When reporting bugs, include commands, versions, and a minimal example.
+
+License:
+By contributing, you agree your code will be distributed under the project’s license (see LICENSE).

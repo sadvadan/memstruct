@@ -27,7 +27,7 @@ This document explains how to configure and use the memstruct.h library.
 - Supports on-heap, on-stack, and custom allocators.
 - No external dependencies (only standard `C` headers).
 - Designed to be inlined heavily by the compiler.
-- Compile time checks & reporting wherever possible. (O1 and above helps, too; and no, "all checks are compile time" can't be true!)
+- Compile time checks & reporting wherever possible. (*O1 and above helps, too; and no, "all checks are compile time" isn't be true: of this or any other system!)
 - Safe to include in multiple translation units.
 - Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, enforced by strict `ASM qword` alignment and `ASM "=m"` constraint, respectively.
 - Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal (justifiably, in the eyes of the author) to this library's workings.

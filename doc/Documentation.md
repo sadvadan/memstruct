@@ -117,8 +117,9 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
       const uint64_t  base; // (immutable) base addr
     } mstrct_meta;
 ```
+
 ##  Troubleshooting
-    LTS for this project is guaranteed as mstrct.h will be used in an oncoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here, and will be promptly responded to!
+    LTS for memstruct is ensured as mstrct.h will be used in an forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here, and will be promptly responded to!
 
 ## Contributing guidelines
 

@@ -19,7 +19,7 @@ This document explains how to configure and use the memstruct.h library.
     
 - The core working principle is to have efficient custom static segment for metadata, such that accesses are as fast as in the stack. Then cache locality kicks in, supported by the custom error reporting made to respond to compiler optimizations.
 
-- A "safe ptr" is basically a unique, anonymous struct type on the 'outside' but also of the size of a plain int (like a memory-ID) casually passed around among ptrs and functions. `$` is a thin convenience macro wrapper over this `memstruct`; however, there is good old `C` and `ASM` code transparent underneath!   
+- A "safe ptr" is basically a unique, anonymous struct type on the 'outside' but also of the size of a plain int (like a memory-ID) casually passed around among stakeholders. `$` is a thin convenience macro wrapper over this `memstruct`; however, there is good old `C` and `ASM` code transparent underneath!   
 
 ## Features and design
 
@@ -30,7 +30,7 @@ This document explains how to configure and use the memstruct.h library.
 - Compile time checks & reporting wherever possible. (O1 and above helps, too)
 - Safe to include in multiple translation units.
 - Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, enforced by strict `ASM qword` alignment and `ASM "=m"` constraint, respectively.
-- Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal to this library's workings.
+- Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal (justifiably, in the eyes of the author) to this library's workings.
 
 ## Configuration
 

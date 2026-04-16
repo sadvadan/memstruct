@@ -83,12 +83,12 @@ This document explains how to configure and use the memstruct.h library.
     $(foo): foo = safe ptr name
     $(foo, ): foo = safe ptr name
 
-    $(foo, index): foo = safe ptr name, index = numeric type
+    $(foo, index): foo = safe ptr name, index = a numeric type
 
     $(type, foo, ): type = ptr typ, foo = a new name, or a struct's field name
 
-    $(type, foo, range, addr): type = ptr type, foo = new name (or one masking another), range = numeric type, addr = 64 bit value
-    $( , foo, range, addr): same as above but foo already exists
+    $(type, foo, range, addr): type = ptr type, foo = new name (or one masking another), range = a numeric type, addr = 64 bit value
+    $( , foo, range, addr): similar to above
 
 ```
 
@@ -132,7 +132,7 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
 ```
 
 ##  Troubleshooting
-LTS for memstruct is ensured as mstrct.h will be used in an forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here (open an issue!), and will be promptly responded to!
+LTS for memstruct is ensured as mstrct.h will be used in a forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here.
 
 ## Contributing guidelines
 

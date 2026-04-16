@@ -108,6 +108,7 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
 
 ```
 - Metadata layout: metadata fields are accessed as `$(foo,)->size` etc. This API is mainly for internal use, but also made available to the occasional user needing metadata.
+
 ```
     // meta data struct layout (lives in custom static segment)
     typedef struct  {
@@ -115,7 +116,6 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
       const uint64_t  size; // (immutable) memory byte size
       const uint64_t  base; // (immutable) base addr
     } mstrct_meta;
-
 ```
 ##  Troubleshooting
     LTS for this project is guaranteed as mstrct.h will be used in an oncoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here, and will be promptly responded to!

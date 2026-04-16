@@ -1,14 +1,15 @@
 
 # ![memstruct banner](banner.svg) memstruct README
 
-Welcome to memstruct -- a compile time leveraged memory safety framework for performant, large scale C applications !
+Welcome to memstruct -- a "Zero Cost" memory safety framework for C programs
 
 ## 🎯 Features
 
-- `memory safe` - Covers: UAF, NULL deref, OOB, leaks, double free.
-- `performant`  - Compile time checks, const folding, VRP, builtins & asm; elision of run time ops where possible.
+- `memory safe` - Covers: UAF, NULL deref, OOB, leaks, and double free.
+- `performant`  - Error reporting prioritises compile time checks, falling back to optimized run time checks.
 - `user ease`   - Thin convenience macro API `$(...)`, substituting e.g. `arr[i]` aka `*(arr + i)` with `$(arr, i)`.
-- `suited for`  - Sytem critical, performant systems. Toggle mem-checks off for resource scarce smaller prods.
+                  FUll type checking in the C code underneath. (expand the macro in your editor)
+- `suited for`  - Sytem critical, reliable, performant systems. Toggle mem-checks off for resource scarce smaller prods.
 - `target`      - gcc, clang: -std=gnu99 &ONWS; x86_64.
 
 ## 🚀 Quick Start

@@ -31,7 +31,7 @@ This document explains how to configure and use the memstruct.h library.
 - Logical concurrency for desired causal orderings is implemented by the user, and is orthogonal to this library's workings.
 
 - memstruct layout:
-  Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general.
+  Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
     struct {
       union {
@@ -48,12 +48,12 @@ This document explains how to configure and use the memstruct.h library.
     }
 
     // field description:
-       id: public API
-       _d: (private) the offset of metadata in custom static segment
-       _s: (private) usually static ID for immediate access
-       typeof(typ[0]): ptr type
-       sizeof(lin[0]): __LINE__ at declaration site
-       sizeof(ran[0]): memory range if static, else 0
-       sizeof(car[0]): cardinality of name, 1 if not multidim
+       foo.id: public API
+       foo._d: (private) the offset of metadata in custom static segment
+       foo._s: (private) usually static ID for immediate access
+       typeof(foo.typ[0]): ptr type
+       sizeof(foo.lin[0]): __LINE__ at declaration site
+       sizeof(foo.ran[0]): memory range if static, else 0
+       sizeof(foo.car[0]): cardinality of name, 1 if not multidim
 
 ```

@@ -69,15 +69,17 @@ This document explains how to configure and use the memstruct.h library.
     ```
     Here, the input fields hold the following relationship:
     ```
-    sizeof(*(ptr_type)) x sizeof(name_cardinality) x (range) = total_allocated_size_in_bytes.
+    sizeof(*ptr_type) x (name_cardinality) x (range) = (total_allocated_size_in_bytes)
     ```
-    This relation is enforced by the library (at compile time, if possible) and any error informed to the user.
+    This relation is enforced by the library (at compile time, where possible) and any error informed to the user.
 
 - In `$(ptr_type, foo, range, addr)`, addr is not necessarily an allocator but could also be an address pointing to a memory. Such usage does not pose memory hazard by its own, and as such is left to the occasional user to suit their program logic.
 
 ## API reference
 
-  mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
+- Memstruct layout:
+
+mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
     struct {
       union {

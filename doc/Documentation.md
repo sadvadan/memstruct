@@ -1,5 +1,5 @@
 
-# ![memstruct banner](banner.svg) memstruct DOC
+# ![memstruct banner](banner.svg) memstruct DOCUMENT
 
 This document explains how to configure and use the memstruct.h library.
 

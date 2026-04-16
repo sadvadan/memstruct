@@ -54,6 +54,6 @@ This document explains how to configure and use the memstruct.h library.
        typeof(typ[0]): ptr type
        sizeof(lin[0]): __LINE__ at declaration site
        sizeof(ran[0]): memory range if static, else 0
-       sizeof(car[0]): cardinality of name
+       sizeof(car[0]): cardinality of name, 1 if not multidim
 
 ```

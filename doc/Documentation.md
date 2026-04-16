@@ -30,6 +30,38 @@ This document explains how to configure and use the memstruct.h library.
 - Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, forced by strict `ASM qword` alignment and `ASM "=m"` constraint respectively.
 - Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal to this library's workings.
 
+## Usage
+
+- Memory sharing: memstruct field id is passed around to share memory. No special distinctions such as ownership, borrow, special, reference count, unique etc are needed.
+```
+    bar.id = foo.id; // makes bar refer the same memory as foo, but accessed as per its type "view"
+    callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope
+```
+- Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
+
+- Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without checks. This API exists mainly for ptr arithmetic (which by itself is safe). For data access, its use is advised mainly for cases e.g. when clear performance benefits can be proven and/or primary check (end-of-the-array) is already hoisted before a loop. 
+
+- memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
+    ```
+    // on-heap arr of 10 longs
+    $(long int *, foo, 10, malloc(40));
+
+    // on-stack multi-dim arr of range 10
+    $(int * const, bar[2][3], 10, (int [60]){0});
+
+    // declare safe ptr w/o defining; could be inside struct type declaration
+    $(float *, cux, );
+
+    // re-assign memory `$(,name, range, addr)`:
+    $(, var, 16, (int [16]){0});
+    ```
+    Here, the input fields hold the following relationship:
+    ```
+    sizeof(*(ptr_type)) x sizeof(name_cardinality) x (range) = total_allocated_size_in_bytes.
+    ```
+    This relation is enforced by the library (at compile time, if possible) and any error informed to the user.
+
+
 ## API reference
 
   mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
@@ -58,14 +90,6 @@ This document explains how to configure and use the memstruct.h library.
        sizeof(foo.car[0]): cardinality of name, 1 if not multidim
 
 ```
-- Memory sharing: memstruct field id is passed around to share memory. No special distinctions such as ownership, borrow, special, reference count, unique etc are needed.
-```
-    bar.id = foo.id; // makes bar refer the same memory as foo, but accessed as per its type "view"
-    callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope
-```
-- Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
-- Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without checks. This API exists mainly for ptr arithmetic (which by itself is safe). For data access, its use is advised mainly for cases e.g. when clear performance benefits can be proven and/or primary check (end-of-the-array) is already hoisted before a loop. 
-
 - Metadata layout: metadata fields are accessed as `$(foo,)->size` etc. This API is mainly for internal use, but also made available to the occasional user needing metadata.
 ```
     // meta data struct layout (lives in custom static segment)
@@ -76,23 +100,4 @@ This document explains how to configure and use the memstruct.h library.
     } mstrct_meta;
 
 ```
-- memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
-    ```
-    // on-heap arr of 10 longs
-    $(long int *, foo, 10, malloc(40));
-
-    // on-stack multi-dim arr of range 10
-    $(int * const, bar[2][3], 10, (int [60]){0});
-
-    // declare safe ptr w/o defining; could be inside struct type declaration
-    $(float *, cux, );
-
-    // re-assign memory `$(,name, range, addr)`:
-    $(, var, 16, (int [16]){0});
-    ```
-    Here, the input fields hold the following relationship:
-    sizeof(*(ptr_type)) x sizeof(name_cardinality) x (range) = total_allocated_size_in_bytes.
-
-    This relation is enforced by the library (at compile time, if possible) and any error informed to the user.
-
  

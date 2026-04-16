@@ -75,6 +75,8 @@ This document explains how to configure and use the memstruct.h library.
 
 - In `$(ptr_type, foo, range, addr)`, addr is not necessarily an allocator but could also be an address pointing to a memory. Such usage does not pose memory hazard by its own, and as such is left to the occasional user to suit their program logic.
 
+- Under the thin macro `$(ptr_type, foo, range, addr)`, boiler-plate if(NULL) checks are already included (see macro expansion in your editor), and needn't be repeated by user. 
+
 ## API reference
 
 - Memstruct layout:

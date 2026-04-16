@@ -79,6 +79,19 @@ This document explains how to configure and use the memstruct.h library.
 
 ## API reference
 
+- $(...) macro API:
+```
+    $(foo): memory addr as L-value; usage: $(foo)[index], $(foo)++, *$(foo), etc
+
+    $(foo, index): equivalent to memory checked *(foo_ptr + index)
+
+    $(type, foo, ): safe ptr declaration; can be used as a struct field declaration
+
+    $(type, foo, range, addr): type = ptr type, foo = new name, range = index_max, addr = typically a memory_allocator
+
+    $( , foo, range, addr): same as above but foo already exists
+```
+
 - memstruct API:
 
 mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.

@@ -1,7 +1,7 @@
 
 # ![memstruct banner](banner.svg) memstruct README
 
-Welcome to memstruct -- a memory safety framework for C programs
+Welcome to memstruct -- a memory safety framework for C
 
 ## 🎯 Features
 

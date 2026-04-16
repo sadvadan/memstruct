@@ -30,7 +30,7 @@ This document explains how to configure and use the memstruct.h library.
 - Safe to include in multiple translation units.
 
 - Since a 'safe ptr' is a unique anonymous struct type, it doesn't mix with other types, including other safe ptrs; it can't be naively de-referenced either. It takes deliberate C gymnastics, other than the $ escape hatch API, to break the safety of a safe ptr + memory binding.
-- Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, enforced by strict `ASM qword` alignment and `ASM "=m"` constraint, respectively.
+- Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, enforced with strict `ASM qword` alignment and `ASM "=m"` constraint, respectively.
 - Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal (justifiably, in the eyes of the author) to this library's workings.
 
 ## Configuration
@@ -41,7 +41,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
     default 0: print detailed err, continue with default "start of the arr value"
     strict  1: print detailed err, halt program with segfault at error site
-    strict  2: print detailed err, exit program with mstrct_status code
+    hard    2: print detailed err, exit program with mstrct_status code
 ```
 ## Usage
 

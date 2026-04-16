@@ -32,28 +32,28 @@ This document explains how to configure and use the memstruct.h library.
 
 - memstruct layout:
   Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general.
-    ```
-struct {
-  union {
-    uint32_t id;
+```
     struct {
-      uint16_t _d;
-      uint16_t _s;
-      type typ[0];
-      struct {char a[line];}  lin[0];
-      struct {char a[range];} ran[0];
-      struct {char a[card];}  car[0];
-    };
-  };
-}
+      union {
+        uint32_t id;
+        struct {
+          uint16_t _d;
+          uint16_t _s;
+          type typ[0];
+          struct {char a[line];}  lin[0];
+          struct {char a[range];} ran[0];
+          struct {char a[card];}  car[0];
+        };
+      };
+    }
 
-// field description:
-   id: public API
-   _d: (private) the offset of metadata in custom static segment
-   _s: (private) usually static ID for immediate access
-   typeof(typ[0]): ptr type
-   sizeof(lin[0]): __LINE__ at declaration site
-   sizeof(ran[0]): memory range if static, else 0
-   sizeof(car[0]): cardinality of name
+    // field description:
+       id: public API
+       _d: (private) the offset of metadata in custom static segment
+       _s: (private) usually static ID for immediate access
+       typeof(typ[0]): ptr type
+       sizeof(lin[0]): __LINE__ at declaration site
+       sizeof(ran[0]): memory range if static, else 0
+       sizeof(car[0]): cardinality of name
 
-    ```
+```

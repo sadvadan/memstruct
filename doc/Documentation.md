@@ -45,7 +45,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
 ## Usage
 
-- Memory sharing: memstruct field id is passed around to share memory. No extra taxonomy e.g. ownership, borrow, special, reference count, unique, lifetime etc.
+- Memory sharing: memstruct field id is simply passed around to share memory.
 ```
     bar.id = foo.id; // makes bar refer the same memory as foo, but accessed as per its type "view"
     callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope
@@ -76,7 +76,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - In `$(ptr_type, foo, range, addr)`, addr is not necessarily an allocator but could also be an address pointing to a memory. Such usage does not pose memory hazard by its own, and as such is left to the occasional user to suit their program logic.
 
-- Under the thin macro `$(ptr_type, foo, range, addr)`, boiler-plate if(NULL) checks are already included (see macro expansion in your editor), and needn't be repeated by user. 
+- Under the macro `$(ptr_type, foo, range, addr)`, boiler-plate if(NULL) checks are already included (see macro expansion in your editor), and needn't be repeated by user. 
 
 ## API reference
 

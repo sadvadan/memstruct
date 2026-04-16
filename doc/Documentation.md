@@ -66,7 +66,7 @@ This document explains how to configure and use the memstruct.h library.
 - Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
 - Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without checks. This API exists mainly for ptr arithmetic (which by itself is safe). For data access, its use is advised mainly for cases e.g. when clear performance benefits can be proven and/or primary check (end-of-the-array) is already hoisted before a loop. 
 
-- Metadata layout: metadata fields are accessed as `$(foo,)->size` etc. This API is mainly for internal use, but also made available to the occasional user needing the metadata.
+- Metadata layout: metadata fields are accessed as `$(foo,)->size` etc. This API is mainly for internal use, but also made available to the occasional user needing metadata.
 ```
     // meta data struct layout (lives in custom static segment)
     typedef struct  {
@@ -76,7 +76,7 @@ This document explains how to configure and use the memstruct.h library.
     } mstrct_meta;
 
 ```
-- memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared before as a safe ptr, then `$( , foo, range, addr)` for reassign.
+- memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
     ```
     // on-heap arr of 10 longs
     $(long int *, foo, 10, malloc(40));
@@ -90,9 +90,9 @@ This document explains how to configure and use the memstruct.h library.
     // re-assign memory `$(,name, range, addr)`:
     $(, var, 16, (int [16]){0});
     ```
-    Here, different input fields the following relationship:
+    Here, the input fields hold the following relationship:
     sizeof(*(ptr_type)) x sizeof(name_cardinality) x (range) = total_allocated_size_in_bytes.
 
-    This relation is enforced by the library and any error informed to the user - if possible at compile time.
+    This relation is enforced by the library (at compile time, if possible) and any error informed to the user.
 
  

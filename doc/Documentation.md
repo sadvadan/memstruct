@@ -45,10 +45,10 @@ This document explains how to configure and use the memstruct.h library.
 ```
 ## Usage
 
-- Memory sharing: memstruct field id is simply passed around to share memory.
+- Memory sharing: memstruct field id is simply passed around to share memory. 
 ```
-    bar.id = foo.id; // makes bar refer the same memory as foo, but accessed as per its type "view"
-    callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope
+    bar.id = foo.id; // makes bar refer the same memory as foo, but retain its type "view"
+    callee_function(int id, other_inputs); // callee is given int foo.id to access memory, metadata
 ```
 - Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
 

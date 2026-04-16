@@ -15,7 +15,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- This project provides memory safety as an error mechanism to complement `C`'s performance, making it possible (going forward) to have `reliable`, `large scale`, `collaborative` projects in `C` that still leverage the language and its codebase.
+- This project provides memory safety as an error mechanism to complement `C`'s performance, making it possible (going forward) to have reliable, large scale, collaborative projects in `C` that still leverage the language and its codebase.
     
 - The core working principle is to have efficient custom static segment for metadata, such that accesses are as fast as in the stack. Then cache locality kicks in, further helped by a custom error reporting made to respond to compiler optimizations.
 
@@ -63,10 +63,10 @@ This document explains how to configure and use the memstruct.h library.
     bar.id = foo.id; // makes bar refer the same memory as foo, but accessed as per its type "view"
     callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope
 ```
-- Safe access of data: $(foo, index) is equivalent to foo[index] but with memory checks (need basis) inlined.
-- Raw access of data: $(foo) is data address as L value, so *$(foo) or $(foo)[index] is raw access without inlined memory checks. this API exists mainly for ptr arithmetic, and data access advised to be done only on rare occasions when performance benefits can be proven or primary check is already hoisted before a loop. 
+- Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
+- Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without inlined memory checks. this API exists mainly for ptr arithmetic, and data access advised to be done only on rare occasions when performance benefits can be proven or primary check is already hoisted before a loop. 
 
-- Metadata layout: metadata fields are accessed as $(foo,)->size etc. This API is used internally, but also made available to the user needing accessing the metadata.
+- Metadata layout: metadata fields are accessed as `$(foo,)->size` etc. This API is used internally, but also made available to the user needing accessing the metadata.
 ```
     // meta data struct layout (lives in custom static segment)
     typedef struct  {
@@ -76,4 +76,4 @@ This document explains how to configure and use the memstruct.h library.
     } mstrct_meta;
 
 ```
-- memstructs dclaration:
+- memstruct declaration:

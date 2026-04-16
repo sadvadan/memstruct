@@ -47,14 +47,13 @@ struct {
   };
 }
 
-/*
-*  - id: public API
-*  - _d: (private) the offset of metadata in custom static segment
-*  - _s: (private) usually static ID for immediate access
-*  - typeof(typ[0]): ptr type
-*  - sizeof(lin[0]): __LINE__ at declaration site
-*  - sizeof(ran[0]): memory range if static, else 0
-*  - sizeof(car[0]): cardinality of name
-*  */ 
+// field description:
+   id: public API
+   _d: (private) the offset of metadata in custom static segment
+   _s: (private) usually static ID for immediate access
+   typeof(typ[0]): ptr type
+   sizeof(lin[0]): __LINE__ at declaration site
+   sizeof(ran[0]): memory range if static, else 0
+   sizeof(car[0]): cardinality of name
 
     ```

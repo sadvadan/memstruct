@@ -136,7 +136,7 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
 ##  Troubleshooting
 LTS for memstruct is ensured as mstrct.h will be used in a forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here.
 
-## Contributing guidelines
+## ![memstruct banner](banner.svg) Contributing guidelines
 
 NOTE: early contributors and adopters
 

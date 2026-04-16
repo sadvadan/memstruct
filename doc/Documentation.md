@@ -80,17 +80,16 @@ This document explains how to configure and use the memstruct.h library.
 
 - $(...) macro API:
 ```
-    $(foo): memory addr as L-value; usage: $(foo)[index], $(foo)++, *$(foo), etc
+    $(foo): foo = safe ptr name
+    $(foo, ): foo = safe ptr name
 
-    $(foo, index): equivalent to memory checked *(foo_ptr + index)
+    $(foo, index): foo = safe ptr name, index = numeric type
 
-    $(type, foo, ): safe ptr declaration; can be used as a struct field declaration
+    $(type, foo, ): type = ptr typ, foo = a new name, or a struct's field name
 
-    $(type, foo, range, addr): type = ptr type, foo = new name, range = index_max, addr = typically a memory_allocator
-
+    $(type, foo, range, addr): type = ptr type, foo = new name (or one masking another), range = numeric type, addr = 64 bit value
     $( , foo, range, addr): same as above but foo already exists
 
-    $(foo, ): metadata API (see below)
 ```
 
 - memstruct API:

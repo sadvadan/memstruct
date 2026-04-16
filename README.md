@@ -25,7 +25,7 @@ Welcome to memstruct -- a memory safety framework for performant, large scale C 
     // declare safe ptr w/o defining; could be inside struct type declaration
     $(float *, cux, );
     ```
- - Re-assign memory `$(,name, range, addr)`:
+- Re-assign memory `$(,name, range, addr)`:
     ```
     $(, var, 16, (int [16]){0});
      ```
@@ -45,17 +45,6 @@ Welcome to memstruct -- a memory safety framework for performant, large scale C 
     // share memory with callee
     callee(foo.id, other_inputs);
      ```
-- Access meta-data (unit: uint64_t):
-     ```
-    // address (ptr addr, mutable):
-    $(foo,)->addr
-
-    // size(total bytes, immutable):
-    $(foo,)->size
-
-    // base address(immutable):
-    $(foo,)->base
-     ```
 - Raw access:
      ```
     // ptr arithmetic
@@ -64,10 +53,11 @@ Welcome to memstruct -- a memory safety framework for performant, large scale C 
     // access (as L value) without memory checks:
     $(foo)[5] = 10;
      ```
-- De-allocate memory:
+- De-allocate:
      ```
     // automatic metadata update for on-stack memories.
     // free & munmap are thinly wrapped so that double frees are redundant (instead of causing corruption) and can be used freely as the redundant frees are elided by compiler.
+
     free(foo);
      ```
 📖 Documentation 

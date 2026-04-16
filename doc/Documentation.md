@@ -64,9 +64,9 @@ This document explains how to configure and use the memstruct.h library.
     callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope
 ```
 - Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
-- Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without inlined memory checks. this API exists mainly for ptr arithmetic, and data access advised to be done only on rare occasions when performance benefits can be proven or primary check is already hoisted before a loop. 
+- Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without inlined memory checks. this API exists mainly for ptr arithmetic. For data access, its use is advised mainly for cases e.g. when clear performance benefits can be proven and/or primary check is already hoisted before a loop. 
 
-- Metadata layout: metadata fields are accessed as `$(foo,)->size` etc. This API is used internally, but also made available to the user needing accessing the metadata.
+- Metadata layout: metadata fields are accessed as `$(foo,)->size` etc. This API is mainly for internal use, but also made available to the occasional user needing the metadata.
 ```
     // meta data struct layout (lives in custom static segment)
     typedef struct  {

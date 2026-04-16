@@ -15,11 +15,11 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- This project provides memory safety as an error mechanism to complement `C`'s performance, making it possible (going forward) to have reliable, large scale, collaborative projects in `C` that still leverage the language and its codebase.
+- This project formulates memory safety as error reporting system to complement `C`'s native performance, making it possible (going forward) to have reliable, large scale, collaborative projects in `C` that can leverage the language and its codebase.
     
-- The core working principle is to have efficient custom static segment for metadata, such that accesses are as fast as in the stack. Then cache locality kicks in, further helped by a custom error reporting made to respond to compiler optimizations.
+- The core working principle is to have efficient custom static segment for metadata, such that accesses are as fast as in the stack. Then cache locality kicks in, supported by the custom error reporting made to respond to compiler optimizations.
 
-- A "safe ptr" is basically a unique, anonymous struct type on the 'outside' but also of the size of a plain int (like a memory-ID) casually passed around among ptrs and functions. `$` is a thin macro wrapper over this `memstruct`, however, underneath transparent is plain old `C` and `ASM` code.   
+- A "safe ptr" is basically a unique, anonymous struct type on the 'outside' but also of the size of a plain int (like a memory-ID) casually passed around among ptrs and functions. `$` is a thin convenience macro wrapper over this `memstruct`; however, there is good old `C` and `ASM` code transparent underneath!   
 
 ## Features and design
 

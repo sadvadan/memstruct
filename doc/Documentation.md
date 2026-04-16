@@ -90,6 +90,8 @@ This document explains how to configure and use the memstruct.h library.
     $(type, foo, range, addr): type = ptr type, foo = new name, range = index_max, addr = typically a memory_allocator
 
     $( , foo, range, addr): same as above but foo already exists
+
+    $(foo, ): metadata API (see below)
 ```
 
 - memstruct API:
@@ -137,6 +139,7 @@ LTS for memstruct is ensured as mstrct.h will be used in an forthcoming project.
 ## Contributing guidelines
 
 NOTE: early contributors and adopters
+
 TODO: CONTRIBUTING.md
 
 ### How to help

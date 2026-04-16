@@ -24,12 +24,24 @@ This document explains how to configure and use the memstruct.h library.
 ## Features and design
 
 - Single‑header; no separate `.c` file needed.
+- Supports on-heap, on-stack, and custom allocators.
 - No external dependencies (only standard `C` headers).
 - Designed to be inlined heavily by the compiler.
+- Compile time checks & reporting wherever possible. (O1 and above helps, too)
 - Safe to include in multiple translation units.
-- Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, forced by strict `ASM qword` alignment and `ASM "=m"` constraint respectively.
+- Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, enforced by strict `ASM qword` alignment and `ASM "=m"` constraint, respectively.
 - Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal to this library's workings.
 
+## Configuration
+
+- Include `mstrct.h`.
+- Define `NMSTRCT` to disable all checks for production, if needed.
+- Use `MSTRCT_L` flag for choosing hardening level of error reporting.
+```
+    default 0: print detailed err, continue with default "start of the arr value"
+    strict  1: print detailed err, halt program with segfault at error site
+    strict  2: print detailed err, exit program with mstrct_status code
+```
 ## Usage
 
 - Memory sharing: memstruct field id is passed around to share memory. No special distinctions such as ownership, borrow, special, reference count, unique etc are needed.
@@ -39,7 +51,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
 - Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
 
-- Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without checks. This API exists mainly for ptr arithmetic (which by itself is safe). For data access, its use is advised mainly for cases e.g. when clear performance benefits can be proven and/or primary check (end-of-the-array) is already hoisted before a loop. 
+- Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without checks. This API exists mainly for ptr arithmetic (which by itself is safe). For data access, its use is advised mainly for cases e.g. when clear performance benefits can be proven and/or primary check is already hoisted. 
 
 - memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
     ```

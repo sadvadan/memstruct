@@ -60,7 +60,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
 - Memory sharing: memstruct field id is passed around to share memory. No special distinctions such as ownership, borrow, special, reference count, unique etc are needed.
 ```
-    bar.id = foo.id; // makes bar refer to the same memory as foo refers, but in line with its type "view"
+    bar.id = foo.id; // makes bar refer the same memory as foo, but accessed as per its type "view"
     callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope
 ```
 - Safe access of data: $(foo, index) is equivalent to foo[index] but with memory checks (need basis) inlined.

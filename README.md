@@ -5,12 +5,11 @@ Welcome to memstruct -- a memory safety framework for C
 
 ## 🎯 Features
 
-- `memory safety` - Covers: UAF, NULL deref, OOB, leaks, and double free.
-- `performance` - Error reporting prioritizes compile time checks, falling back to (optimized) run time checks.
-- `user ease`   - Convenience macro `$(...)`, substituting e.g. `arr[i]` aka `*(arr + i)` with `$(arr, i)`.
-- `robustness`  - Type checked C code underneath.
-- `suited for`  - Reliable, performant systems. Toggle mem-checks off for resource scarce smaller prods.
-- `target`      - gcc, clang: -std=gnu99 &ONWS; x86_64.
+- Memory safety  - Covers: UAF, NULL deref, OOB, leaks, and double free.
+- Performance  - Error reporting prioritizes compile time checks, falling back to (optimized) run time checks.
+- User ease    - Convenience macro `$(...)`, substituting e.g. `arr[i]` aka `*(arr + i)` with `$(arr, i)`.
+- Robustness   - Type checked C code underneath.
+- Target       - gcc, clang: -std=gnu99 &ONWS, x86_64. Toggle mem-checks off for resource scarce smaller prods.
 
 ## 🚀 Quick Start
 

@@ -17,9 +17,9 @@ This document explains how to configure and use the memstruct.h library.
 
 - This project formulates memory safety as error reporting system to complement `C`'s native performance, making it possible (going forward) to have reliable, large scale, collaborative projects in `C` that can leverage the language and its codebase.
     
-- The core working principle is to have the 'safe ptr' carry as much compile time known data in its type system as possible. The error reporting system then enhances this with constant foldings from compiler optimizer. This results in either compile time checks or heavily optimized runtime ones. For runtime checks that cannot be elided, metadata is stored in a fast access, cache friendly, static data segment. UAF & NULL checks are part of OOB check in a way as to incur no extra overhead.
+- The core working principle is to have the 'safe ptr' maximally carry compile time information in its type system. The error reporting system then supplements this with constant foldings from compiler optimizer. This results in either compile time or heavily optimized runtime checks. For runtime checks that cannot be elided, metadata is stored in a fast access, cache friendly, static data segment. UAF & NULL checks are part of OOB check in a way as to incur no extra overhead.
 
-- A "safe ptr" is basically a unique, anonymous struct type on the 'outside' but also of the size of a plain int (like a memory-ID) casually passed around among stakeholders. `$` is a thin convenience macro wrapper over this `memstruct`; however, there is good old `C` and `ASM` code transparent underneath!   
+- A 'safe ptr' is basically a unique, anonymous struct type on the 'outside' but also of the size of a plain int (like a memory-ID) casually passed around among stakeholders. `$` is a thin convenience macro wrapper over this `memstruct`; however, there is good old `C` and `ASM` code transparent underneath!   
 
 ## Features and design
 
@@ -45,7 +45,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
 ## Usage
 
-- Memory sharing: memstruct field id is passed around to share memory. No special distinctions such as ownership, borrow, special, reference count, unique etc are needed.
+- Memory sharing: memstruct field id is passed around to share memory. No extra taxonomy e.g. ownership, borrow, special, reference count, unique, lifetime etc.
 ```
     bar.id = foo.id; // makes bar refer the same memory as foo, but accessed as per its type "view"
     callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope

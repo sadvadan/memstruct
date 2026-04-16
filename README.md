@@ -47,10 +47,10 @@ Welcome to memstruct -- a memory safety framework for performant, large scale C 
      ```
 - Raw access:
      ```
-    // ptr arithmetic
+    // (safe) ptr arithmetic
     $(foo)++
 
-    // access (as L value) without memory checks:
+    // (unsafe) access (as L value) without memory checks:
     $(foo)[5] = 10;
      ```
 - De-allocate:

@@ -76,4 +76,23 @@ This document explains how to configure and use the memstruct.h library.
     } mstrct_meta;
 
 ```
-- memstruct declaration:
+- memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared before as a safe ptr, then `$( , foo, range, addr)` for reassign.
+    ```
+    // on-heap arr of 10 longs
+    $(long int *, foo, 10, malloc(40));
+
+    // on-stack multi-dim arr of range 10
+    $(int * const, bar[2][3], 10, (int [60]){0});
+
+    // declare safe ptr w/o defining; could be inside struct type declaration
+    $(float *, cux, );
+
+    // re-assign memory `$(,name, range, addr)`:
+    $(, var, 16, (int [16]){0});
+    ```
+    Here, different input fields the following relationship:
+    sizeof(*(ptr_type)) x sizeof(name_cardinality) x (range) = total_allocated_size_in_bytes.
+
+    This relation is enforced by the library and any error informed to the user - if possible at compile time.
+
+ 

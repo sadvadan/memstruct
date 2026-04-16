@@ -28,6 +28,8 @@ This document explains how to configure and use the memstruct.h library.
 - Supports on-heap, on-stack, and custom allocators.
 - No external dependencies (only standard `C` headers).
 - Safe to include in multiple translation units.
+
+- Since a 'safe ptr' is a unique anonymous struct type, it doesn't mix with other types, including other safe ptrs; it can't be naively de-referenced either. It takes deliberate C gymnastics, other than the $ escape hatch API, to break the safety of a safe ptr + memory binding.
 - Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, enforced by strict `ASM qword` alignment and `ASM "=m"` constraint, respectively.
 - Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal (justifiably, in the eyes of the author) to this library's workings.
 

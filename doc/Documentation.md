@@ -28,10 +28,11 @@ This document explains how to configure and use the memstruct.h library.
 - Designed to be inlined heavily by the compiler.
 - Safe to include in multiple translation units.
 - Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, forced by strict `ASM qword` alignment and `ASM "=m"` constraint respectively.
-- Logical concurrency for desired causal orderings is implemented by the user, and is orthogonal to this library's workings.
+- Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal to this library's workings.
 
-- memstruct layout:
-  Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
+## API reference
+
+  mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
     struct {
       union {
@@ -57,3 +58,22 @@ This document explains how to configure and use the memstruct.h library.
        sizeof(foo.car[0]): cardinality of name, 1 if not multidim
 
 ```
+- Memory sharing: memstruct field id is passed around to share memory. No special distinctions such as ownership, borrow, special, reference count, unique etc are needed.
+```
+    bar.id = foo.id; // makes bar refer to the same memory as foo refers, but in line with its type "view"
+    callee_function(int id, other_inputs); // callee is supplied foo.id as int to access the same memory in its scope
+```
+- Safe access of data: $(foo, index) is equivalent to foo[index] but with memory checks (need basis) inlined.
+- Raw access of data: $(foo) is data address as L value, so *$(foo) or $(foo)[index] is raw access without inlined memory checks. this API exists mainly for ptr arithmetic, and data access advised to be done only on rare occasions when performance benefits can be proven or primary check is already hoisted before a loop. 
+
+- Metadata layout: metadata fields are accessed as $(foo,)->size etc. This API is used internally, but also made available to the user needing accessing the metadata.
+```
+    // meta data struct layout (lives in custom static segment)
+    typedef struct  {
+      uint64_t addr;        // (mutable) ptr addr
+      const uint64_t  size; // (immutable) memory byte size
+      const uint64_t  base; // (immutable) base addr
+    } mstrct_meta;
+
+```
+- memstructs dclaration:

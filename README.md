@@ -8,7 +8,7 @@ Welcome to memstruct -- a compile time leveraged memory safety framework for per
 - `memory safe` - Covers: UAF, NULL deref, OOB, leaks, double free.
 - `performant`  - Compile time checks, const folding, VRP, builtins & asm; elision of run time ops where possible.
 - `user ease`   - Thin convenience macro API `$(...)`, substituting e.g. `arr[i]` aka `*(arr + i)` with `$(arr, i)`.
-- `suited for`  - Large scale sytem critical, performant systems. Toggle mem-checks off for resource scarce smaller prods.
+- `suited for`  - Sytem critical, performant systems. Toggle mem-checks off for resource scarce smaller prods.
 - `target`      - gcc, clang: -std=gnu99 &ONWS; x86_64.
 
 ## 🚀 Quick Start

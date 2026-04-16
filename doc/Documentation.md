@@ -117,4 +117,25 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
     } mstrct_meta;
 
 ```
- 
+##  Troubleshooting
+    LTS for this project is guaranteed as mstrct.h will be used in an oncoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here, and will be promptly responded to!
+
+## Contributing guidelines
+
+# How to help
+
+- Fix bugs, typos, or improve tests.
+- Clarify or expand documentation.
+- Keep changes small and focused; for big changes, open an issue first to discuss.
+
+# Code style
+
+- Follow the existing C style (indentation, braces, naming).
+- Keep pull requests small and easy to review.
+
+# Pull request workflow
+
+1. Fork the repo and create a branch:
+   ```bash
+   git checkout -b fix/foo-bug
+   ```

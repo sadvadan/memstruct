@@ -13,8 +13,8 @@ Welcome to memstruct -- a memory safety framework for C
 
 ## 🚀 Quick Start
 
-- Include `mstrct.h` in your file.
-- Declare a name and bind a memory to it `$(ptr-type, name, range, addr)` like so:
+- **Include** `mstrct.h` in your file.
+- **Declare** a name and bind a memory to it `$(ptr-type, name, range, addr)` like so:
     ```
     // on-heap arr of 10 longs
     $(long int *, foo, 10, malloc(40));
@@ -25,11 +25,11 @@ Welcome to memstruct -- a memory safety framework for C
     // declare safe ptr w/o defining; could be inside struct type declaration
     $(float *, cux, );
     ```
-- Re-assign memory `$(,name, range, addr)`:
+- **Re-assign** memory `$(,name, range, addr)`:
     ```
     $(, var, 16, (int [16]){0});
      ```
-- Define memory `$(name, index) = value`:
+- **Define** memory `$(name, index) = value`:
     ```
     // single dim array types
     $(foo, 5) = 10;
@@ -37,7 +37,7 @@ Welcome to memstruct -- a memory safety framework for C
     // multi-dim array types
     $(bar[1][2], 5) = 10;
      ```
-- Share memory:
+- **Share** memory:
      ```
     // share memory with another safe type
     foo.id = baz.id;
@@ -45,15 +45,15 @@ Welcome to memstruct -- a memory safety framework for C
     // share memory with callee
     callee(foo.id, other_inputs);
      ```
-- Raw access:
+- **Raw access:**
      ```
     // (safe) ptr arithmetic
     $(foo).addr++
 
-    // (unsafe, escape hatch) access (as L value) without memory checks:
+    // (unsafe escape hatch) access, w/o check:
     $(foo).addr[5] = 10;
      ```
-- De-allocate:
+- **De-allocate:**
      ```
     // automatic metadata update for on-stack memories.
     // free & munmap are thinly wrapped so that double frees are redundant (instead of causing corruption) and can be used freely as the redundant frees are elided by compiler.

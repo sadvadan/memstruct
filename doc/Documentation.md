@@ -82,7 +82,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## API reference
 
-- `$(...)` **macro API:**
+- `$(...)` **macro:**
 ```
     $(foo): foo = safe ptr name
     $(foo, index): foo = safe ptr name, index = a numeric type
@@ -93,7 +93,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ```
 
-- **memstruct API:**
+- **memstruct:**
 mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
     struct {
@@ -120,7 +120,7 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
        sizeof(foo.car[0]): cardinality of name, 1 if not multidim
 
 ```
-- **metadata API:** metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr`, `$(foo).size` and `$(foo).base`. This API is mainly for internal use, but also made available to enable ptr arithmetic (like so: `$(foo).addr++`), and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).metadata` available.
+- **metadata:** metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr`, `$(foo).size` and `$(foo).base`. This API is mainly for internal use, but also made available to enable ptr arithmetic (like so: `$(foo).addr++`), and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).metadata` available.
 - **Raw access** of data through `$(foo).addr[index]` (verbose on purpose!) is allowed, mainly for occasional cases e.g. when clear performance benefits (of raw access) can be proven and/or primary check is already hoisted before a hot loop. 
 
 ```

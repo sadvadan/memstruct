@@ -20,7 +20,7 @@
  *
  * NOTATION                    TYPE        EFFECT
  * --------                    -------     ------
- * $(name)                     L-value     data_addr
+ * $(name)                     L-value     meta data
  * $(name, index)              L-value     data[index]
  * $(type, name, range, addr)  declare     bind memory
  *

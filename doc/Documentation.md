@@ -122,11 +122,11 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
 - **Raw access** of data through `$(foo).addr[index]` (verbose on purpose!) is allowed, mainly for occasional cases e.g. when clear performance benefits (of raw access) can be proven and/or primary check is already hoisted before a hot loop. 
 
 ```
-    // meta data struct layout (lives in custom static segment)
+    // meta data struct layout
     typedef struct  {
-      ptr_type addr;        // (mutable) ptr addr
+      ptr_type        addr; // (mutable)   ptr addr
       const uint64_t  size; // (immutable) memory byte size
-      const ptr_type  base; // (immutable) base addr
+      ptr_type const  base; // (immutable) base addr
     }
 ```
 

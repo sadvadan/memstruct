@@ -29,7 +29,7 @@ This document explains how to configure and use the memstruct.h library.
 - No external dependencies (only standard `C` headers).
 - Safe to include in multiple translation units.
 
-- Since a 'safe ptr' is a unique anonymous struct type, it doesn't mix with other types, including other safe ptrs; it can't be naively de-referenced, or cast either. It takes deliberate `C` gymnastics, other than the `$` escape hatch API, to break the safety net.
+- Since a 'safe ptr' is a unique anonymous struct type, it doesn't mix with other types, including other safe ptrs; it can't be naively de-referenced, or cast either. It takes deliberate `C` gymnastics, other than the `$(name)` escape hatch API, to break the safety net.
 - Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, enforced with strict `ASM qword` alignment and `ASM "=m"` constraint, respectively.
 - Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal (justifiably, in the eyes of the author) to this library's workings.
 
@@ -52,7 +52,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
 - Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
 
-- Raw access of data: `$(foo)` is data address as L value, so `*$(foo)` or `$(foo)[index]` is raw access without checks. This API exists mainly for ptr arithmetic (which by itself is safe). For data access, its use is advised mainly for cases e.g. when clear performance benefits can be proven and/or primary check is already hoisted. 
+- Raw access (w/o checks) of data: use mstrct_meta type `$(foo)` (see the metadata API reference).
 
 - memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
     ```
@@ -83,12 +83,9 @@ This document explains how to configure and use the memstruct.h library.
 - $(...) macro API:
 ```
     $(foo): foo = safe ptr name
-    $(foo, ): foo = safe ptr name
-
     $(foo, index): foo = safe ptr name, index = a numeric type
 
     $(type, foo, ): type = ptr typ, foo = a new name, or a struct's field name
-
     $(type, foo, range, addr): type = ptr type, foo = new name (or one masking another), range = a numeric type, addr = 64 bit value
     $( , foo, range, addr): similar to above
 
@@ -122,7 +119,9 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
        sizeof(foo.car[0]): cardinality of name, 1 if not multidim
 
 ```
-- metadata API: metadata fields are accessed as `$(foo,)->size` etc. This API is mainly for internal use, but also made available to the occasional user needing metadata.
+- metadata API: metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr` etc. This API is mainly for internal use, but also made available to enable ptr arithmetic, and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).mrtadata` available.
+
+- Raw access of data through `$(foo).addr[index]` (verbose on purpose!) is allowed, mainly for occasional cases e.g. when clear performance benefits (of raw access) can be proven and/or primary check is already hoisted before a hot loop. 
 
 ```
     // meta data struct layout (lives in custom static segment)

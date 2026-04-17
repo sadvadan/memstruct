@@ -48,10 +48,10 @@ Welcome to memstruct -- a memory safety framework for C
 - Raw access:
      ```
     // (safe) ptr arithmetic
-    $(foo)++
+    $(foo).addr++
 
-    // (unsafe) access (as L value) without memory checks:
-    $(foo)[5] = 10;
+    // (unsafe, escape hatch) access (as L value) without memory checks:
+    $(foo).addr[5] = 10;
      ```
 - De-allocate:
      ```

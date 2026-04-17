@@ -43,7 +43,7 @@ Welcome to memstruct -- a memory safety framework for C
     foo.id = baz.id;
 
     // share memory with callee
-    callee(foo.id, other_inputs);
+    callee(int foo.id, other_inputs);
      ```
 - **Raw** access:
      ```
@@ -56,9 +56,10 @@ Welcome to memstruct -- a memory safety framework for C
 - **De**-allocate:
      ```
     // automatic metadata update for on-stack memories.
-    // free & munmap are thinly wrapped so that double frees are redundant (instead of causing corruption) and can be used freely as the redundant frees are elided by compiler.
+    // free & munmap thinly wrapped so that double frees are redundant.
 
-    free(foo);
+    free(foo);   // on-heap memory
+    munmap(foo); // mmapped memory
      ```
 ## 📖 Documentation 
 - See: [Documentation](doc/Documentation.md)

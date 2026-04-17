@@ -45,7 +45,7 @@ Welcome to memstruct -- a memory safety framework for C
     // share memory with callee
     callee(foo.id, other_inputs);
      ```
-- **Raw access:**
+- **Raw** access:
      ```
     // (safe) ptr arithmetic
     $(foo).addr++

@@ -39,7 +39,7 @@ This document explains how to configure and use the memstruct.h library.
 - Define `NMSTRCT` to disable all checks for production, if needed.
 - Use `MSTRCT_L` flag for choosing hardening level of error reporting.
 ```
-    default 0: print detailed err, continue with default "start of the arr value"
+    default 0: print detailed err, continue with default "the arr end value"
     strict  1: print detailed err, halt program with segfault at error site
     hard    2: print detailed err, exit program with mstrct_status code
 ```
@@ -77,6 +77,8 @@ This document explains how to configure and use the memstruct.h library.
 - In `$(ptr_type, foo, range, addr)`, addr is not necessarily an allocator but could also be an address pointing to a memory. Such usage does not pose memory hazard by its own, and as such is left to the occasional user to suit their program logic.
 
 - Under the macro `$(ptr_type, foo, range, addr)`, boiler-plate if(NULL) checks are already included (see macro expansion in your editor), and needn't be repeated by user. 
+
+- **Macro wrap of free() and munmap():** provides polymorphism of either de-allocating safe ptrs (as simply as `free(foo)` and `munmap(foo)`) or de-allocating normal ptrs (with std C interface). Moreover, an `if(NULL)` check is also inserted so that double de-allocations are redundant. The user is the best judge of when to free a memory, but in complex CFGs - or when in doubt - it's better to make over-use of the overloaded free() or munmap(), as mstrct.h ensures redundant de-allocations are **elided by the compiler**, rather than corrupting memory.
 
 ## API reference
 

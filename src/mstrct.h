@@ -62,9 +62,11 @@
 
 #define MSTRCT_$2(arg1, arg2) MSTRCT_CAT3(MSTRCT_$2$, MSTRCT_ARG_COUNT(arg1), MSTRCT_ARG_COUNT(arg2))(arg1, arg2)
 
-#define MSTRCT_$2$00(arg1, arg2) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG); MSTRCT_WRONG_TYPE_OF_ARG;})
+#define MSTRCT_$2$00(arg1, arg2)  ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG); MSTRCT_WRONG_TYPE_OF_ARG;})
 
 #define MSTRCT_$2$01(name, empty) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG); MSTRCT_WRONG_TYPE_OF_ARG;})
+
+#define MSTRCT_$2$10(name, empty) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG); MSTRCT_WRONG_TYPE_OF_ARG;})
 
 #define MSTRCT_$2$11(arg1, arg2) MSTRCT_GET(arg1, arg2)
 
@@ -406,13 +408,19 @@ static uint64_t mstrct_munmap_2(void **arg, uint64_t size, int line, const char 
 #define MSTRCT_MUNMAP_0() MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
 __attribute__((always_inline))
-static inline uint64_t mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f_size) {
+static inline uint64_t mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f_size, int line, const char *file) {
   switch (__builtin_constant_p(id_s)) {
     case 1: return mstrct_meta_addr1(id_s);
     case 0:
       switch (f_size) {
         case 0: return 0; // clang multidim VLA
-        default: return mstrct_meta_addr2(id_d);
+        case 1: return mstrct_meta_addr2(id_d); // cardinality = 1
+        default:
+          switch (id_s) {
+            case 0: return mstrct_meta_addr2(id_d); // start of multidim arr
+            default: {mstrct_error("No unique metadata exists for individual elements of a multidim arr (hint: input w/o indexes)",
+                      MSTRCT_BAD_SYNTAX, line, file); return 0;}
+          }
       }
     default: __builtin_unreachable();
   }
@@ -474,27 +482,25 @@ mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uin
 __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type_range, uint64_t f_range, uint64_t index,
   int line, const char *file, uint64_t type_line, uint16_t _s, uint16_t _d, uint64_t addr_in) {uint64_t addr = addr_in;
   if (f_range > 1) {addr = mstrct_fact_oob(type_line, _d, line, file, addr);}
-  if (type_range > 0) {addr = mstrct_check_stat(index, type_range, addr, _d, line, file);}
+  if ((type_range > 0) && (__builtin_constant_p(_s))) {addr = mstrct_check_stat(index, type_range, addr, _d, line, file);}
   else {addr = mstrct_dyna(_s, _d, addr, line, file);};
   return addr;
 }
 
 
-#define MSTRCT_$1(name) \
-  (*(typeof(typeof(name.typ[0]) *))(mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])))))
-
-#define MSTRCT_$2$10(name, empty) ((mstrct_meta *)mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0]))))
+#define MSTRCT_$1(name) (*(struct {typeof(name.typ[0]) addr; const uint64_t size; const typeof(name.typ[0]) base;} *)   \
+  mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])), __LINE__, __FILE__))
 
 #define MSTRCT_GET(name, index) MSTRCT_CAT2(MSTRCT_GET__, MSTRCT_C)(name, index)
 
-#define MSTRCT_GET__2(name, index)  \
+#define MSTRCT_GET__0(name, index)  \
    (*((typeof(name.typ[0]))(mstrct_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])))) + (index)))
 
 
 #define MSTRCT_GET__1(name, index) (*((typeof(name.typ[0])) (  \
   mstrct_check(sizeof(name.ran[0]), sizeof(name.car[0]), index, __LINE__, __FILE__, sizeof(name.lin[0]), name._s, name._d, \
-  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(name._s, name._d, (sizeof(name.car[0])))) + index)) \
-)))
+  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(name._s, name._d, (sizeof(name.car[0])))) + index + 1)) \
+) - 1))
 
 #define MSTRCT_$3$110(typ, name, empty) MSTRCT_T(typ, sizeof(struct {char name;}), 0, __LINE__) name
 

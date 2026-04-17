@@ -488,7 +488,8 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 }
 
 
-#define MSTRCT_$1(name) (*(struct {typeof(name.typ[0]) addr; const uint64_t size; const typeof(name.typ[0]) base;} *)   \
+#define MSTRCT_$1(name) \
+  (*(struct {typeof(name.typ[0]) addr; const uint64_t size; typeof(({typeof(name.typ[0]) ptr; ptr;})) const base;} *)   \
   mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])), __LINE__, __FILE__))
 
 #define MSTRCT_GET(name, index) MSTRCT_CAT2(MSTRCT_GET__, MSTRCT_C)(name, index)

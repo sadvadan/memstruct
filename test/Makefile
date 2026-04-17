@@ -4,7 +4,7 @@ CFLAG = -O0 -g -Wall -Wextra
 TARGET = out
 
 # source and header files
-SRCS = 6_reassign.c # change this to your test file name, goto this directory, run make
+SRCS = 1_malloc.c # change this to your test file name, goto this directory, run make
 DEPS = ../src/mstrct.h
 
 # default rule

@@ -53,7 +53,7 @@ Welcome to memstruct -- a memory safety framework for C
     // (unsafe escape hatch) access, w/o check:
     $(foo).addr[5] = 10;
      ```
-- **De-**allocate:
+- **De**-allocate:
      ```
     // automatic metadata update for on-stack memories.
     // free & munmap are thinly wrapped so that double frees are redundant (instead of causing corruption) and can be used freely as the redundant frees are elided by compiler.

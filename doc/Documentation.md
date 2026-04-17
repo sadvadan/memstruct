@@ -52,7 +52,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
 - Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
 
-- Raw access (w/o checks) of data: use mstrct_meta type `$(foo)` (see the metadata API reference).
+- Raw access (w/o checks) of data: through meta data type `$(foo)` (see the metadata API reference).
 
 - memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
     ```
@@ -118,16 +118,16 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
        sizeof(foo.car[0]): cardinality of name, 1 if not multidim
 
 ```
-- **metadata API:** metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr` etc. This API is mainly for internal use, but also made available to enable ptr arithmetic (like so: `$(foo).addr++`), and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).metadata` available.
+- **metadata API:** metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr`, `$(foo).size` and `$(foo).base`. This API is mainly for internal use, but also made available to enable ptr arithmetic (like so: `$(foo).addr++`), and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).metadata` available.
 - **Raw access** of data through `$(foo).addr[index]` (verbose on purpose!) is allowed, mainly for occasional cases e.g. when clear performance benefits (of raw access) can be proven and/or primary check is already hoisted before a hot loop. 
 
 ```
     // meta data struct layout (lives in custom static segment)
     typedef struct  {
-      uint64_t addr;        // (mutable) ptr addr
+      ptr_type addr;        // (mutable) ptr addr
       const uint64_t  size; // (immutable) memory byte size
-      const uint64_t  base; // (immutable) base addr
-    } mstrct_meta;
+      const ptr_type  base; // (immutable) base addr
+    }
 ```
 
 ##  Troubleshooting

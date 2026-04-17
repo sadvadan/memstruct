@@ -45,16 +45,16 @@ This document explains how to configure and use the memstruct.h library.
 ```
 ## Usage
 
-- Memory sharing: memstruct field id is simply passed around to share memory. 
+- **Memory sharing:** memstruct field id is simply passed around to share memory. 
 ```
     bar.id = foo.id; // makes bar refer the same memory as foo, but retain its type "view"
     callee_function(int id, other_inputs); // callee is given int foo.id to access memory, metadata
 ```
-- Safe access of data: `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
+- **Safe access of data:** `$(foo, index)` is equivalent to `foo[index]` but with memory checks (as needed!) inlined.
 
-- Raw access (w/o checks) of data: through meta data type `$(foo)` (see the metadata API reference).
+- **Raw access (w/o checks) of data:** through meta data type `$(foo)` (see the metadata API reference).
 
-- memstruct declaration: declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
+- **memstruct declaration:** declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
     ```
     // on-heap arr of 10 longs
     $(long int *, foo, 10, malloc(40));

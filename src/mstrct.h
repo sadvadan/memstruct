@@ -180,15 +180,17 @@ struct {  \
       uint16_t _s; \
       type typ[0] __attribute__((packed)); \
       struct {char a[line];} lin[0];   \
-      MSTRCT_SIZ(range); \
+      MSTRCT_SIZ(range, type); \
       MSTRCT_FAC(card); \
     };   \
   };  \
 } __attribute__((aligned(4)))
 
-#define MSTRCT_SIZ(range) MSTRCT_CAT2(MSTRCT_SIZ_, MSTRCT_O)(range)
-#define MSTRCT_SIZ_0(range) struct {char a[0];} ran[0]
-#define MSTRCT_SIZ_1(range) struct {char a[(__builtin_constant_p(range)) * range];} ran[0]
+#define MSTRCT_CON(type) __builtin_strstr(__builtin_strrchr(#type, '*'), "const") != NULL
+
+#define MSTRCT_SIZ(range, type) MSTRCT_CAT2(MSTRCT_SIZ_, MSTRCT_O)(range, type)
+#define MSTRCT_SIZ_0(range, type) struct {char a[0];} ran[0]
+#define MSTRCT_SIZ_1(range, type) struct {char a[(MSTRCT_CON(type)) * (__builtin_constant_p(range)) * (range)];} ran[0]
 
 #define MSTRCT_FAC(card) MSTRCT_CAT2(MSTRCT_FAC_, MSTRCT_X)(card)
 #define MSTRCT_FAC_0(card) struct {char a[card];} car[0] // gcc
@@ -447,8 +449,8 @@ static void mstrct_bounds_error(uint64_t ptr, int line, const char *file) {
 
 __attribute__((always_inline)) static inline uint64_t
 mstrct_check_dyna(uint64_t addr, uint64_t size, uint64_t base, uint16_t id_d, int line, const char *file) {
-  if (__builtin_expect(((uint64_t)(addr - base) < size), 1)) {return addr;}
-  else {mstrct_bounds_error(mstrct_get20(id_d), line, file); if (MSTRCT_L == 0) return base;}
+  if (__builtin_expect(((uint64_t)(addr - base) <= size), 1)) {return addr;}
+  else {mstrct_bounds_error(mstrct_get20(id_d), line, file); if (MSTRCT_L == 0) return (base + size);}
 }
 
 __attribute__((always_inline)) static inline uint64_t
@@ -464,7 +466,7 @@ __attribute__((always_inline))
 static inline uint64_t mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, uint16_t _d, int line, const char *file) {
   if (n < N) {return addr;}
   else {
-    addr = mstrct_get20(_d); // reset the addr
+    addr = (mstrct_get21(_d) + mstrct_get22(_d)); // default
     mstrct_warn((n >= N), MSTRCT_BOUNDS_CHECK_FAIL, "bounds check failed!!", line, file);
     if (MSTRCT_L == 0) return addr;
   }
@@ -473,7 +475,7 @@ static inline uint64_t mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, 
 __attribute__((always_inline)) static inline uint64_t
 mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uint64_t addr) {
   if (mstrct_get23(_d) != type_line) {
-    //addr = mstrct_get22(_d); // reset the addr
+    addr = (mstrct_get21(_d) + mstrct_get22(_d)); // default
     mstrct_error("multi-dim-arr index failed bounds check!!", MSTRCT_MULTI_DIM_BOUNDS_FAIL, line, file);
     if (MSTRCT_L == 0) return addr;
   } else return addr;
@@ -489,7 +491,7 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 
 
 #define MSTRCT_$1(name) \
-  (*(struct {typeof(name.typ[0]) addr; const uint64_t size; typeof(({typeof(name.typ[0]) ptr; ptr;})) const base;} *)   \
+  (*(struct {typeof(name.typ[0]) addr; const uint64_t size; typeof(({(typeof(name.typ[0]))0;})) const base;} *)   \
   mstrct_meta_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])), __LINE__, __FILE__))
 
 #define MSTRCT_GET(name, index) MSTRCT_CAT2(MSTRCT_GET__, MSTRCT_C)(name, index)

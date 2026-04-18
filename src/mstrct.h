@@ -447,9 +447,13 @@ static void mstrct_bounds_error(uint64_t ptr, int line, const char *file) {
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line, file);};
 }
 
+__attribute__((const, always_inline)) static int mstrct_check_dyna_cal(uint64_t addr, uint64_t size, uint64_t base) {
+  return __builtin_expect(((uint64_t)(addr - base) <= size), 1);
+}
+
 __attribute__((always_inline)) static inline uint64_t
 mstrct_check_dyna(uint64_t addr, uint64_t size, uint64_t base, uint16_t id_d, int line, const char *file) {
-  if (__builtin_expect(((uint64_t)(addr - base) <= size), 1)) {return addr;}
+  if (mstrct_check_dyna_cal(addr, size, base)) {return addr;}
   else {mstrct_bounds_error(mstrct_get20(id_d), line, file); if (MSTRCT_L == 0) return (base + size);}
 }
 

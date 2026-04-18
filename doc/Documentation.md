@@ -57,7 +57,7 @@ This document explains how to configure and use the memstruct.h library.
 - **memstruct declaration:** declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
     ```
     // on-heap arr of 10 longs
-    $(long int *, foo, 10, malloc(40));
+    $(long int *, foo, 10, malloc(80));
 
     // on-stack multi-dim arr of range 10
     $(int * const, bar[2][3], 10, (int [60]){0});

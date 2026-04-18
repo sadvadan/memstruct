@@ -135,7 +135,7 @@ mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's 
 ```
 
 ##  Troubleshooting
-LTS for memstruct is ensured as mstrct.h will be used in a forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here.
+LTS for memstruct is ensured as mstrct.h will be used in a forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here. Raise an issue if you need to discuss or ask clarification, too.
 
 ## ![memstruct banner](banner.svg) Contributing guidelines
 

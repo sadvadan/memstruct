@@ -106,6 +106,7 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
           struct {char a[line];}  lin[0];
           struct {char a[range];} ran[0];
           struct {char a[card];}  car[0];
+          struct {char a[cons];}  con[0];
         };
       };
     }
@@ -118,6 +119,7 @@ mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carrie
        sizeof(foo.lin[0]): __LINE__ at declaration site
        sizeof(foo.ran[0]): memory range if static, else 0
        sizeof(foo.car[0]): cardinality of name, 1 if not multidim
+       sizeof(foo.con[0]): 1 if ptr is *const type, 0 if not
 
 ```
 - **metadata:** metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr`, `$(foo).size` and `$(foo).base`. This API is mainly for internal use, but also made available to enable ptr arithmetic (like so: `$(foo).addr++`), and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).metadata` available.

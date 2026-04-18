@@ -122,7 +122,7 @@ mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's 
        sizeof(foo.con[0]): 1 if ptr is *const type, 0 if not
 
 ```
-- **metadata:** metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr`, `$(foo).size` and `$(foo).base`. This API is mainly for internal use, but also made available to enable ptr arithmetic (like so: `$(foo).addr++`), and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).metadata` available.
+- **metadata:** metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr`, `$(foo).size`, `$(foo).base` and `typeof($(foo).addr)`. This API is mainly for internal use, but also made available to enable ptr arithmetic (like so: `$(foo).addr++`), and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).metadata` available.
 - **Raw access** of data through `$(foo).addr[index]` (verbose on purpose!) is allowed, mainly for occasional cases e.g. when clear performance benefits (of raw access) can be proven and/or primary check is already hoisted before a hot loop. 
 
 ```

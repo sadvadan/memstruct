@@ -459,7 +459,8 @@ static void mstrct_bounds_error(uint64_t ptr, int line, const char *file) {
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line, file);};
 }
 
-__attribute__((const, always_inline)) static int mstrct_check_dyna_cal(uint64_t addr, uint64_t size, uint64_t base) {
+__attribute__((const, always_inline))  
+static inline int mstrct_check_dyna_cal(uint64_t addr, uint64_t size, uint64_t base) {
   return __builtin_expect(((uint64_t)(addr - base) <= size), 1);
 }
 
@@ -527,22 +528,29 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_$4$1111(typ, name, range, addr) MSTRCT_CAT2(MSTRCT_SET_, MSTRCT_C)(typ, name, range, addr)
 
 #define MSTRCT_SET_0(typ, name, range, addr) \
-mstrct_ptr = (char *)(addr); MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
-MSTRCT_LET(name, range, sizeof(addr))
+  mstrct_ptr = (char *)(addr);  \
+  MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
+  MSTRCT_LET(name, range, sizeof(addr))
 
 #define MSTRCT_SET_1(typ, name, range, addr)  \
-mstrct_ptr = (char *)(addr); MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
-__attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_,__LINE__) = UINT16_MAX; \
-MSTRCT_LET(name, range, sizeof(addr))
+  mstrct_ptr = (char *)(addr);  \
+  MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
+  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_,__LINE__) = UINT16_MAX; \
+  MSTRCT_LET(name, range, sizeof(addr))
 
 
 #define MSTRCT_$4$0111(empty, name, range, addr) MSTRCT_CAT2(MSTRCT_RET_, MSTRCT_C)(empty, name, range, addr)
 
-#define MSTRCT_RET_0(empty, name, range, addr) mstrct_ptr = (char *)(addr); MSTRCT_LET(name, range, sizeof(addr))
+#define MSTRCT_RET_0(empty, name, range, addr)  \
+  mstrct_ptr = (char *)(addr);   \
+  if ((mstrct_get22(name._d) == 0) || (mstrct_get20(name._d) == 0)) {MSTRCT_SET((uint64_t)0, name._d, 0);} /* realloc kind */  \
+  MSTRCT_LET(name, range, sizeof(addr))
 
-#define MSTRCT_RET_1(empty, name, range, addr) mstrct_ptr = (char *)(addr);  \
-__attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0; MSTRCT_LET(name, range, sizeof(addr))
-
+#define MSTRCT_RET_1(empty, name, range, addr)  \
+  mstrct_ptr = (char *)(addr);  \
+  if ((mstrct_get22(name._d) == 0) || (mstrct_get20(name._d) == 0)) {MSTRCT_SET((uint64_t)0, name._d, 0);} /* realloc kind */ \
+  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
+  MSTRCT_LET(name, range, sizeof(addr))
 
 #define MSTRCT_CLEANUP(line, off) MSTRCT_CAT2(MSTRCT_CLEANUP_, MSTRCT_C)(line, off)
 #define MSTRCT_CLEANUP_0(line, off) (void)0
@@ -552,7 +560,7 @@ __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE_
 #define MSTRCT_PRAG_ON  _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 #define MSTRCT_PRAG_OFF _Pragma("GCC diagnostic pop")
 
-#define MSTRCT_LET(name, range, allo_size) {   \
+#define MSTRCT_LET(name, range, allo_size) if (mstrct_ptr != (char *)1) {   \
   enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8; char a;  \
   MSTRCT_PRAG_ON if (card == 1) {name._s = enm; MSTRCT_DEF_META(enm, 24);} else {MSTRCT_DEF_META(enm, 32);} MSTRCT_PRAG_OFF   \
   if (((int64_t)(&a - mstrct_ptr)) < 0) {MSTRCT_CLEANUP(__LINE__, off);} \

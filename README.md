@@ -64,3 +64,6 @@ Welcome to memstruct -- a memory safety framework for C
 ## 📖 Documentation 
 - See: [Documentation](doc/Documentation.md)
 
+## License
+This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+Copyright (c) 2026 @sadvadan.

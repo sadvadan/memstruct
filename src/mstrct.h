@@ -1,4 +1,6 @@
 /**
+ *  Copyright (C) 2026 @sadvadan (https://github.com/sadvadan)
+ *
  *  memstruct v0.1.0
  *  "Zero Cost Abstraction"  -std=gnu99 & onws
  *

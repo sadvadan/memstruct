@@ -182,15 +182,19 @@ struct {  \
       struct {char a[line];} lin[0];   \
       MSTRCT_SIZ(range, type); \
       MSTRCT_FAC(card); \
+      MSTRCT_CON(type); \
     };   \
   };  \
 } __attribute__((aligned(4)))
 
-#define MSTRCT_CON(type) __builtin_strstr(__builtin_strrchr(#type, '*'), "const") != NULL
+#define MSTRCT_CON(type) MSTRCT_CAT2(MSTRCT_CON_, MSTRCT_O)(type)
+#define MSTRCT_CON_0(type) struct {char a[0];} con[0]
+#define MSTRCT_CON_1(type) struct {char a[(__builtin_strstr(__builtin_strrchr(#type, '*'), "const") != NULL)];} con[0]
 
 #define MSTRCT_SIZ(range, type) MSTRCT_CAT2(MSTRCT_SIZ_, MSTRCT_O)(range, type)
 #define MSTRCT_SIZ_0(range, type) struct {char a[0];} ran[0]
-#define MSTRCT_SIZ_1(range, type) struct {char a[(MSTRCT_CON(type)) * (__builtin_constant_p(range)) * (range)];} ran[0]
+#define MSTRCT_SIZ_1(range, type) struct {   \
+  char a[(__builtin_strstr(__builtin_strrchr(#type, '*'), "const") != NULL) * (__builtin_constant_p(range)) * (range)];} ran[0]
 
 #define MSTRCT_FAC(card) MSTRCT_CAT2(MSTRCT_FAC_, MSTRCT_X)(card)
 #define MSTRCT_FAC_0(card) struct {char a[card];} car[0] // gcc
@@ -429,13 +433,21 @@ static inline uint64_t mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f
 }
 
 __attribute__((always_inline))
-static inline uint64_t mstrct_addr(const uint64_t id_s, const uint64_t id_d, const uint64_t f_size) {
+static inline uint64_t mstrct_addr(uint64_t con, const uint64_t id_s, const uint64_t id_d, const uint64_t f_size) {
   switch (__builtin_constant_p(id_s)) {
-    case 1: return mstrct_get10(id_s);
+    case 1:
+      switch (con) {
+        case 0:  return mstrct_get10(id_s); // mutable addr
+        default: return mstrct_get12(id_s); // const addr
+      }
     case 0:
       switch (f_size) {
         case 0: return 0; // clang multidim VLA
-        case 1: return mstrct_get20(id_d); // cardinality = 1
+        case 1: 
+          switch (con) { // cardinalty = 1
+            case 0:  return mstrct_get20(id_d); // mutable addr
+            default: return mstrct_get22(id_d); // const addr
+          }
         default: {return mstrct_get30(id_d, (f_size * id_s));} // name factory
       }
     default: __builtin_unreachable();
@@ -500,13 +512,13 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 
 #define MSTRCT_GET(name, index) MSTRCT_CAT2(MSTRCT_GET__, MSTRCT_C)(name, index)
 
-#define MSTRCT_GET__0(name, index)  \
-   (*((typeof(name.typ[0]))(mstrct_addr((uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])))) + (index)))
+#define MSTRCT_GET__0(name, index) (*((typeof(name.typ[0])) \
+   (mstrct_addr(sizeof(name.con[0]), (uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])))) + (index)))
 
 
 #define MSTRCT_GET__1(name, index) (*((typeof(name.typ[0])) (  \
   mstrct_check(sizeof(name.ran[0]), sizeof(name.car[0]), index, __LINE__, __FILE__, sizeof(name.lin[0]), name._s, name._d, \
-  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(name._s, name._d, (sizeof(name.car[0])))) + index + 1)) \
+  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(sizeof(name.con[0]), name._s, name._d, (sizeof(name.car[0])))) + index + 1)) \
 ) - 1))
 
 #define MSTRCT_$3$110(typ, name, empty) MSTRCT_T(typ, sizeof(struct {char name;}), 0, __LINE__) name

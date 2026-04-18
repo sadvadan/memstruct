@@ -560,12 +560,15 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_PRAG_ON  _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 #define MSTRCT_PRAG_OFF _Pragma("GCC diagnostic pop")
 
-#define MSTRCT_LET(name, range, allo_size) if (mstrct_ptr != (char *)1) {   \
+#define MSTRCT_LET(name, range, allo_size) if (mstrct_ptr != (char *)1 && mstrct_ptr != NULL) {   \
   enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8; char a;  \
   MSTRCT_PRAG_ON if (card == 1) {name._s = enm; MSTRCT_DEF_META(enm, 24);} else {MSTRCT_DEF_META(enm, 32);} MSTRCT_PRAG_OFF   \
   if (((int64_t)(&a - mstrct_ptr)) < 0) {MSTRCT_CLEANUP(__LINE__, off);} \
   mstrct_u64 = MSTRCT_BASE(name, card); uint64_t size = (sizeof(*(name.typ[0])) * card * range); \
   mstrct_checksum(size, allo_size, __LINE__, __FILE__); mstrct_let((char *)&(name), size, off, __LINE__, __FILE__, card, enm);  \
+} else if (mstrct_ptr == NULL) { \
+  mstrct_ptr = (char *)1;  \
+  mstrct_error("allocation failed!!", MSTRCT_ALLOC_FAIL, __LINE__, __FILE__); \
 }
 
 static void mstrct_leak_1(mstrct_proto * name, int line, const char *file) {

@@ -94,7 +94,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
 
 - **memstruct:**
-mstrct.h targets ptrs holding memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
+mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
     struct {
       union {

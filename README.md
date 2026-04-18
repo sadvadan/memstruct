@@ -17,7 +17,7 @@ Welcome to memstruct -- a memory safety framework for C
 - **Declare** a name and bind a memory to it `$(ptr-type, name, range, addr)` like so:
     ```
     // on-heap arr of 10 longs
-    $(long int *, foo, 10, malloc(40));
+    $(long int *, foo, 10, malloc(80));
 
     // on-stack multi-dim arr of range 10
     $(int * const, bar[2][3], 10, (int [60]){0});

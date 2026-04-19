@@ -544,13 +544,15 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_$4$0111(empty, name, range, addr) MSTRCT_CAT2(MSTRCT_RET_, MSTRCT_C)(empty, name, range, addr)
 
 #define MSTRCT_RET_0(empty, name, range, addr)  \
-  mstrct_ptr = (char *)(addr); /* allocation; next: tackle realloc types */   \
-  if ((mstrct_get22(name._d) == 0) || (mstrct_get22(name._d) == (uint64_t)mstrct_ptr)) {MSTRCT_SET((uint64_t)0, name._d, 0);} \
+  mstrct_ptr = (char *)(addr);   \
+  if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
+    {MSTRCT_SET((uint64_t)0, name._d, 0);} \
   MSTRCT_LET(name, range, sizeof(addr))
 
 #define MSTRCT_RET_1(empty, name, range, addr)  \
-  mstrct_ptr = (char *)(addr); /* allocation; next: tackle realloc types */   \
-  if ((mstrct_get22(name._d) == 0) || (mstrct_get22(name._d) == (uint64_t)mstrct_ptr)) {MSTRCT_SET((uint64_t)0, name._d, 0);} \
+  mstrct_ptr = (char *)(addr);   \
+  if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
+    {MSTRCT_SET((uint64_t)0, name._d, 0);} \
   __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
   MSTRCT_LET(name, range, sizeof(addr))
 

@@ -353,7 +353,9 @@ static inline void mstrct_cleanup(uint16_t *ptr) {
   if (*ptr != UINT16_MAX) {
     uintptr_t rsp; __asm__("mov %%rsp, %0" : "=r"(rsp));
     if ((int64_t)((char *)rsp - (char *)ptr) < 0) { // only cater to stack vars
-      MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 0); // scope end: make ptr addr NULL
+      MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 0); // scope end: make metadata NULL
+      MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 8);
+      MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 16);
     }
   }
 }
@@ -365,7 +367,7 @@ static void mstrct_user_free(mstrct_proto *arg, int flag) {
       mstrct_proto name = *arg;
       void *addr = (void *)mstrct_get20(name._d); 
       if (addr != NULL) {(free)((void *)mstrct_get22(name._d));}
-      MSTRCT_SET((uint64_t)0, name._d, 0); break;
+      MSTRCT_SET((uint64_t)0, name._d, 0); MSTRCT_SET((uint64_t)0, name._d, 8); MSTRCT_SET((uint64_t)0, name._d, 16); break;
     }
     case 1: {
       void *addr = *(void **)(arg);
@@ -390,7 +392,7 @@ static uint64_t mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
   void *addr = (void *)mstrct_get20(name._d); 
   if (addr != NULL) {
     if ((munmap)((void *)mstrct_get22(name._d), mstrct_get21(name._d)) == 0) {
-      MSTRCT_SET((uint64_t)0, name._d, 0); MSTRCT_SET((uint64_t)0, name._d, 8); return temp;
+      MSTRCT_SET((uint64_t)0, name._d, 0); MSTRCT_SET((uint64_t)0, name._d, 8); MSTRCT_SET((uint64_t)0, name._d, 16); return temp;
     } else {
        temp = 1; mstrct_error("de-allocation failed!!", MSTRCT_DE_ALLOC_FAIL, line, file); return temp;
     }

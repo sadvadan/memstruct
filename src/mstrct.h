@@ -503,7 +503,7 @@ mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uin
 __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type_range, uint64_t f_range, uint64_t index,
   int line, const char *file, uint64_t type_line, uint16_t _s, uint16_t _d, uint64_t addr_in) {uint64_t addr = addr_in;
   if (f_range > 1) {addr = mstrct_fact_oob(type_line, _d, line, file, addr);}
-  if ((type_range > 0) && (__builtin_constant_p(_s))) {addr = mstrct_check_stat(index, type_range, addr, _d, line, file);}
+  if (type_range > 0) {addr = mstrct_check_stat(index, type_range, addr, _d, line, file);}
   else {addr = mstrct_dyna(_s, _d, addr, line, file);};
   return addr;
 }

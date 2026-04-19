@@ -78,7 +78,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Under the macro `$(ptr_type, foo, range, addr)`, boiler-plate if(NULL) checks are already included (see macro expansion in your editor), and needn't be repeated by user. 
 
-- **Macro wrap of free() and munmap():** provides polymorphism of either de-allocating safe ptrs (as simply as `free(foo)` and `munmap(foo)`) or de-allocating normal ptrs (with std C interface). Moreover, an `if(NULL)` check is also inserted so that double de-allocations are redundant. The user is the best judge of when to free a memory, but in complex CFGs - or when in doubt - it's better to make over-use of the overloaded free() or munmap(), as mstrct.h ensures redundant de-allocations are **elided by the compiler**, rather than corrupting memory.
+- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocate safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocate a C ptr with C std API. Moreover, addr is `NULL`-d so double frees are redundant. User knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
 
 ## API reference
 

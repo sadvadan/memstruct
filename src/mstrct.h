@@ -189,14 +189,12 @@ struct {  \
   };  \
 } __attribute__((aligned(4)))
 
-#define MSTRCT_CON(type) MSTRCT_CAT2(MSTRCT_CON_, MSTRCT_O)(type)
-#define MSTRCT_CON_0(type) struct {char a[0];} con[0]
-#define MSTRCT_CON_1(type) struct {char a[(__builtin_strstr(__builtin_strrchr(#type, '*'), "const") != NULL)];} con[0]
+#define MSTRCT_CON(type) struct {char a[__builtin_types_compatible_p(typeof(type) const *, typeof(type) *)];} con[0]
 
 #define MSTRCT_SIZ(range, type) MSTRCT_CAT2(MSTRCT_SIZ_, MSTRCT_O)(range, type)
 #define MSTRCT_SIZ_0(range, type) struct {char a[0];} ran[0]
 #define MSTRCT_SIZ_1(range, type) struct {   \
-  char a[(__builtin_strstr(__builtin_strrchr(#type, '*'), "const") != NULL) * (__builtin_constant_p(range)) * (range)];} ran[0]
+  char a[(__builtin_types_compatible_p(typeof(type) const *, typeof(type) *)) * (__builtin_constant_p(range)) * (range)];} ran[0]
 
 #define MSTRCT_FAC(card) MSTRCT_CAT2(MSTRCT_FAC_, MSTRCT_X)(card)
 #define MSTRCT_FAC_0(card) struct {char a[card];} car[0] // gcc

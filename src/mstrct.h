@@ -571,7 +571,7 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
   mstrct_u64 = MSTRCT_BASE(name, card); uint64_t size = (sizeof(*(name.typ[0])) * card * range); \
   mstrct_checksum(size, allo_size, __LINE__, __FILE__); mstrct_let((char *)&(name), size, off, __LINE__, __FILE__, card, enm);  \
 } else if (mstrct_ptr == NULL) { \
-  mstrct_ptr = (char *)1;  \
+  mstrct_ptr = (char *)1; mstrct_u64 = UINT64_MAX; \
   mstrct_error("allocation failed!!", MSTRCT_ALLOC_FAIL, __LINE__, __FILE__); \
 }
 
@@ -603,10 +603,9 @@ static void mstrct_factory(mstrct_proto * name, uint64_t card) {
 
 __attribute__((always_inline))
 inline static void mstrct_checksum(uint64_t size, uint64_t allosize, int line, const char *file) {
-  ssize_t obj_size = (ssize_t)__builtin_dynamic_object_size(mstrct_ptr, 0);
-  if (obj_size > 0) {
-    mstrct_warn(((uint64_t)obj_size != size), MSTRCT_BAD_CHECKSUM,
-    "checksum: (type_size) x (name_cardinality) x (range) = total_syze_in_bytes, SEEMS OFF!", line, file);
+  if ((ssize_t)__builtin_dynamic_object_size(mstrct_ptr, 0) > 0) {
+    mstrct_error("checksum: (type_size) x (name_cardinality) x (range) = total_syze_in_bytes, SEEMS OFF!",
+    MSTRCT_BAD_CHECKSUM, line, file);
   } else if (allosize != sizeof(void *)) {
     mstrct_warn((allosize != size), MSTRCT_BAD_CHECKSUM,
     "checksum: (type_size) x (name_cardinality) x (range) = total_syze_in_bytes, SEEMS OFF!", line, file);

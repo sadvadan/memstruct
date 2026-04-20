@@ -212,7 +212,7 @@ typedef struct {
 
 typedef struct  {
   uint64_t addr;  // ptr addr
-  const uint64_t  size; // range value
+  const uint64_t  size; // size, bytes
   const uint64_t  base; // base addr
 } mstrct_meta;
 

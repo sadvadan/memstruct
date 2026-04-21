@@ -553,7 +553,7 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
   mstrct_ptr = (char *)(addr);   \
   if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
     {MSTRCT_SET((uint64_t)0, name._d, 0);} \
-  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
+  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = UINT16_MAX;   \
   MSTRCT_LET(name, range, sizeof(addr))
 
 #define MSTRCT_CLEANUP(line, off) MSTRCT_CAT2(MSTRCT_CLEANUP_, MSTRCT_C)(line, off)
@@ -566,13 +566,11 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 
 #define MSTRCT_LET(name, range, allo_size) if (mstrct_ptr != (char *)1 && mstrct_ptr != NULL) {   \
   enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8; char a;  \
-  MSTRCT_PRAG_ON if (card == 1) {name._s = enm; MSTRCT_DEF_META(enm, 24);} else {MSTRCT_DEF_META(enm, 32);} MSTRCT_PRAG_OFF   \
+  MSTRCT_PRAG_ON if (card == 1) {name._s = enm;} MSTRCT_PRAG_OFF   \
+  MSTRCT_DEF_META(enm, ((card == 1) ? 24 : 32));   \
   if (((int64_t)(&a - mstrct_ptr)) < 0) {MSTRCT_CLEANUP(__LINE__, off);} \
   mstrct_u64 = MSTRCT_BASE(name, card); uint64_t size = (sizeof(*(name.typ[0])) * card * range); \
   mstrct_checksum(size, allo_size, __LINE__, __FILE__); mstrct_let((char *)&(name), size, off, __LINE__, __FILE__, card, enm);  \
-} else if (mstrct_ptr == NULL) { \
-  mstrct_ptr = (char *)1; mstrct_u64 = UINT64_MAX; \
-  mstrct_error("allocation failed!!", MSTRCT_ALLOC_FAIL, __LINE__, __FILE__); \
 }
 
 static void mstrct_leak_1(mstrct_proto * name, int line, const char *file) {
@@ -621,6 +619,11 @@ static void mstrct_let( // helper func
   mstrct_warn((enm > UINT16_MAX), MSTRCT_ALLOC_FAIL, "name cardinality __COUNT__ can't exceed UINT16_MAX!!", line, file);
   mstrct_warn((card > UINT16_MAX), MSTRCT_ALLOC_FAIL, "multi-dim name cardinality CAN'T exceed UINT16_MAX!", line, file);
   mstrct_warn((card == 0), MSTRCT_BAD_SYNTAX, "mstrct.h doesn't support multidim VLAs in clang (try gcc)!!", line, file); 
+
+  if (mstrct_ptr == NULL) {
+  mstrct_ptr = (char *)1; mstrct_u64 = UINT64_MAX;
+  mstrct_error("allocation failed!!", MSTRCT_ALLOC_FAIL, __LINE__, __FILE__);
+  }
 
   mstrct_proto *name = (mstrct_proto *)oob - mstrct_u64;
   name->_d = off;

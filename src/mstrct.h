@@ -564,7 +564,7 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_PRAG_ON  _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 #define MSTRCT_PRAG_OFF _Pragma("GCC diagnostic pop")
 
-#define MSTRCT_LET(name, range, allo_size) if (mstrct_ptr != (char *)1 && mstrct_ptr != NULL) {   \
+#define MSTRCT_LET(name, range, allo_size) if (mstrct_ptr != (char *)1) {   \
   enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8; char a;  \
   MSTRCT_PRAG_ON if (card == 1) {name._s = enm;} MSTRCT_PRAG_OFF   \
   MSTRCT_DEF_META(enm, ((card == 1) ? 24 : 32));   \

@@ -93,14 +93,13 @@ MSTRCT_$4$, MSTRCT_ARG_COUNT(typ), MSTRCT_ARG_COUNT(name), MSTRCT_ARG_COUNT(size
 
 #define MSTRCT_$4$1010(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$1001(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
-//#define MSTRCT_$4$0110(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$0101(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
+#define MSTRCT_$4$0000(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 
 #define MSTRCT_$4$0011(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$1100(typ, name, size, addr) MSTRCT_$3$110(typ, name, size)
 #define MSTRCT_$4$1011(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$1101(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
-#define MSTRCT_$4$0000(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 
 #ifdef __clang__
   #define MSTRCT_X 1

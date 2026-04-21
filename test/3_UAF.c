@@ -26,7 +26,7 @@ var[5], with checks: 10
 foo[5], w/o checks: 10
 foo[5], with checks: 10
 MSTRCT ERR: USE_AFTER_FREE; originated at line: 9, file: sample_1.c; err status: 1711
-Segmentation fault         (core dumped)
+foo[5], with checks: (garbage with settings MSTRCT_L = 0)
 */
 
 

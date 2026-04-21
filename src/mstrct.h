@@ -93,13 +93,11 @@ MSTRCT_$4$, MSTRCT_ARG_COUNT(typ), MSTRCT_ARG_COUNT(name), MSTRCT_ARG_COUNT(size
 
 #define MSTRCT_$4$1010(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$1001(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
-#define MSTRCT_$4$0110(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
+//#define MSTRCT_$4$0110(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$0101(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 
 #define MSTRCT_$4$0011(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$1100(typ, name, size, addr) MSTRCT_$3$110(typ, name, size)
-
-#define MSTRCT_$4$1110(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$1011(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$1101(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
 #define MSTRCT_$4$0000(typ, name, size, addr) ({MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);})
@@ -520,34 +518,66 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_$3$110(typ, name, empty) MSTRCT_T(typ, sizeof(struct {char name;}), 0, __LINE__) name
 
 
-#define MSTRCT_$4$1111(typ, name, range, addr) MSTRCT_CAT2(MSTRCT_SET_, MSTRCT_C)(typ, name, range, addr)
+// assign a new safe name to a memory addr
+#define MSTRCT_$4$1111(typ, name, range, addr) MSTRCT_CAT2(MSTRCT_ASS_, MSTRCT_C)(typ, name, range, addr)
 
-#define MSTRCT_SET_0(typ, name, range, addr) \
+#define MSTRCT_ASS_0(typ, name, range, addr) \
   mstrct_ptr = (char *)(addr);  \
   MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
   MSTRCT_LET(name, range, sizeof(addr))
 
-#define MSTRCT_SET_1(typ, name, range, addr)  \
+#define MSTRCT_ASS_1(typ, name, range, addr)  \
   mstrct_ptr = (char *)(addr);  \
   MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
   __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_,__LINE__) = 0; \
   MSTRCT_LET(name, range, sizeof(addr))
 
+// re-assign to new allocation
+#define MSTRCT_$4$0111(empty, name, range, addr) MSTRCT_CAT2(MSTRCT_REASS_, MSTRCT_C)(empty, name, range, addr)
 
-#define MSTRCT_$4$0111(empty, name, range, addr) MSTRCT_CAT2(MSTRCT_RET_, MSTRCT_C)(empty, name, range, addr)
-
-#define MSTRCT_RET_0(empty, name, range, addr)  \
+#define MSTRCT_REASS_0(empty, name, range, addr)  \
   mstrct_ptr = (char *)(addr);   \
   if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
     {MSTRCT_SET((uint64_t)0, name._d, 0);} \
   MSTRCT_LET(name, range, sizeof(addr))
 
-#define MSTRCT_RET_1(empty, name, range, addr)  \
+#define MSTRCT_REASS_1(empty, name, range, addr)  \
   mstrct_ptr = (char *)(addr);   \
   if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
     {MSTRCT_SET((uint64_t)0, name._d, 0);} \
   __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
   MSTRCT_LET(name, range, sizeof(addr))
+
+// create name, VLA
+#define MSTRCT_$4$1110(typ, name, size, empty) MSTRCT_CAT2(MSTRCT_VLA_, MSTRCT_C)(typ, name, range, empty)
+
+#define MSTRCT_VLA_0(typ, name, range, empty)   \
+  mstrct_ptr = (char *)2; typ MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
+  mstrct_ptr = (char *)MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
+  MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
+  MSTRCT_LET(name, range, 0)
+
+#define MSTRCT_VLA_1(typ, name, range, empty)   \
+  mstrct_ptr = (char *)2; typ MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
+  mstrct_ptr = (char *)MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
+  MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
+  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
+  MSTRCT_LET(name, range, 0)
+
+// re-assign to a new VLA
+#define MSTRCT_$4$0110(empty1, name, size, empty2) MSTRCT_CAT2(MSTRCT_VLA_RE_, MSTRCT_C)(empty1, name, range, empty2)
+
+#define MSTRCT_VLA_RE_0(empty1, name, range, empty2)   \
+  mstrct_ptr = (char *)2; typ MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
+  mstrct_ptr = (char *)MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
+  MSTRCT_LET(name, range, 0)
+
+#define MSTRCT_VLA_RE_1(empty1, name, range, empty2)   \
+  mstrct_ptr = (char *)2; typ MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
+  mstrct_ptr = (char *)MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
+  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
+  MSTRCT_LET(name, range, 0)
+
 
 #define MSTRCT_CLEANUP(line, off) MSTRCT_CAT2(MSTRCT_CLEANUP_, MSTRCT_C)(line, off)
 #define MSTRCT_CLEANUP_0(line, off) (void)0
@@ -561,7 +591,7 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
   enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8;  \
   MSTRCT_PRAG_ON if (card == 1) {name._s = enm;} MSTRCT_PRAG_OFF   \
   MSTRCT_DEF_META(enm, ((card == 1) ? 24 : 32));   \
-  if (allo_size != sizeof(void *)) {MSTRCT_CLEANUP(__LINE__, off);} /* all stack arrs except alloca must have cleanup */ \
+  if (MSTRCT_C && allo_size != sizeof(void *)) {MSTRCT_CLEANUP(__LINE__, off);} /* stack arrs except alloca have cleanup */ \
   mstrct_u64 = MSTRCT_BASE(name, card); uint64_t size = (sizeof(*(name.typ[0])) * card * range); \
   mstrct_checksum(size, allo_size, __LINE__, __FILE__); mstrct_let((char *)&(name), size, off, __LINE__, __FILE__, card, enm);  \
 }
@@ -594,13 +624,14 @@ static void mstrct_factory(mstrct_proto * name, uint64_t card) {
 
 __attribute__((always_inline))
 inline static void mstrct_checksum(uint64_t size, uint64_t allosize, int line, const char *file) {
-  if ((ssize_t)__builtin_dynamic_object_size(mstrct_ptr, 0) > 0) {
-    mstrct_error("checksum: (type_size) x (name_cardinality) x (range) = total_syze_in_bytes, SEEMS OFF!",
-    MSTRCT_BAD_CHECKSUM, line, file);
-  } else if (allosize != sizeof(void *)) {
+  ssize_t obj_size = (ssize_t)__builtin_dynamic_object_size(mstrct_ptr, 0);
+  if (obj_size > 0) {
+    mstrct_warn(((uint64_t)obj_size != size), MSTRCT_BAD_CHECKSUM,
+    "checksum: (type_size) x (name_cardinality) x (range) = total_syze_in_bytes, SEEMS OFF!", line, file);
+  } else if (allosize > sizeof(void *)) {
     mstrct_warn((allosize != size), MSTRCT_BAD_CHECKSUM,
     "checksum: (type_size) x (name_cardinality) x (range) = total_syze_in_bytes, SEEMS OFF!", line, file);
-  } else if (allosize < sizeof(void *)) {
+  } else if (allosize > 0) {
     mstrct_warn((allosize < sizeof(void *)), MSTRCT_ALLOC_FAIL,
     "allocation failed because of invalid addr input (must be a 64-bit valid address)!", line, file);
   }

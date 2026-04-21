@@ -538,13 +538,13 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_REASS_0(empty, name, range, addr)  \
   mstrct_ptr = (char *)(addr);   \
   if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
-    {MSTRCT_SET((uint64_t)0, name._d, 0);} \
+    {MSTRCT_SET((uint64_t)0, name._d, 8);} \
   MSTRCT_LET(name, range, sizeof(addr))
 
 #define MSTRCT_REASS_1(empty, name, range, addr)  \
   mstrct_ptr = (char *)(addr);   \
   if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
-    {MSTRCT_SET((uint64_t)0, name._d, 0);} \
+    {MSTRCT_SET((uint64_t)0, name._d, 8);} \
   __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
   MSTRCT_LET(name, range, sizeof(addr))
 

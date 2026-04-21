@@ -348,14 +348,7 @@ static void mstrct_leak(int status, void *ptr) {
 
 __attribute__((always_inline))
 static inline void mstrct_cleanup(uint16_t *ptr) {
-  if (*ptr != UINT16_MAX) {
-    uintptr_t rsp; __asm__("mov %%rsp, %0" : "=r"(rsp));
-    if ((int64_t)((char *)rsp - (char *)ptr) < 0) { // only cater to stack vars
-      MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 0); // scope end: make metadata NULL
-      MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 8);
-      MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 16);
-    }
-  }
+   if (*ptr != 0) {MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 8);}
 }
 
 __attribute__((unused))
@@ -387,10 +380,10 @@ extern int munmap(void *addr, size_t len); // fwd declare munmap
 __attribute__((unused))
 static uint64_t mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
   mstrct_proto name = *arg; int temp = 0;
-  void *addr = (void *)mstrct_get20(name._d); 
-  if (addr != NULL) {
+  uint64_t size = mstrct_get21(name._d); 
+  if (size != 0) {
     if ((munmap)((void *)mstrct_get22(name._d), mstrct_get21(name._d)) == 0) {
-      MSTRCT_SET((uint64_t)0, name._d, 0); MSTRCT_SET((uint64_t)0, name._d, 8); MSTRCT_SET((uint64_t)0, name._d, 16); return temp;
+      MSTRCT_SET((uint64_t)0, name._d, 8); return temp;
     } else {
        temp = 1; mstrct_error("de-allocation failed!!", MSTRCT_DE_ALLOC_FAIL, line, file); return temp;
     }
@@ -456,8 +449,8 @@ static inline uint64_t mstrct_addr(uint64_t con, const uint64_t id_s, const uint
   }
 }
 
-static void mstrct_bounds_error(uint64_t ptr, int line, const char *file) {
-  if (ptr == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line, file);}
+static void mstrct_bounds_error(uint64_t size, int line, const char *file) {
+  if (size == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line, file);}
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line, file);};
 }
 
@@ -469,7 +462,7 @@ static inline int mstrct_check_dyna_cal(uint64_t addr, uint64_t size, uint64_t b
 __attribute__((always_inline)) static inline uint64_t
 mstrct_check_dyna(uint64_t addr, uint64_t size, uint64_t base, uint16_t id_d, int line, const char *file) {
   if (mstrct_check_dyna_cal(addr, size, base)) {return addr;}
-  else {mstrct_bounds_error(mstrct_get20(id_d), line, file); if (MSTRCT_L == 0) return (base + size);}
+  else {mstrct_bounds_error(mstrct_get21(id_d), line, file); if (MSTRCT_L == 0) return (base);}
 }
 
 __attribute__((always_inline)) static inline uint64_t
@@ -485,7 +478,7 @@ __attribute__((always_inline))
 static inline uint64_t mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, uint16_t _d, int line, const char *file) {
   if (n < N) {return addr;}
   else {
-    addr = (mstrct_get21(_d) + mstrct_get22(_d)); // default
+    addr = mstrct_get22(_d); // default
     mstrct_warn((n >= N), MSTRCT_BOUNDS_CHECK_FAIL, "bounds check failed!!", line, file);
     if (MSTRCT_L == 0) return addr;
   }
@@ -494,7 +487,7 @@ static inline uint64_t mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, 
 __attribute__((always_inline)) static inline uint64_t
 mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uint64_t addr) {
   if (mstrct_get23(_d) != type_line) {
-    addr = (mstrct_get21(_d) + mstrct_get22(_d)); // default
+    addr = mstrct_get22(_d); // default
     mstrct_error("multi-dim-arr index failed bounds check!!", MSTRCT_MULTI_DIM_BOUNDS_FAIL, line, file);
     if (MSTRCT_L == 0) return addr;
   } else return addr;
@@ -521,8 +514,8 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 
 #define MSTRCT_GET__1(name, index) (*((typeof(name.typ[0])) (  \
   mstrct_check(sizeof(name.ran[0]), sizeof(name.car[0]), index, __LINE__, __FILE__, sizeof(name.lin[0]), name._s, name._d, \
-  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(sizeof(name.con[0]), name._s, name._d, (sizeof(name.car[0])))) + index + 1)) \
-) - 1))
+  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(sizeof(name.con[0]), name._s, name._d, (sizeof(name.car[0])))) + index)) \
+)))
 
 #define MSTRCT_$3$110(typ, name, empty) MSTRCT_T(typ, sizeof(struct {char name;}), 0, __LINE__) name
 
@@ -537,7 +530,7 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_SET_1(typ, name, range, addr)  \
   mstrct_ptr = (char *)(addr);  \
   MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
-  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_,__LINE__) = UINT16_MAX; \
+  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_,__LINE__) = 0; \
   MSTRCT_LET(name, range, sizeof(addr))
 
 
@@ -553,7 +546,7 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
   mstrct_ptr = (char *)(addr);   \
   if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
     {MSTRCT_SET((uint64_t)0, name._d, 0);} \
-  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = UINT16_MAX;   \
+  __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
   MSTRCT_LET(name, range, sizeof(addr))
 
 #define MSTRCT_CLEANUP(line, off) MSTRCT_CAT2(MSTRCT_CLEANUP_, MSTRCT_C)(line, off)
@@ -565,10 +558,10 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_PRAG_OFF _Pragma("GCC diagnostic pop")
 
 #define MSTRCT_LET(name, range, allo_size) if (mstrct_ptr != (char *)1) {   \
-  enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8; char a;  \
+  enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8;  \
   MSTRCT_PRAG_ON if (card == 1) {name._s = enm;} MSTRCT_PRAG_OFF   \
   MSTRCT_DEF_META(enm, ((card == 1) ? 24 : 32));   \
-  if (((int64_t)(&a - mstrct_ptr)) < 0) {MSTRCT_CLEANUP(__LINE__, off);} \
+  if (allo_size != sizeof(void *)) {MSTRCT_CLEANUP(__LINE__, off);} /* all stack arrs except alloca must have cleanup */ \
   mstrct_u64 = MSTRCT_BASE(name, card); uint64_t size = (sizeof(*(name.typ[0])) * card * range); \
   mstrct_checksum(size, allo_size, __LINE__, __FILE__); mstrct_let((char *)&(name), size, off, __LINE__, __FILE__, card, enm);  \
 }

@@ -523,13 +523,13 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_ASS_0(typ, name, range, addr) \
   mstrct_ptr = (char *)(addr);  \
   MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
-  MSTRCT_LET(name, range, sizeof(addr))
+  MSTRCT_LET(name, range, sizeof(addr), (!__builtin_types_compatible_p(typeof(&(addr)[0]), typeof(addr))))
 
 #define MSTRCT_ASS_1(typ, name, range, addr)  \
   mstrct_ptr = (char *)(addr);  \
   MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
   __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_,__LINE__) = 0; \
-  MSTRCT_LET(name, range, sizeof(addr))
+  MSTRCT_LET(name, range, sizeof(addr), (!__builtin_types_compatible_p(typeof(&(addr)[0]), typeof(addr))))
 
 // re-assign to new allocation
 #define MSTRCT_$4$0111(empty, name, range, addr) MSTRCT_CAT2(MSTRCT_REASS_, MSTRCT_C)(empty, name, range, addr)
@@ -538,14 +538,14 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
   mstrct_ptr = (char *)(addr);   \
   if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
     {MSTRCT_SET((uint64_t)0, name._d, 8);} \
-  MSTRCT_LET(name, range, sizeof(addr))
+  MSTRCT_LET(name, range, sizeof(addr), (!__builtin_types_compatible_p(typeof(&(addr)[0]), typeof(addr))))
 
 #define MSTRCT_REASS_1(empty, name, range, addr)  \
   mstrct_ptr = (char *)(addr);   \
   if ((__builtin_strstr(#addr, "realloc") != NULL) || (__builtin_strstr(#addr, "mremap") != NULL)) \
     {MSTRCT_SET((uint64_t)0, name._d, 8);} \
   __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
-  MSTRCT_LET(name, range, sizeof(addr))
+  MSTRCT_LET(name, range, sizeof(addr), (!__builtin_types_compatible_p(typeof(&(addr)[0]), typeof(addr))))
 
 // create name, VLA
 #define MSTRCT_$4$1110(typ, name, size, empty) MSTRCT_CAT2(MSTRCT_VLA_, MSTRCT_C)(typ, name, range, empty)
@@ -554,14 +554,14 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
   mstrct_ptr = (char *)2; typ MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
   mstrct_ptr = (char *)MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
   MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
-  MSTRCT_LET(name, range, 0)
+  MSTRCT_LET(name, range, 0, 1)
 
 #define MSTRCT_VLA_1(typ, name, range, empty)   \
   mstrct_ptr = (char *)2; typ MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
   mstrct_ptr = (char *)MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
   MSTRCT_T(typ, sizeof(struct {char name;}), range, __LINE__) name = {0};  \
   __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
-  MSTRCT_LET(name, range, 0)
+  MSTRCT_LET(name, range, 0, 1)
 
 // re-assign to a new VLA
 #define MSTRCT_$4$0110(empty1, name, size, empty2) MSTRCT_CAT2(MSTRCT_VLA_RE_, MSTRCT_C)(empty1, name, range, empty2)
@@ -569,13 +569,13 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_VLA_RE_0(empty1, name, range, empty2)   \
   mstrct_ptr = (char *)2; typ MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
   mstrct_ptr = (char *)MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
-  MSTRCT_LET(name, range, 0)
+  MSTRCT_LET(name, range, 0, 1)
 
 #define MSTRCT_VLA_RE_1(empty1, name, range, empty2)   \
   mstrct_ptr = (char *)2; typ MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
   mstrct_ptr = (char *)MSTRCT_CAT2(mstrct_vla_, __LINE__);  \
   __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, __LINE__) = 0;   \
-  MSTRCT_LET(name, range, 0)
+  MSTRCT_LET(name, range, 0, 1)
 
 
 #define MSTRCT_CLEANUP(line, off) MSTRCT_CAT2(MSTRCT_CLEANUP_, MSTRCT_C)(line, off)
@@ -586,11 +586,11 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
 #define MSTRCT_PRAG_ON  _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 #define MSTRCT_PRAG_OFF _Pragma("GCC diagnostic pop")
 
-#define MSTRCT_LET(name, range, allo_size) if (mstrct_ptr != (char *)1) {   \
+#define MSTRCT_LET(name, range, allo_size, is_array) if (mstrct_ptr != (char *)1) {   \
   enum {enm = __COUNTER__, card = sizeof(name.car[0])}; uint16_t off = (MSTRCT_OFF(enm))/8;  \
   MSTRCT_PRAG_ON if (card == 1) {name._s = enm;} MSTRCT_PRAG_OFF   \
   MSTRCT_DEF_META(enm, ((card == 1) ? 24 : 32));   \
-  if (MSTRCT_C && allo_size != sizeof(void *)) {MSTRCT_CLEANUP(__LINE__, off);} /* stack arrs except alloca have cleanup */ \
+  if (MSTRCT_C && is_array) {MSTRCT_CLEANUP(__LINE__, off);} /* stack arrs (note: alloca isn't array) have cleanup */ \
   mstrct_u64 = MSTRCT_BASE(name, card); uint64_t size = (sizeof(*(name.typ[0])) * card * range); \
   mstrct_checksum(size, allo_size, __LINE__, __FILE__); mstrct_let((char *)&(name), size, off, __LINE__, __FILE__, card, enm);  \
 }

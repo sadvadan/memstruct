@@ -54,7 +54,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - **Raw access (w/o checks) of data:** through meta data type `$(foo)` (see the metadata API reference).
 
-- **memstruct declaration:** declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
+- **memstruct declaration:** declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign. For binding to VLA memory, see API reference.
     ```
     // on-heap arr of 10 longs
     $(long int *, foo, 10, malloc(80));
@@ -84,12 +84,26 @@ This document explains how to configure and use the memstruct.h library.
 
 - `$(...)` **macro:**
 ```
+    // metadata
     $(foo): foo = safe ptr name
+
+    // data
     $(foo, index): foo = safe ptr name, index = a numeric type
 
-    $(type, foo, ): type = ptr typ, foo = a new name, or a struct's field name
+    // safe ptr declaration
+    $(type, foo, ): type = ptr typ, foo = a new name (or one masking another), or a struct's field name
+
+    // safe ptr declaration and definition
     $(type, foo, range, addr): type = ptr type, foo = new name (or one masking another), range = a numeric type, addr = 64 bit value
-    $( , foo, range, addr): similar to above
+    
+    // safe ptr declaration and VLA definition
+    $(type, foo, range, ): type = ptr type, foo = new name (or one masking another), range = a numeric type
+
+    // safe ptr re-assignment
+    $( , foo, range, addr): foo = a safe ptr name , range = a numeric type, addr = 64 bit value
+
+    // safe ptr VLA re-assignment
+    $( , foo, range, ): foo = a safe ptr name , range = a numeric type
 
 ```
 

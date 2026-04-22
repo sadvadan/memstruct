@@ -152,8 +152,8 @@ static __thread char * mstrct_ptr  = (char *)1;
 
 static const char * mstrct_abc;
 
-__attribute__((constructor)) 
-static void mstrct_shadow() {
+__attribute__((constructor)) static void
+mstrct_shadow() {
   char* _abc;
   __asm__ __volatile__ (
     ".pushsection .bss.mstrct, \"aw\", @nobits \n\t"
@@ -228,53 +228,53 @@ __asm__ (  \
 #define MSTRCT_OFF(counter) ({uint64_t _diff; __asm__ (  \
   "movq $(.Lmstrct_label_%c[suffix] - .Lmstrct_asm), %0\n\t" : "=r" (_diff) : [suffix] "i" (counter)); _diff;})
 
-__attribute__((const, always_inline))
-static inline uint64_t mstrct_meta_addr1(int counter) {uint64_t _addr;
+__attribute__((const, always_inline)) static inline uint64_t
+mstrct_meta_addr1(int counter) {uint64_t _addr;
   __asm__ ("leaq .Lmstrct_label_%c[suffix](%%rip), %0" : "=r" (_addr) : [suffix] "i" (counter)); return _addr;
 }
 
-__attribute__((const))
-static uint64_t mstrct_meta_addr2(uint64_t runtime_off) {uint64_t _addr;
+__attribute__((const)) static uint64_t
+mstrct_meta_addr2(uint64_t runtime_off) {uint64_t _addr;
   __asm__ ("leaq (%2,%1,8), %0\n\t" : "=r" (_addr) : "r" (runtime_off), "r" (mstrct_abc)); return _addr;
 }
 
-__attribute__((pure, always_inline))
-static inline uint64_t mstrct_get10(int counter) {uint64_t _val;
+__attribute__((pure, always_inline)) static inline uint64_t
+mstrct_get10(int counter) {uint64_t _val;
   __asm__ ("movq .Lmstrct_label_%c[suffix](%%rip), %0" : "=r" (_val) : [suffix] "i" (counter)); return _val;
 }
 
-__attribute__((const, always_inline))
-static inline uint64_t mstrct_get11(int counter) {uint64_t _val;
+__attribute__((const, always_inline)) static inline uint64_t
+mstrct_get11(int counter) {uint64_t _val;
   __asm__ ("movq .Lmstrct_label_%c[suffix]+8(%%rip), %0" : "=r" (_val) : [suffix] "i" (counter)); return _val;
 }
 
-__attribute__((const, always_inline))
-static inline uint64_t mstrct_get12(int counter) {uint64_t _val;
+__attribute__((const, always_inline)) static inline uint64_t
+mstrct_get12(int counter) {uint64_t _val;
   __asm__ ("movq .Lmstrct_label_%c[suffix]+16(%%rip), %0" : "=r" (_val) : [suffix] "i" (counter)); return _val;
 }
 
-__attribute__((pure))
-static uint64_t mstrct_get20(uint64_t runtime_off) {uint64_t _val;
+__attribute__((pure)) static uint64_t
+mstrct_get20(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq (%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const))
-static uint64_t mstrct_get21(uint64_t runtime_off) {uint64_t _val;
+__attribute__((const)) static uint64_t
+mstrct_get21(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 8(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const))
-static uint64_t mstrct_get22(uint64_t runtime_off) {uint64_t _val;
+__attribute__((const)) static uint64_t
+mstrct_get22(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 16(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const))
-static uint64_t mstrct_get23(uint64_t runtime_off) {uint64_t _val;
+__attribute__((const)) static uint64_t
+mstrct_get23(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 24(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const))
-static uint64_t mstrct_get30(uint64_t runtime_off, uint64_t f_off) {
+__attribute__((const)) static uint64_t
+mstrct_get30(uint64_t runtime_off, uint64_t f_off) {
   __asm__ ("addq (%2,%1,8), %0" : "+r" (f_off) : "r" (runtime_off), "r" (mstrct_abc) : "cc"); return f_off;
 }
 
@@ -289,7 +289,8 @@ static uint64_t mstrct_get30(uint64_t runtime_off, uint64_t f_off) {
 // force return
 #define MSTRCT_RET() __asm__ __volatile__ ("movl $0, %%eax\n\t" "leave\n\t" "ret" : : : "eax")
 
-static void mstrct_error(const char *ops, const int err_no, const int line, const char *file) {
+static void
+mstrct_error(const char *ops, const int err_no, const int line, const char *file) {
   printf("MSTRCT ERR: %s; originated at line: %d, file: %s; err status: %d\n", ops, line, file, err_no);
   if (MSTRCT_L == 2) {exit(err_no);} else if (MSTRCT_L == 1) {MSTRCT_RET();}
 }
@@ -325,8 +326,8 @@ static mstrct_func mstrct_err_tab[] = { // err vtable
   MSTRCT__ALLOC_FAIL
 };
 
-__attribute__((always_inline))
-static inline void mstrct_warn(int err_cond, int err_code, const char *err_msg, int line, const char *file) {
+static inline void 
+mstrct_warn(int err_cond, int err_code, const char *err_msg, int line, const char *file) {
   switch (__builtin_constant_p(err_cond)) {
       case 0: if (err_cond) {mstrct_error(err_msg, err_code, line, file);}; return;
       case 1: mstrct_err_tab[err_cond * (err_code - MSTRCT_NULL)](); return;
@@ -335,7 +336,8 @@ static inline void mstrct_warn(int err_cond, int err_code, const char *err_msg, 
 }
 
 
-static void mstrct_leak(int status, void *ptr) {
+static void
+mstrct_leak(int status, void *ptr) {
   if (mstrct_get20((uint16_t)(uint64_t)ptr) != 0) {
     const char *file = (const char *)((uint64_t)mstrct_string + (((uint64_t)ptr)>> 32));
     printf("MSTRCT ERR: MEMORY_LEAK; for memory originated at line: %d, file: %s; exit status: %d\n",
@@ -343,13 +345,13 @@ static void mstrct_leak(int status, void *ptr) {
   }
 }
 
-__attribute__((always_inline))
-static inline void mstrct_cleanup(uint16_t *ptr) {
+__attribute__((always_inline)) static inline void
+mstrct_cleanup(uint16_t *ptr) {
    if (*ptr != 0) {MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 8);}
 }
 
-__attribute__((unused))
-static void mstrct_user_free(mstrct_proto *arg, int flag) {
+__attribute__((unused)) static void
+mstrct_user_free(mstrct_proto *arg, int flag) {
   switch (flag) {
     case 0: {
       mstrct_proto name = *arg;
@@ -374,8 +376,8 @@ static void mstrct_user_free(mstrct_proto *arg, int flag) {
 
 extern int munmap(void *addr, size_t len); // fwd declare munmap
 
-__attribute__((unused))
-static uint64_t mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
+__attribute__((unused)) static uint64_t
+mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
   mstrct_proto name = *arg; int temp = 0;
   uint64_t size = mstrct_get21(name._d); 
   if (size != 0) {
@@ -387,8 +389,8 @@ static uint64_t mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
   } else return temp;
 }
 
-__attribute__((unused))
-static uint64_t mstrct_munmap_2(void **arg, uint64_t size, int line, const char *file) {
+__attribute__((unused)) static uint64_t
+mstrct_munmap_2(void **arg, uint64_t size, int line, const char *file) {
   int temp = 0; void *addr = *(void **)(arg);
   if (addr != NULL) {
     if ((munmap)(addr, size) == 0) {addr = NULL; return temp;}
@@ -405,8 +407,8 @@ static uint64_t mstrct_munmap_2(void **arg, uint64_t size, int line, const char 
 #define MSTRCT_MUNMAP_4(arg1, arg2, arg3, arg4) MSTRCT_ASSERT(TOO_MANY_ARGS)
 #define MSTRCT_MUNMAP_0() MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
-__attribute__((always_inline))
-static inline uint64_t mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f_size, int line, const char *file) {
+static inline uint64_t
+mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f_size, int line, const char *file) {
   switch (__builtin_constant_p(id_s)) {
     case 1: return mstrct_meta_addr1(id_s);
     case 0:
@@ -424,8 +426,8 @@ static inline uint64_t mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f
   }
 }
 
-__attribute__((always_inline))
-static inline uint64_t mstrct_addr(uint64_t con, const uint64_t id_s, const uint64_t id_d, const uint64_t f_size) {
+static inline uint64_t
+mstrct_addr(uint64_t con, const uint64_t id_s, const uint64_t id_d, const uint64_t f_size) {
   switch (__builtin_constant_p(id_s)) {
     case 1:
       switch (con) {
@@ -446,13 +448,14 @@ static inline uint64_t mstrct_addr(uint64_t con, const uint64_t id_s, const uint
   }
 }
 
-static void mstrct_bounds_error(uint64_t size, int line, const char *file) {
+static void
+mstrct_bounds_error(uint64_t size, int line, const char *file) {
   if (size == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line, file);}
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line, file);};
 }
 
-__attribute__((const, always_inline))  
-static inline int mstrct_check_dyna_cal(uint64_t addr, uint64_t size, uint64_t base) {
+__attribute__((const)) static inline int
+mstrct_check_dyna_cal(uint64_t addr, uint64_t size, uint64_t base) {
   return __builtin_expect(((uint64_t)(addr - base) <= size), 1);
 }
 
@@ -462,7 +465,7 @@ mstrct_check_dyna(uint64_t addr, uint64_t size, uint64_t base, uint16_t id_d, in
   else {mstrct_bounds_error(mstrct_get21(id_d), line, file); if (MSTRCT_L == 0) return (base);}
 }
 
-__attribute__((always_inline)) static inline uint64_t
+static inline uint64_t
 mstrct_dyna(uint16_t id_s, uint16_t id_d, uint64_t addr, int line, const char *file) {
   switch (__builtin_constant_p(id_s)) {
       case 0: return mstrct_check_dyna(addr, mstrct_get21(id_d), mstrct_get22(id_d), id_d, line, file);
@@ -471,8 +474,8 @@ mstrct_dyna(uint16_t id_s, uint16_t id_d, uint64_t addr, int line, const char *f
   }
 }
 
-__attribute__((always_inline))
-static inline uint64_t mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, uint16_t _d, int line, const char *file) {
+static inline uint64_t
+mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, uint16_t _d, int line, const char *file) {
   if (n < N) {return addr;}
   else {
     addr = mstrct_get22(_d); // default
@@ -481,7 +484,7 @@ static inline uint64_t mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, 
   }
 }
 
-__attribute__((always_inline)) static inline uint64_t
+static inline uint64_t
 mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uint64_t addr) {
   if (mstrct_get23(_d) != type_line) {
     addr = mstrct_get22(_d); // default
@@ -490,8 +493,10 @@ mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uin
   } else return addr;
 }
 
-__attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type_range, uint64_t f_range, uint64_t index,
-  int line, const char *file, uint64_t type_line, uint16_t _s, uint16_t _d, uint64_t addr_in) {uint64_t addr = addr_in;
+static inline uint64_t
+mstrct_check(uint64_t type_range, uint64_t f_range, uint64_t index, int line, const char *file, uint64_t type_line,
+  uint16_t _s, uint16_t _d, uint64_t addr_in) {
+  uint64_t addr = addr_in;
   if (f_range > 1) {addr = mstrct_fact_oob(type_line, _d, line, file, addr);}
   if (type_range > 0) {addr = mstrct_check_stat(index, type_range, addr, _d, line, file);}
   else {addr = mstrct_dyna(_s, _d, addr, line, file);};
@@ -595,7 +600,8 @@ __attribute__((always_inline)) static inline uint64_t mstrct_check(uint64_t type
   mstrct_checksum(size, allo_size, __LINE__, __FILE__); mstrct_let((char *)&(name), size, off, __LINE__, __FILE__, card, enm);  \
 }
 
-static void mstrct_leak_1(mstrct_proto * name, int line, const char *file) {
+static void 
+mstrct_leak_1(mstrct_proto * name, int line, const char *file) {
   uintptr_t rsp; __asm__("mov %%rsp, %0" : "=r"(rsp));
   if ((int64_t)((char *)rsp - mstrct_ptr) > 0) /* not on stack */ {
     mstrct_proto temp; temp._d = name->_d; temp._s = (uint16_t)line;
@@ -608,7 +614,8 @@ static void mstrct_leak_1(mstrct_proto * name, int line, const char *file) {
 __attribute__((unused)) static void mstrct_leak_0(__attribute__((unused)) mstrct_proto * name,
 __attribute__((unused)) int line, __attribute__((unused)) const char *file) {(void)0;}
 
-static void mstrct_factory(mstrct_proto * name, uint64_t card) {
+static void
+mstrct_factory(mstrct_proto * name, uint64_t card) {
   uint16_t offset = name->_d;
   for (uint64_t i = 0; i < (card); i++) {
     (name + i)->_s = i; // carries local_offset
@@ -621,8 +628,8 @@ static void mstrct_factory(mstrct_proto * name, uint64_t card) {
     ((uint64_t)((char *)(&(dummy->name)) - (char *)dummy));  \
 })
 
-__attribute__((always_inline))
-inline static void mstrct_checksum(uint64_t size, uint64_t allosize, int line, const char *file) {
+inline static void 
+mstrct_checksum(uint64_t size, uint64_t allosize, int line, const char *file) {
   ssize_t obj_size = (ssize_t)__builtin_dynamic_object_size(mstrct_ptr, 0);
   if (obj_size > 0) {
     mstrct_warn(((uint64_t)obj_size != size), MSTRCT_BAD_CHECKSUM,
@@ -636,9 +643,8 @@ inline static void mstrct_checksum(uint64_t size, uint64_t allosize, int line, c
   }
 }
 
-static void mstrct_let( // helper func
-  char *oob, uint64_t size, uint16_t off, int line, const char *file, uint64_t card, int enm) {
-
+static void 
+mstrct_let(char *oob, uint64_t size, uint16_t off, int line, const char *file, uint64_t card, int enm) {
   mstrct_warn((enm > UINT16_MAX), MSTRCT_ALLOC_FAIL, "name cardinality __COUNT__ can't exceed UINT16_MAX!!", line, file);
   mstrct_warn((card > UINT16_MAX), MSTRCT_ALLOC_FAIL, "multi-dim name cardinality CAN'T exceed UINT16_MAX!", line, file);
   mstrct_warn((card == 0), MSTRCT_BAD_SYNTAX, "mstrct.h doesn't support multidim VLAs in clang (try gcc)!!", line, file); 

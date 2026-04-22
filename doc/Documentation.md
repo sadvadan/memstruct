@@ -54,19 +54,19 @@ This document explains how to configure and use the memstruct.h library.
 
 - **Raw access (w/o checks) of data:** through meta data type `$(foo)` (see the metadata API reference).
 
-- **memstruct declaration:** declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign. For binding to VLA memory, see API reference.
+- **memstruct declaration:** declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
     ```
     // on-heap arr of 10 longs
     $(long int *, foo, 10, malloc(80));
 
     // on-stack multi-dim arr of range 10
-    $(int * const, bar[2][3], 10, (int [60]){0});
+    $(int * const, bar[2][3], 10, (int [60]){0}); // OR:  $(int * const, bar[2][3], 10, ) -- using plain array
 
     // declare safe ptr w/o defining; could be inside struct type declaration
     $(float *, cux, );
 
     // re-assign memory `$(,name, range, addr)`:
-    $(, var, 16, (int [16]){0});
+    $(, var, 16, (int [16]){0}); // OR:  $( , var, 16, ) -- using plain array
     ```
     Here, the input fields hold the following relationship:
     ```
@@ -96,13 +96,13 @@ This document explains how to configure and use the memstruct.h library.
     // safe ptr declaration and definition
     $(type, foo, range, addr): type = ptr type, foo = new name (or one masking another), range = a numeric type, addr = 64 bit value
     
-    // safe ptr declaration and definition as VLA
+    // safe ptr declaration and definition as VLA or fixed size array
     $(type, foo, range, ): type = ptr type, foo = new name (or one masking another), range = a numeric type
 
     // safe ptr re-assignment
     $( , foo, range, addr): foo = a safe ptr name , range = a numeric type, addr = 64 bit value
 
-    // safe ptr re-assignment as VLA
+    // safe ptr re-assignment as VLA or fixed size array
     $( , foo, range, ): foo = a safe ptr name , range = a numeric type
 
 ```

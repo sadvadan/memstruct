@@ -233,7 +233,7 @@ mstrct_meta_addr1(int counter) {uint64_t _addr;
   __asm__ ("leaq .Lmstrct_label_%c[suffix](%%rip), %0" : "=r" (_addr) : [suffix] "i" (counter)); return _addr;
 }
 
-__attribute__((const)) static inline uint64_t
+__attribute__((const, hot)) static inline uint64_t
 mstrct_meta_addr2(uint64_t runtime_off) {uint64_t _addr;
   __asm__ ("leaq (%2,%1,8), %0\n\t" : "=r" (_addr) : "r" (runtime_off), "r" (mstrct_abc)); return _addr;
 }
@@ -253,27 +253,27 @@ mstrct_get12(int counter) {uint64_t _val;
   __asm__ ("movq .Lmstrct_label_%c[suffix]+16(%%rip), %0" : "=r" (_val) : [suffix] "i" (counter)); return _val;
 }
 
-__attribute__((pure)) static inline uint64_t
+__attribute__((pure, hot)) static inline uint64_t
 mstrct_get20(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq (%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const)) static inline uint64_t
+__attribute__((const, hot)) static inline uint64_t
 mstrct_get21(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 8(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const)) static inline uint64_t
+__attribute__((const, hot)) static inline uint64_t
 mstrct_get22(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 16(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const)) static inline uint64_t
+__attribute__((const, hot)) static inline uint64_t
 mstrct_get23(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 24(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const)) static inline uint64_t
+__attribute__((const, hot)) static inline uint64_t
 mstrct_get30(uint64_t runtime_off, uint64_t f_off) {
   __asm__ ("addq (%2,%1,8), %0" : "+r" (f_off) : "r" (runtime_off), "r" (mstrct_abc) : "cc"); return f_off;
 }
@@ -289,7 +289,7 @@ mstrct_get30(uint64_t runtime_off, uint64_t f_off) {
 // force return
 #define MSTRCT_RET() __asm__ __volatile__ ("movl $0, %%eax\n\t" "leave\n\t" "ret" : : : "eax")
 
-static void
+__attribute__((cold)) static void
 mstrct_error(const char *ops, const int err_no, const int line, const char *file) {
   printf("MSTRCT ERR: %s; originated at line: %d, file: %s; err status: %d\n", ops, line, file, err_no);
   if (MSTRCT_L == 2) {exit(err_no);} else if (MSTRCT_L == 1) {MSTRCT_RET();}
@@ -326,7 +326,7 @@ static mstrct_func mstrct_err_tab[] = { // err vtable
   MSTRCT__ALLOC_FAIL
 };
 
-static inline void 
+__attribute__((hot)) static inline void 
 mstrct_warn(int err_cond, int err_code, const char *err_msg, int line, const char *file) {
   switch (__builtin_constant_p(err_cond)) {
       case 0: if (err_cond) {mstrct_error(err_msg, err_code, line, file);}; return;
@@ -374,7 +374,7 @@ mstrct_user_free(mstrct_proto *arg, int flag) {
 
 #define MSTRCT_FREE(arg) mstrct_user_free(((mstrct_proto *)&arg), (__builtin_classify_type(arg) == 5))
 
-extern int munmap(void *addr, size_t len); // fwd declare munmap
+extern int (munmap)(void *addr, size_t len); // fwd declare munmap
 
 static inline uint64_t
 mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
@@ -407,7 +407,7 @@ mstrct_munmap_2(void **arg, uint64_t size, int line, const char *file) {
 #define MSTRCT_MUNMAP_4(arg1, arg2, arg3, arg4) MSTRCT_ASSERT(TOO_MANY_ARGS)
 #define MSTRCT_MUNMAP_0() MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
-static inline uint64_t
+__attribute__((hot)) static inline uint64_t
 mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f_size, int line, const char *file) {
   switch (__builtin_constant_p(id_s)) {
     case 1: return mstrct_meta_addr1(id_s);
@@ -426,7 +426,7 @@ mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f_size, int line, const 
   }
 }
 
-static inline uint64_t
+__attribute__((hot)) static inline uint64_t
 mstrct_addr(uint64_t con, const uint64_t id_s, const uint64_t id_d, const uint64_t f_size) {
   switch (__builtin_constant_p(id_s)) {
     case 1:
@@ -448,24 +448,24 @@ mstrct_addr(uint64_t con, const uint64_t id_s, const uint64_t id_d, const uint64
   }
 }
 
-static inline void
+__attribute__((cold)) static inline void
 mstrct_bounds_error(uint64_t size, int line, const char *file) {
   if (size == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line, file);}
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line, file);};
 }
 
-__attribute__((const)) static inline int
+__attribute__((const, hot)) static inline int
 mstrct_check_dyna_cal(uint64_t addr, uint64_t size, uint64_t base) {
   return __builtin_expect(((uint64_t)(addr - base) <= size), 1);
 }
 
-__attribute__((always_inline)) static inline uint64_t
+__attribute__((hot)) static inline uint64_t
 mstrct_check_dyna(uint64_t addr, uint64_t size, uint64_t base, uint16_t id_d, int line, const char *file) {
   if (mstrct_check_dyna_cal(addr, size, base)) {return addr;}
   else {mstrct_bounds_error(mstrct_get21(id_d), line, file); if (MSTRCT_L == 0) return (base);}
 }
 
-static inline uint64_t
+__attribute__((hot)) static inline uint64_t
 mstrct_dyna(uint16_t id_s, uint16_t id_d, uint64_t addr, int line, const char *file) {
   switch (__builtin_constant_p(id_s)) {
       case 0: return mstrct_check_dyna(addr, mstrct_get21(id_d), mstrct_get22(id_d), id_d, line, file);
@@ -474,7 +474,7 @@ mstrct_dyna(uint16_t id_s, uint16_t id_d, uint64_t addr, int line, const char *f
   }
 }
 
-static inline uint64_t
+__attribute__((hot)) static inline uint64_t
 mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, uint16_t _d, int line, const char *file) {
   if (n < N) {return addr;}
   else {
@@ -484,7 +484,7 @@ mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, uint16_t _d, int line, 
   }
 }
 
-static inline uint64_t
+__attribute__((hot)) static inline uint64_t
 mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uint64_t addr) {
   if (mstrct_get23(_d) != type_line) {
     addr = mstrct_get22(_d); // default
@@ -493,8 +493,8 @@ mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uin
   } else return addr;
 }
 
-static inline uint64_t
-mstrct_check(uint64_t type_range, uint64_t f_range, uint64_t index, int line, const char *file, uint64_t type_line,
+__attribute__((hot)) static inline uint64_t
+ mstrct_check(uint64_t type_range, uint64_t f_range, uint64_t index, int line, const char *file, uint64_t type_line,
   uint16_t _s, uint16_t _d, uint64_t addr_in) {
   uint64_t addr = addr_in;
   if (f_range > 1) {addr = mstrct_fact_oob(type_line, _d, line, file, addr);}
@@ -611,7 +611,7 @@ mstrct_leak_1(mstrct_proto * name, int line, const char *file) {
   } 
 }
 
-__attribute__((unused)) static void mstrct_leak_0(__attribute__((unused)) mstrct_proto * name,
+static inline void mstrct_leak_0(__attribute__((unused)) mstrct_proto * name,
 __attribute__((unused)) int line, __attribute__((unused)) const char *file) {(void)0;}
 
 static inline void

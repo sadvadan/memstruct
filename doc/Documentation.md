@@ -60,13 +60,15 @@ This document explains how to configure and use the memstruct.h library.
     $(long int *, foo, 10, malloc(80));
 
     // on-stack multi-dim arr of range 10
-    $(int * const, bar[2][3], 10, (int [60]){0}); // OR:  $(int * const, bar[2][3], 10, ) -- using plain arr
+    $(int * const, bar[2][3], 10, (int [60]){0});
+    // OR:  $(int * const, bar[2][3], 10, ) -- using plain arr
 
     // declare safe ptr w/o defining; could be inside struct type declaration
     $(float *, cux, );
 
     // re-assign memory `$(,name, range, addr)`:
-    $(, var, 16, (int [16]){0}); // OR:  $( , var, 16, ) -- using plain arr
+    $(, var, 16, (int [16]){0}); 
+    // OR:  $( , var, 16, ) -- using plain arr
     ```
     Here, the input fields hold the following relationship:
     ```
@@ -91,13 +93,16 @@ This document explains how to configure and use the memstruct.h library.
     $(foo, index): foo = safe ptr name, index = a numeric type
 
     // safe ptr declaration
-    $(type, foo, ): type = ptr typ, foo = a new name (or one masking another), or a struct's field name
+    $(type, foo, ):
+    type = ptr typ, foo = a new name (or one masking another), or a struct's field name
 
     // safe ptr declaration and definition
-    $(type, foo, range, addr): type = ptr type, foo = new name (or masks another), range = a numeric type, addr = 64 bit val
+    $(type, foo, range, addr): 
+    type = ptr type, foo = new name (or masks another), range = a numeric type, addr = 64 bit val
     
     // safe ptr declaration and definition as VLA or fixed size array
-    $(type, foo, range, ): type = ptr type, foo = new name (or one masking another), range = a numeric type
+    $(type, foo, range, ): 
+    type = ptr type, foo = new name (or one masking another), range = a numeric type
 
     // safe ptr re-assignment
     $( , foo, range, addr): foo = a safe ptr name , range = a numeric type, addr = 64 bit value

@@ -233,7 +233,7 @@ mstrct_meta_addr1(int counter) {uint64_t _addr;
   __asm__ ("leaq .Lmstrct_label_%c[suffix](%%rip), %0" : "=r" (_addr) : [suffix] "i" (counter)); return _addr;
 }
 
-__attribute__((const)) static uint64_t
+__attribute__((const)) static inline uint64_t
 mstrct_meta_addr2(uint64_t runtime_off) {uint64_t _addr;
   __asm__ ("leaq (%2,%1,8), %0\n\t" : "=r" (_addr) : "r" (runtime_off), "r" (mstrct_abc)); return _addr;
 }
@@ -253,27 +253,27 @@ mstrct_get12(int counter) {uint64_t _val;
   __asm__ ("movq .Lmstrct_label_%c[suffix]+16(%%rip), %0" : "=r" (_val) : [suffix] "i" (counter)); return _val;
 }
 
-__attribute__((pure)) static uint64_t
+__attribute__((pure)) static inline uint64_t
 mstrct_get20(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq (%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const)) static uint64_t
+__attribute__((const)) static inline uint64_t
 mstrct_get21(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 8(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const)) static uint64_t
+__attribute__((const)) static inline uint64_t
 mstrct_get22(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 16(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const)) static uint64_t
+__attribute__((const)) static inline uint64_t
 mstrct_get23(uint64_t runtime_off) {uint64_t _val;
   __asm__ ("movq 24(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_abc)); return _val;
 }
 
-__attribute__((const)) static uint64_t
+__attribute__((const)) static inline uint64_t
 mstrct_get30(uint64_t runtime_off, uint64_t f_off) {
   __asm__ ("addq (%2,%1,8), %0" : "+r" (f_off) : "r" (runtime_off), "r" (mstrct_abc) : "cc"); return f_off;
 }
@@ -336,7 +336,7 @@ mstrct_warn(int err_cond, int err_code, const char *err_msg, int line, const cha
 }
 
 
-static void
+static inline void
 mstrct_leak(int status, void *ptr) {
   if (mstrct_get20((uint16_t)(uint64_t)ptr) != 0) {
     const char *file = (const char *)((uint64_t)mstrct_string + (((uint64_t)ptr)>> 32));
@@ -350,7 +350,7 @@ mstrct_cleanup(uint16_t *ptr) {
    if (*ptr != 0) {MSTRCT_SET((uint64_t)0, (uint16_t)(*ptr), 8);}
 }
 
-__attribute__((unused)) static void
+static inline void
 mstrct_user_free(mstrct_proto *arg, int flag) {
   switch (flag) {
     case 0: {
@@ -376,7 +376,7 @@ mstrct_user_free(mstrct_proto *arg, int flag) {
 
 extern int munmap(void *addr, size_t len); // fwd declare munmap
 
-__attribute__((unused)) static uint64_t
+static inline uint64_t
 mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
   mstrct_proto name = *arg; int temp = 0;
   uint64_t size = mstrct_get21(name._d); 
@@ -389,7 +389,7 @@ mstrct_munmap_1(mstrct_proto *arg, int line, const char *file) {
   } else return temp;
 }
 
-__attribute__((unused)) static uint64_t
+static inline uint64_t
 mstrct_munmap_2(void **arg, uint64_t size, int line, const char *file) {
   int temp = 0; void *addr = *(void **)(arg);
   if (addr != NULL) {
@@ -448,7 +448,7 @@ mstrct_addr(uint64_t con, const uint64_t id_s, const uint64_t id_d, const uint64
   }
 }
 
-static void
+static inline void
 mstrct_bounds_error(uint64_t size, int line, const char *file) {
   if (size == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line, file);}
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line, file);};
@@ -600,7 +600,7 @@ mstrct_check(uint64_t type_range, uint64_t f_range, uint64_t index, int line, co
   mstrct_checksum(size, allo_size, __LINE__, __FILE__); mstrct_let((char *)&(name), size, off, __LINE__, __FILE__, card, enm);  \
 }
 
-static void 
+static inline void 
 mstrct_leak_1(mstrct_proto * name, int line, const char *file) {
   uintptr_t rsp; __asm__("mov %%rsp, %0" : "=r"(rsp));
   if ((int64_t)((char *)rsp - mstrct_ptr) > 0) /* not on stack */ {
@@ -614,7 +614,7 @@ mstrct_leak_1(mstrct_proto * name, int line, const char *file) {
 __attribute__((unused)) static void mstrct_leak_0(__attribute__((unused)) mstrct_proto * name,
 __attribute__((unused)) int line, __attribute__((unused)) const char *file) {(void)0;}
 
-static void
+static inline void
 mstrct_factory(mstrct_proto * name, uint64_t card) {
   uint16_t offset = name->_d;
   for (uint64_t i = 0; i < (card); i++) {
@@ -628,7 +628,7 @@ mstrct_factory(mstrct_proto * name, uint64_t card) {
     ((uint64_t)((char *)(&(dummy->name)) - (char *)dummy));  \
 })
 
-inline static void 
+static inline void 
 mstrct_checksum(uint64_t size, uint64_t allosize, int line, const char *file) {
   ssize_t obj_size = (ssize_t)__builtin_dynamic_object_size(mstrct_ptr, 0);
   if (obj_size > 0) {
@@ -643,7 +643,7 @@ mstrct_checksum(uint64_t size, uint64_t allosize, int line, const char *file) {
   }
 }
 
-static void 
+static inline void 
 mstrct_let(char *oob, uint64_t size, uint16_t off, int line, const char *file, uint64_t card, int enm) {
   mstrct_warn((enm > UINT16_MAX), MSTRCT_ALLOC_FAIL, "name cardinality __COUNT__ can't exceed UINT16_MAX!!", line, file);
   mstrct_warn((card > UINT16_MAX), MSTRCT_ALLOC_FAIL, "multi-dim name cardinality CAN'T exceed UINT16_MAX!", line, file);

@@ -87,10 +87,12 @@ This document explains how to configure and use the memstruct.h library.
 - `$(...)` **macro:**
 ```
     // metadata (L-value)
-    $(foo): foo = safe ptr name
+    $(foo): 
+    foo = safe ptr name
 
     // data (L-value)
-    $(foo, index): foo = safe ptr name, index = a numeric type
+    $(foo, index):
+    foo = safe ptr name, index = a numeric type
 
     // safe ptr declaration
     $(type, foo, ):
@@ -105,10 +107,12 @@ This document explains how to configure and use the memstruct.h library.
     type = ptr type, foo = new name (or one masking another), range = a numeric type
 
     // safe ptr re-assignment
-    $( , foo, range, addr): foo = a safe ptr name , range = a numeric type, addr = 64 bit value
+    $( , foo, range, addr): 
+    foo = a safe ptr name , range = a numeric type, addr = 64 bit value
 
     // safe ptr re-assignment as VLA or fixed size array
-    $( , foo, range, ): foo = a safe ptr name , range = a numeric type
+    $( , foo, range, ): 
+    foo = a safe ptr name , range = a numeric type
 
 ```
 

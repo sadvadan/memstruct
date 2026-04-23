@@ -15,21 +15,21 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- The core working principle is to have the 'safe ptr' maximally carry compile time information in its type system. The error reporting system then supplements this with constant foldings from compiler optimizer. This results in either compile time or heavily optimized runtime checks. For runtime checks that cannot be elided, metadata is stored in a fast access, cache friendly, static data segment. UAF & NULL checks are part of OOB check in a way as to incur no extra overhead.
+- Working principle: the 'safe ptr' maximally carries compile time data in its type system. The error reporting system supplements this with const foldings and SSA from compiler-optimizer. This results in -- fully compile time, heavily elided or auto-hoisted runtime checks. UAF & NULL checks are part of OOB check in a way that incurs no extra overhead.
 
-- A 'safe ptr' is basically a unique, anonymous struct type on the 'outside' but also the size of a plain int (like a memory-ID), casually passed around among stakeholders.
+- Ergonomy: a 'safe ptr' is basically a unique, anonymous struct type on the 'outside' but also the size of a plain int (like a memory-ID), casually passed around among stakeholders.
 
-- `$` macro, with one symbol overload, provides the unified API.   
+- `$` macro, with one symbol overload, provides the unified API -- including access to useful metadata, stored in a static segment.
 
 ## Features and design
 
-- Compile time checks & reporting for static and constant folded data.
+- Designed to perform bare minimum number of safety checks.
 - Single‑header; no separate `.c` file needed.
 - Supports on-heap, on-stack, and custom allocators.
 - No external dependencies (only standard `C` headers).
 - Safe to include in multiple translation units.
 
-- Since a 'safe ptr' is a unique anonymous struct type, it doesn't mix with other types, including other safe ptrs; it can't be naively de-referenced, or cast either. It takes deliberate `C` gymnastics, other than the `$(name)` escape hatch API, to break the safety net.
+- A 'safe ptr' being a unique anonymous struct type, doesn't mix with other types, including safe ptrs; it can't be naively de-referenced, or cast either. It takes deliberate `C` gymnastics, other than the `$(name)` escape hatch API, to break the safety net.
 - Thread safety relies on target `x86` h/w-level atomicity and cache coherency through `MESI`, enforced with strict `ASM qword` alignment and `ASM "=m"` constraint, respectively.
 - Logical concurrency for strict causal orderings is implemented by the user, and is orthogonal (justifiably, in the eyes of the author) to this library's workings.
 
@@ -39,7 +39,7 @@ This document explains how to configure and use the memstruct.h library.
 - Define `NMSTRCT` to disable all checks for production, if needed.
 - Use `MSTRCT_L` flag for choosing hardening level of error reporting.
 ```
-    default 0: print detailed err, continue with default "the arr end value"
+    default 0: print detailed err, continue with default "the arr start value"
     strict  1: print detailed err, halt program with segfault at error site
     hard    2: print detailed err, exit program with mstrct_status code
 ```

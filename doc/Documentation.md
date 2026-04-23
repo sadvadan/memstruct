@@ -15,18 +15,18 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- Working principle: the 'safe ptr' maximally carries compile time data in its type system. The error reporting system supplements this with const foldings and SSA from compiler-optimizer. This results in -- fully compile time, heavily elided or auto-hoisted runtime checks. UAF & NULL checks are part of OOB check in a way that incurs no extra overhead.
+- **Working:** the 'safe ptr' maximally carries compile time data in its type system. The error reporting system supplements this with const foldings and SSA from compiler-optimizer. This results in -- fully compile time, or heavily elided / auto-hoisted runtime checks. UAF & NULL checks are part of OOB check in a way that incurs no extra overhead.
 
-- Ergonomy: a 'safe ptr' is basically a unique, anonymous struct type on the 'outside' but also the size of a plain int (like a memory-ID), casually passed around among stakeholders.
+- **Ergonomy:** a 'safe ptr' is basically a unique, anonymous struct type on the 'outside' but also the size of a plain int (like a memory-ID), casually passed around among stakeholders.
 
-- `$` macro, with one symbol overload, provides the unified API -- including access to useful metadata, stored in a static segment.
+- **API:** `$` macro, with one symbol overload, provides the unified API -- including access to useful metadata, stored in a static segment.
 
 ## Features and design
 
-- Designed to perform bare minimum number of safety checks.
+- Bare minimum safety checks; additionally: opt-out & hardening flags.
 - Single‑header; no separate `.c` file needed.
 - Supports on-heap, on-stack, and custom allocators.
-- No external dependencies (only standard `C` headers).
+- No external dependencies; only standard `C` headers.
 - Safe to include in multiple translation units.
 
 - A 'safe ptr' being a unique anonymous struct type, doesn't mix with other types, including safe ptrs; it can't be naively de-referenced, or cast either. It takes deliberate `C` gymnastics, other than the `$(name)` escape hatch API, to break the safety net.

@@ -23,7 +23,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Features and design
 
-- Bare minimum safety checks; additionally: opt-out & hardening flags.
+- Bare minimum safety checks; additionally: opt-out & error-handling-hardening flags.
 - Single‑header; no separate `.c` file needed.
 - Supports on-heap, on-stack, and custom allocators.
 - No external dependencies; only standard `C` headers.

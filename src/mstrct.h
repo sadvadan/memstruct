@@ -213,6 +213,16 @@ typedef struct  {
   const uint64_t  base; // base addr
 } mstrct_meta;
 
+typedef union { // bounds metadata
+  uint64_t limit;
+  struct {
+    const int32_t upper;
+    const int32_t lower;
+  };
+} mstrct_limit;
+
+static const mstrct_limit mstrct_limit_max = {.upper = INT32_MIN, .lower = INT32_MAX};
+
 #define MSTRCT_DEF_META(counter, size) { \
 __asm__ (  \
   ".pushsection .bss.mstrct, \"aw\", @nobits \n\t" \
@@ -418,7 +428,7 @@ mstrct_meta_addr(uint64_t id_s, uint64_t id_d, uint64_t f_size, int line, const 
         default:
           switch (id_s) {
             case 0: return mstrct_meta_addr2(id_d); // start of multidim arr
-            default: {mstrct_error("No unique metadata exists for individual elements of a multidim arr (hint: input w/o indexes)",
+            default: {mstrct_error("No unique metadata exists for individual elems of a multidim arr (hint: input w/o indexes)",
                       MSTRCT_BAD_SYNTAX, line, file); return 0;}
           }
       }
@@ -448,59 +458,46 @@ mstrct_addr(uint64_t con, const uint64_t id_s, const uint64_t id_d, const uint64
   }
 }
 
-__attribute__((cold)) static inline void
-mstrct_bounds_error(uint64_t size, int line, const char *file) {
+__attribute__((cold)) static inline uint64_t
+mstrct_bounds_error(uint16_t _d, uint64_t offset, int line, const char *file) {
+  uint64_t size = mstrct_get21(_d);
   if (size == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line, file);}
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line, file);};
+  if (MSTRCT_L == 0) {return (mstrct_get22(_d) - offset);} else {return 0;}
 }
 
-__attribute__((const, hot)) static inline int
-mstrct_check_dyna_cal(uint64_t addr, uint64_t size, uint64_t base) {
-  return __builtin_expect(((uint64_t)(addr - base) <= size), 1);
+__attribute__((cold)) static inline uint64_t
+mstrct_card_error(uint16_t _d, int line, const char *file) {
+  mstrct_error("multi-dim-arr index failed bounds check!!", MSTRCT_MULTI_DIM_BOUNDS_FAIL, line, file);
+  if (MSTRCT_L == 0) {return mstrct_get22(_d);} else {return 0;}
 }
 
-__attribute__((hot)) static inline uint64_t
-mstrct_check_dyna(uint64_t addr, uint64_t size, uint64_t base, uint16_t id_d, int line, const char *file) {
-  if (mstrct_check_dyna_cal(addr, size, base)) {return addr;}
-  else {mstrct_bounds_error(mstrct_get21(id_d), line, file); if (MSTRCT_L == 0) return (base);}
+__attribute__((const)) static inline uint64_t
+mstrct_oob_up(uint64_t unit_size, uint64_t addr, uint16_t _d) {
+  uint64_t base = mstrct_get22(_d); uint64_t size = mstrct_get21(_d);
+  int64_t limit = (base + size - addr)/ unit_size - 1;
+  if (limit < 0) {return 0;} else {return (uint64_t)limit;}
 }
 
-__attribute__((hot)) static inline uint64_t
-mstrct_dyna(uint16_t id_s, uint16_t id_d, uint64_t addr, int line, const char *file) {
-  switch (__builtin_constant_p(id_s)) {
-      case 0: return mstrct_check_dyna(addr, mstrct_get21(id_d), mstrct_get22(id_d), id_d, line, file);
-      case 1: return mstrct_check_dyna(addr, mstrct_get11(id_s), mstrct_get12(id_s), id_d, line, file);
-      default: __builtin_unreachable();
-  }
-}
-
-__attribute__((hot)) static inline uint64_t
-mstrct_check_stat(uint64_t n, uint64_t N, uint64_t addr, uint16_t _d, int line, const char *file) {
-  if (n < N) {return addr;}
-  else {
-    addr = mstrct_get22(_d); // default
-    mstrct_warn((n >= N), MSTRCT_BOUNDS_CHECK_FAIL, "bounds check failed!!", line, file);
-    if (MSTRCT_L == 0) return addr;
-  }
+__attribute__((const)) static inline uint64_t
+mstrct_oob_lo(uint64_t unit_size, int64_t addr, uint16_t _d) {
+  uint64_t base = mstrct_get22(_d);
+  int64_t limit = (base - addr)/ unit_size;
+  if (limit >= 0) {return UINT64_MAX;} else {return (uint64_t)limit;}
 }
 
 __attribute__((hot)) static inline uint64_t
-mstrct_fact_oob(uint64_t type_line, uint16_t _d, int line, const char *file, uint64_t addr) {
-  if (mstrct_get23(_d) != type_line) {
-    addr = mstrct_get22(_d); // default
-    mstrct_error("multi-dim-arr index failed bounds check!!", MSTRCT_MULTI_DIM_BOUNDS_FAIL, line, file);
-    if (MSTRCT_L == 0) return addr;
-  } else return addr;
-}
+mstrct_check(uint64_t type_size, uint64_t type_range, uint64_t type_card, uint64_t index, int line, const char *file,
+  uint64_t type_line, uint16_t _s, uint16_t _d, uint64_t addr) {
 
-__attribute__((hot)) static inline uint64_t
- mstrct_check(uint64_t type_range, uint64_t f_range, uint64_t index, int line, const char *file, uint64_t type_line,
-  uint16_t _s, uint16_t _d, uint64_t addr_in) {
-  uint64_t addr = addr_in;
-  if (f_range > 1) {addr = mstrct_fact_oob(type_line, _d, line, file, addr);}
-  if (type_range > 0) {addr = mstrct_check_stat(index, type_range, addr, _d, line, file);}
-  else {addr = mstrct_dyna(_s, _d, addr, line, file);};
-  return addr;
+  if (type_card > 1 && mstrct_get23(_d) != type_line) {addr = mstrct_card_error(_d, line, file);}
+  if (type_range > 0 && __builtin_constant_p(_s) && index >= type_range) {
+    return mstrct_bounds_error(_d, (index * type_size), line, file);
+  } else {
+    if (mstrct_oob_up((type_size * type_card), addr, _d) > (uint64_t)index || 
+      mstrct_oob_lo((type_size * type_card), addr, _d) < (uint64_t)index) {return addr;
+    } else {return mstrct_bounds_error(_d, (index * type_size), line, file);}
+  };
 }
 
 
@@ -511,13 +508,12 @@ __attribute__((hot)) static inline uint64_t
 #define MSTRCT_GET(name, index) MSTRCT_CAT2(MSTRCT_GET__, MSTRCT_C)(name, index)
 
 #define MSTRCT_GET__0(name, index) (*((typeof(name.typ[0])) \
-   (mstrct_addr(sizeof(name.con[0]), (uint64_t)name._s, (uint64_t)name._d, (sizeof(name.car[0])))) + (index)))
+   (mstrct_addr(sizeof(name.con[0]), (uint64_t)name._s, (uint64_t)name._d, sizeof(name.car[0]))) + (index)))
 
 
-#define MSTRCT_GET__1(name, index) (*((typeof(name.typ[0])) (  \
-  mstrct_check(sizeof(name.ran[0]), sizeof(name.car[0]), index, __LINE__, __FILE__, sizeof(name.lin[0]), name._s, name._d, \
-  (uint64_t)((typeof(name.typ[0]))(mstrct_addr(sizeof(name.con[0]), name._s, name._d, (sizeof(name.car[0])))) + index)) \
-)))
+#define MSTRCT_GET__1(name, index) (*((typeof(name.typ[0])) \
+  (mstrct_check(sizeof(*((typeof(name.typ[0]))0)), sizeof(name.ran[0]), sizeof(name.car[0]), (index), __LINE__, __FILE__,  \
+  sizeof(name.lin[0]), name._s, name._d, mstrct_addr(sizeof(name.con[0]), name._s, name._d, sizeof(name.car[0])))) + (index)))
 
 #define MSTRCT_$3$110(typ, name, empty) MSTRCT_T(typ, sizeof(struct {char name;}), 0, __LINE__) name
 

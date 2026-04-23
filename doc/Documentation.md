@@ -15,11 +15,11 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- **Working:** the 'safe ptr' maximally carries compile time data in its type system. The error reporting system supplements this with const foldings and SSA from compiler-optimizer. This results in -- fully compile time, or heavily elided / auto-hoisted runtime checks. UAF & NULL checks are part of OOB check in a way that incurs no extra overhead.
+- **Working:** the 'safe ptr' maximally carries compile time data in its type system. The error reporting system supplements this with const foldings and SSA from compiler-optimizer, leading to -- fully compile time, or heavily elided / auto-hoisted runtime checks. Also, UAF & NULL checks are part of OOB check in a way that incurs no extra overhead.
 
 - **Ergonomy:** a 'safe ptr' is basically a unique, anonymous struct type on the 'outside' but also the size of a plain int (like a memory-ID), casually passed around among stakeholders.
 
-- **API:** `$` macro, with one symbol overload, provides the unified API -- including access to useful metadata, stored in a static segment.
+- **API:** `$` macro, with 1 symbol overload, provides the unified API -- including access to useful metadata, stored in a static segment.
 
 ## Features and design
 

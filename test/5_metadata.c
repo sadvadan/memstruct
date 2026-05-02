@@ -4,14 +4,15 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  $(int * , var, 12, malloc(48)); // declare heap memory
-  $(var, 5) = 10; // define heap memory, with checks, make it 15 to see comptime err!
+  M(int * ,var,); // var[][1]
+  M(malloc(48),var,12); // var[12][1]
+  m(var,5) = 10; // define var[5][0]
 
-  printf("ptr_addr: %p\n", $(var).addr); // fetch addr (uint64_t)
-  printf("arr_range: %zu\n", $(var).size); // fetch range (uint64_t)
-  printf("base_addr: %p\n", $(var).base); // fetch base (uint64_t)
+  printf("ptr_addr: %p\n", m(var)); // fetch addr
+  printf("arr_byte_size: %zu\n", M(var.id)->size); // fetch memory size in bytes
+  printf("base_addr: %p\n", M(var.id)->addr); // fetch memory base addr
 
-  free(var); // comment this to see leak warning
+  free(var);
   return 0;
 }
 

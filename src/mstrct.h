@@ -15,16 +15,6 @@
  *  with flag NMSTRCT checks can be disabled. there's
  *  also hardening flag MSTRCT_L to suit err handling
  *
- **BASIC*USAGE***************************************
- *
- * NOTATION                      TYPE             OUT
- * --------                    -------         ------
- * $(foo)                      L-value       foo_addr
- * $(foo, i, j,...)            L-value    foo[i][j]..
- * $$(type, foo, i, j,...)     create     declare foo
- * $$(foo, memory)             assign     bind memory
- * foo.id = bar.id             assign    share memory       
- *
  **/
 
 #ifndef MSTRCT_H

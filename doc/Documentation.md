@@ -2,7 +2,7 @@
 # ![memstruct banner](banner.svg) memstruct DOCUMENT
 
 This document explains how to configure and use the memstruct.h library.
-(**NOTE: this document is currently completely outdated.**)
+(**NOTE: this document is currently outdated from API reference ONWS.**)
 
 ## Table of contents
 

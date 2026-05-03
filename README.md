@@ -37,7 +37,7 @@ C + memstruct = performance + memory safety
     ```
     M(malloc(80),foo,40); // same as assignment
     ```
-- **Share memory** simply pass around foo.id (a uint16_t):
+- **Share** memory: simply pass around foo.id (a uint16_t):
     ```
     M(foo.id, bar); // bar now shares memory with foo 
 
@@ -51,7 +51,7 @@ C + memstruct = performance + memory safety
     // multi-dim array types
     m(bar,5,7,2) = 10;
      ```
-- **Access metadata** M(foo) is *struct {addr, size}:
+- **Metadata** access: M(foo) is *struct {addr, size}:
      ```
     uint64_t temp = M(foo)->size; // byte size as R value
 

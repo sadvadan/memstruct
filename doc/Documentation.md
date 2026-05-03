@@ -75,35 +75,64 @@ This document explains how to configure and use the memstruct.h library.
 
     the dereferencing `m(foo)[index]` is however an escape hatch where checks don't apply. document each use case with proper reason, especially given you can always use `#define NMSTRCT` to flag a section as unsafe. memstruct offers subscriptive, not prescriptive, safety: user is able to deliberate safety bypass at program, sub-program, or line level; or, memory safe code is able to co-exist with legacy code.
 
-- **memstruct declaration:** declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
+- **memstruct declaration:** declare a "safe ptr" foo as `M(ptr_type, foo, multi_dim_index)`.
     ```
-    // on-heap arr of 10 longs
-    $(long int *, foo, 10, malloc(80));
+    // foo[][1]
+    M(long int *,foo,); // or: M(long int *,foo,,1)
 
-    // on-stack multi-dim arr of range 10
-    $(int * const, bar[2][3], 10, (int [60]){0});
-    // OR:  $(int * const, bar[2][3], 10, ) -- using plain arr
+    // foo[][2][5]
+    M(char * const,foo,,2,5);
 
-    // declare safe ptr w/o defining; could be inside struct type declaration
-    $(float *, cux, );
-
-    // re-assign memory `$(,name, range, addr)`:
-    $(, var, 16, (int [16]){0}); 
-    // OR:  $( , var, 16, ) -- using plain arr
+    // valid as a field declaration within a struct type definition
     ```
-    Here, the input fields hold the following relationship:
+- **Assignment:** map the safe ptr onto a memory as `M(storage, foo, single_index)`.
     ```
-    sizeof(*ptr_type) x (name_cardinality) x (range) = (total_allocated_size_in_bytes)
+    M(malloc(80),foo,10); // allocate 80 heap bytes as foo[10][2]
+
+    M(auto,foo,10); // allocate foo[10] on-stack segment
+
+    M(static,foo,10); // allocate foo[10] on-static segment
+
+    // memstruct supports all kind of allocators (should return a ptr)
     ```
-    This relation is enforced by the library (at compile time, where possible!).
+- **Re-assign** memory:
+    ```
+    M(malloc(80),foo,40); // same as assignment
+    ```
+- **Share** memory: simply pass around `foo.id` (a `uint16_t`).
+    ```
+    M(foo.id, bar); // bar now shares memory with foo 
 
-- In `$(ptr_type, foo, range, addr)`, addr is not necessarily an allocator but could also be an address pointing to a memory. Such usage does not pose memory hazard by its own, and as such is left to the occasional user to suit their program logic.
+    Callee_function(foo.id, other_inputs); // share with callee
+     ```
+- **Read / write** memory: `m(name,index) = value`.
+    ```
+    // single dim array types
+    m(foo,5) = 10;
 
-- Under the macro `$(ptr_type, foo, range, addr)`, boiler-plate if(NULL) checks are already included (see macro expansion in your editor), and needn't be repeated by user. 
+    // multi-dim array types
+    m(bar,5,7,2) = 10;
+     ```
+- **Metadata** access: `M(foo)` is `*struct {addr, size}`.
+     ```
+    uint64_t temp = M(foo)->size; // byte size as R value
 
+    void *temp = M(foo)->addr; // base addr as R value
+     ```
+- **Raw** access: `m(foo)` is the current addr (L value).
+     ```
+    m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
+
+    m(foo)[5] = 10; // unsafe escape hatch
+     ```
+- **De**-allocate: double frees are redundant (later elided by compiler).
+     ```
+    free(foo);   // on-heap memory
+    munmap(foo); // mmapped memory
+ 
 - **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. Moreover, addr is `NULL`-ed so double frees are redundant. User knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
 
-## API reference
+## API reference (WARNING: completely outdated)
 
 - `$(...)` **macro:**
 ```

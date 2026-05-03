@@ -67,12 +67,12 @@ This document explains how to configure and use the memstruct.h library.
 ```
 - **Safe access of data:** 
 
-    `m(foo, index)` is equivalent to `foo[index]`. or `M(foo,i,j,k..)` to `foo[ i ][ j ][ k ]`..
+    `m(foo,index)` is equivalent to `foo[index]`. or `M(foo,i,j,k..)` to `foo[ i ][ j ][ k ]`..
 
 - **Raw access (w/o checks) of data:** 
 
-    m(foo) is the raw address on which ptr arithmetic is applicable, and is an L value.
-    m(foo)[index] is therefore escape hatch where checks don't apply. document each use case with proper reason, especially given you can always use `#define NMSTRCT` to flag a section as unsafe.
+    `m(foo)` is the raw address on which ptr arithmetic is applicable, and is an L value.
+    `m(foo)[index]` is therefore escape hatch where checks don't apply. document each use case with proper reason, especially given you can always use `#define NMSTRCT` to flag a section as unsafe.
 
 - **memstruct declaration:** declare a "safe ptr" foo as `$(ptr_type, foo, range, addr)`. If foo is already declared as a safe ptr, then call `$( , foo, range, addr)` for reassign.
     ```

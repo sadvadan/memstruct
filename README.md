@@ -15,7 +15,7 @@ C + memstruct = performance + memory safety
 ## 🚀 Quick Start
 
 - **Include** `mstrct.h` in your file.
-- **Declare** a name and bind a memory to it `M(ptr-type,name,,multidim_index)` like so:
+- **Declare** a name `M(ptr-type,name,,multidim_index)` like so:
     ```
     // single dim foo (interal rep: foo[][1])
     M(int *,foo,);

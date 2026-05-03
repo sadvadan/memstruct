@@ -14,9 +14,11 @@ C + memstruct = performance + memory safety
 
 ## 🚀 Quick Start
 
-- **Include** 
+- **Include**
+
     `mstrct.h` in your file.
 - **Declare**
+
     a name `M(ptr-type,name,,multidim_index)` like so:
     ```
     // single dim foo (interal rep: foo[][1])
@@ -28,6 +30,7 @@ C + memstruct = performance + memory safety
     // declaration could be a field declaration inside a struct type definition
     ```
 - **Assign** 
+
     the name a memory `M(storage,name,index)` like so:
     ```
     M(int *,foo,,2); // first declare foo[][2]
@@ -37,18 +40,21 @@ C + memstruct = performance + memory safety
     M(auto,foo,10); // allocate foo[10] on-stack
     ```
 - **Re-assign**
+
     memory `M(storage,name,index)`:
     ```
     M(malloc(80),foo,40); // same as assignment
     ```
 - **Share** 
+
     memory: simply pass around foo.id (a uint16_t):
     ```
     M(foo.id, bar); // bar now shares memory with foo 
 
     Callee_function(foo.id, other_inputs); // share with callee
      ```
-- **Read / write** 
+- **Read / write**
+
     memory `m(name,index) = value`:
     ```
     // single dim array types
@@ -58,6 +64,7 @@ C + memstruct = performance + memory safety
     m(bar,5,7,2) = 10;
      ```
 - **Metadata**
+
     access: M(foo) is *struct {addr, size}:
      ```
     uint64_t temp = M(foo)->size; // byte size as R value
@@ -65,6 +72,7 @@ C + memstruct = performance + memory safety
     void *temp = M(foo)->addr; // base addr as R value
      ```
 - **Raw** 
+
     access: m(foo) is the current addr (L value)
      ```
     m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
@@ -72,6 +80,7 @@ C + memstruct = performance + memory safety
     m(foo)[5] = 10; // unsafe escape hatch
      ```
 - **De**-allocate:
+
     double frees are redundant (later elided by compiler)
      ```
     free(foo);   // on-heap memory

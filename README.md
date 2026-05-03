@@ -53,9 +53,9 @@ C + memstruct = performance + memory safety
      ```
 - **Access metadata** M(foo) is *struct {addr, size}:
      ```
-    uint64_t temp = M(foo)->size; // access as R value
+    uint64_t temp = M(foo)->size; // byte size as R value
 
-    void *temp = M(foo)->addr; // access as R value
+    void *temp = M(foo)->addr; // base addr as R value
      ```
 - **Raw** access: m(foo) is the current addr (L value)
      ```

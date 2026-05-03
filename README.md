@@ -65,7 +65,7 @@ C + memstruct = performance + memory safety
      ```
 - **Metadata** access
 
-    `M(foo)` is *struct {addr, size}:
+    `M(foo)` is `*struct {addr, size}`:
      ```
     uint64_t temp = M(foo)->size; // byte size as R value
 

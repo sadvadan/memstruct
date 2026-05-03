@@ -14,8 +14,10 @@ C + memstruct = performance + memory safety
 
 ## 🚀 Quick Start
 
-- **Include** `mstrct.h` in your file.
-- **Declare** a name `M(ptr-type,name,,multidim_index)` like so:
+- **Include** 
+    `mstrct.h` in your file.
+- **Declare**
+    a name `M(ptr-type,name,,multidim_index)` like so:
     ```
     // single dim foo (interal rep: foo[][1])
     M(int *,foo,);
@@ -25,7 +27,8 @@ C + memstruct = performance + memory safety
 
     // declaration could be a field declaration inside a struct type definition
     ```
-- **Assign** the name a memory `M(storage,name,index)` like so:
+- **Assign** 
+    the name a memory `M(storage,name,index)` like so:
     ```
     M(int *,foo,,2); // first declare foo[][2]
     M(malloc(80),foo,10); // allocate 80 heap bytes as foo[10][2]
@@ -33,17 +36,20 @@ C + memstruct = performance + memory safety
     M(int *,foo,); // declare simple (dim=1) foo
     M(auto,foo,10); // allocate foo[10] on-stack
     ```
-- **Re-assign** memory `M(storage,name,index)`:
+- **Re-assign**
+    memory `M(storage,name,index)`:
     ```
     M(malloc(80),foo,40); // same as assignment
     ```
-- **Share** memory: simply pass around foo.id (a uint16_t):
+- **Share** 
+    memory: simply pass around foo.id (a uint16_t):
     ```
     M(foo.id, bar); // bar now shares memory with foo 
 
     Callee_function(foo.id, other_inputs); // share with callee
      ```
-- **Read / write** memory `m(name,index) = value`:
+- **Read / write** 
+    memory `m(name,index) = value`:
     ```
     // single dim array types
     m(foo,5) = 10;
@@ -51,19 +57,22 @@ C + memstruct = performance + memory safety
     // multi-dim array types
     m(bar,5,7,2) = 10;
      ```
-- **Metadata** access: M(foo) is *struct {addr, size}:
+- **Metadata**
+    access: M(foo) is *struct {addr, size}:
      ```
     uint64_t temp = M(foo)->size; // byte size as R value
 
     void *temp = M(foo)->addr; // base addr as R value
      ```
-- **Raw** access: m(foo) is the current addr (L value)
+- **Raw** 
+    access: m(foo) is the current addr (L value)
      ```
     m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
 
     m(foo)[5] = 10; // unsafe escape hatch
      ```
-- **De**-allocate: double frees are redundant (later elided by compiler)
+- **De**-allocate:
+    double frees are redundant (later elided by compiler)
      ```
     free(foo);   // on-heap memory
     munmap(foo); // mmapped memory

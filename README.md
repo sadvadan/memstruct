@@ -1,5 +1,5 @@
 
-# ![memstruct banner](banner.svg) memstruct README
+# ![memstruct banner](banner.svg) memstruct v1.0.0 README
 
 C + memstruct = performance + memory safety 
 

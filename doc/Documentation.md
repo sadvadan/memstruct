@@ -130,7 +130,7 @@ This document explains how to configure and use the memstruct.h library.
     free(foo);   // on-heap memory
     munmap(foo); // mmapped memory
  
-- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. Moreover, addr is `NULL`-ed so double frees are redundant. User knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
+- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. Moreover, addr / metadata is `NULL`-ed so double frees are redundant. User knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
 
 ## API reference (WARNING: completely outdated)
 

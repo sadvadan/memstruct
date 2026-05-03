@@ -7,7 +7,7 @@
  **SUMMARY*******************************************
  *
  *  A lightweight & fast single header library with a
- *  $-macro API for memory safety in calling program.
+ *  m-macro API for memory safety in calling program.
  *
  *  Leverages compile & runtime methods, and hoisting
  *  to check OOB/UAF/NULL-deref/double-free and leaks
@@ -214,7 +214,7 @@ mstrct_shadow() {
 
 }
 
-// memstruct; if mdim=1: index=[i][j][k]...; elseif mdim=0: index=[1]
+// memstruct; if dim=1: index=[i][j][k]...; elseif dim=0: index=[1]
 #define MSTRCT_T(type, index, enm)  \
 struct {  \
   uint16_t id; \

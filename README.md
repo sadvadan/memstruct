@@ -14,7 +14,7 @@ C + memstruct = performance + memory safety
 ## 🚀 Quick Start
 
 - **Include** `mstrct.h` in your file.
-- **Declare** a name and bind a memory to it `$(ptr-type, name,, multidim_index)` like so:
+- **Declare** a name and bind a memory to it `M(ptr-type,name,,multidim_index)` like so:
     ```
     // single dim foo (interal rep: foo[][1])
     M(int *,foo,);
@@ -24,7 +24,7 @@ C + memstruct = performance + memory safety
 
     // declaration could be a field declaration inside a struct type definition
     ```
-- **Assign** the name a memory `$(storage, name, index)` like so:
+- **Assign** the name a memory `M(storage,name,index)` like so:
     ```
     M(int *,foo,,2); // first declare foo[][2]
     M(malloc(80),foo,10); // allocate 80 heap bytes as foo[10][2]
@@ -32,17 +32,17 @@ C + memstruct = performance + memory safety
     M(int *,foo,); // declare simple (dim=1) foo
     M(auto,foo,10); // allocate foo[10] on-stack
     ```
-- **Re-assign** memory `$(storage, name, index)`:
+- **Re-assign** memory `M(storage,name,index)`:
     ```
-    M(malloc(80),foo,40); // similar to assignment
+    M(malloc(80),foo,40); // same as assignment
     ```
-- **Share memory** shae foo.id (a uint16_t ID):
+- **Share memory** simply pass around foo.id (a uint16_t):
     ```
     M(foo.id, bar); // bar now shares memory with foo 
 
     Callee_function(foo.id, other_inputs); // share with callee
      ```
-- **Read / write** memory `$(name,index) = value`:
+- **Read / write** memory `m(name,index) = value`:
     ```
     // single dim array types
     $(foo,5) = 10;
@@ -52,9 +52,9 @@ C + memstruct = performance + memory safety
      ```
 - **Access metadata** M(foo) is *struct {addr, size}:
      ```
-    uint64_t temp = M(foo)->size;
+    uint64_t temp = M(foo)->size; // access as R value
 
-    void *temp = M(foo)->addr;
+    void *temp = M(foo)->addr; // access as R value
      ```
 - **Raw** access: m(foo) is the current addr (L value)
      ```

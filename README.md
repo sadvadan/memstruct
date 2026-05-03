@@ -25,7 +25,7 @@ C + memstruct = performance + memory safety
     M(int *,foo,);
 
     // multidim foo (internal rep: foo[][2][5][7])
-    M(int * const,foo,,2,5,7);
+    M(int *const,foo,,2,5,7);
 
     // declaration could be a field declaration inside a struct type definition
     ```

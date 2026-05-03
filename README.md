@@ -39,23 +39,23 @@ C + memstruct = performance + memory safety
     M(int *,foo,); // declare simple (dim=1) foo
     M(auto,foo,10); // allocate foo[10] on-stack
     ```
-- **Re-assign**
+- **Re-assign** memory:
 
-    memory `M(storage,name,index)`:
+    `M(storage,name,index)`:
     ```
     M(malloc(80),foo,40); // same as assignment
     ```
-- **Share** 
+- **Share** memory: 
 
-    memory: simply pass around foo.id (a uint16_t):
+    simply pass around foo.id (a uint16_t):
     ```
     M(foo.id, bar); // bar now shares memory with foo 
 
     Callee_function(foo.id, other_inputs); // share with callee
      ```
-- **Read / write**
+- **Read / write** memory:
 
-    memory `m(name,index) = value`:
+    `m(name,index) = value`:
     ```
     // single dim array types
     m(foo,5) = 10;
@@ -63,17 +63,17 @@ C + memstruct = performance + memory safety
     // multi-dim array types
     m(bar,5,7,2) = 10;
      ```
-- **Metadata**
+- **Metadata** access: 
 
-    access: M(foo) is *struct {addr, size}:
+    M(foo) is *struct {addr, size}:
      ```
     uint64_t temp = M(foo)->size; // byte size as R value
 
     void *temp = M(foo)->addr; // base addr as R value
      ```
-- **Raw** 
+- **Raw** access: 
 
-    access: m(foo) is the current addr (L value)
+    m(foo) is the current addr (L value)
      ```
     m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
 

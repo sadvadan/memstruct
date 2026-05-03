@@ -31,7 +31,7 @@ C + memstruct = performance + memory safety
     ```
 - **Assign** 
 
-    the name a memory `M(storage,name,index)` like so:
+    map onto a memory `M(storage,name,index)` like so:
     ```
     M(int *,foo,,2); // first declare foo[][2]
     M(malloc(80),foo,10); // allocate 80 heap bytes as foo[10][2]

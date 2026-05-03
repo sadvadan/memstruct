@@ -45,15 +45,15 @@ C + memstruct = performance + memory safety
     ```
     M(malloc(80),foo,40); // same as assignment
     ```
-- **Share** memory: 
+- **Share** memory
 
-    simply pass around foo.id (a uint16_t):
+    simply pass around `foo.id` (a `uint16_t`):
     ```
     M(foo.id, bar); // bar now shares memory with foo 
 
     Callee_function(foo.id, other_inputs); // share with callee
      ```
-- **Read / write** memory:
+- **Read / write** memory
 
     `m(name,index) = value`:
     ```
@@ -63,25 +63,25 @@ C + memstruct = performance + memory safety
     // multi-dim array types
     m(bar,5,7,2) = 10;
      ```
-- **Metadata** access: 
+- **Metadata** access
 
-    M(foo) is *struct {addr, size}:
+    `M(foo)` is *struct {addr, size}:
      ```
     uint64_t temp = M(foo)->size; // byte size as R value
 
     void *temp = M(foo)->addr; // base addr as R value
      ```
-- **Raw** access: 
+- **Raw** access
 
-    m(foo) is the current addr (L value)
+    `m(foo)` is the current addr (L value):
      ```
     m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
 
     m(foo)[5] = 10; // unsafe escape hatch
      ```
-- **De**-allocate:
+- **De**-allocate
 
-    double frees are redundant (later elided by compiler)
+    double frees are redundant (later elided by compiler):
      ```
     free(foo);   // on-heap memory
     munmap(foo); // mmapped memory

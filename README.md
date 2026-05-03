@@ -46,10 +46,10 @@ C + memstruct = performance + memory safety
 - **Read / write** memory `m(name,index) = value`:
     ```
     // single dim array types
-    $(foo,5) = 10;
+    m(foo,5) = 10;
 
     // multi-dim array types
-    $(bar,5,7,2) = 10;
+    m(bar,5,7,2) = 10;
      ```
 - **Access metadata** M(foo) is *struct {addr, size}:
      ```
@@ -61,7 +61,7 @@ C + memstruct = performance + memory safety
      ```
     m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
 
-    $(foo)[5] = 10; // unsafe escape hatch
+    m(foo)[5] = 10; // unsafe escape hatch
      ```
 - **De**-allocate: double frees are redundant (later elided by compiler)
      ```

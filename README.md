@@ -5,6 +5,7 @@ C + memstruct = performance + memory safety
 
 ## 🎯 Features
 
+- **Code size**    - memstruct.h is a single file 400 LOC library with no external dependencies.
 - **Memory safety**- targets pointers to cover UAF, NULL deref, OOB, leaks, & double free.
 - **Performance**  - comptime, or largely elided / hoisted runtime checks. with good amount of asm, retains / improves C speed.
 - **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.

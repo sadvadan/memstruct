@@ -1,63 +1,69 @@
 
 # ![memstruct banner](banner.svg) memstruct README
 
-Welcome to memstruct -- memory safety framework for C
+C + memstruct = performance + memory safety 
 
 ## 🎯 Features
 
-- **Memory safety**  - covers: UAF, NULL deref, OOB, leaks, and double free.
-- **Performance**  - either compile-time checks, or largely elided / hoisted run-time checks.
-- **User ease**    - convenience macro `$(...)`, substituting e.g. `arr[i]` aka `*(arr + i)` with `$(arr, i)`.
-- **Robustness**   - type checked C code underneath.
-- **Target**       - gcc, clang: -std=gnu99 &ONWS, x86_64. Toggle mem-checks off for resource scarce smaller prods.
+- **Memory safety**- targets pointers to cover UAF, NULL deref, OOB, leaks, & double free.
+- **Performance**  - comptime, or largely elided / hoisted runtime checks. with good amount of asm, retains / improves C speed.
+- **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
+- **Robustness**   - type checked C code underneath (your code editor itself flags bad memstruct grammar).
+- **Target**       - gcc, clang: -std=gnu99 &ONWS, x86_64. "batteries" included: opt-out, & hardening flags.
 
 ## 🚀 Quick Start
 
 - **Include** `mstrct.h` in your file.
-- **Declare** a name and bind a memory to it `$(ptr-type, name, range, addr)` like so:
+- **Declare** a name and bind a memory to it `$(ptr-type, name,, multidim_index)` like so:
     ```
-    // on-heap arr of 10 longs
-    $(long int *, foo, 10, malloc(80));
+    // single dim foo (interal rep: foo[][1])
+    M(int *,foo,);
 
-    // on-stack multi-dim arr of range 10
-    $(int * const, bar[2][3], 10, (int [60]){0});
+    // multidim foo (internal rep: foo[][2][5][7])
+    M(int * const,foo,,2,5,7);
 
-    // declare safe ptr w/o defining; could be inside struct type declaration
-    $(float *, cux, );
+    // declaration could be a field declaration inside a struct type definition
     ```
-- **Re-assign** memory `$(,name, range, addr)`:
+- **Assign** the name a memory `$(storage, name, index)` like so:
     ```
-    $(, var, 16, (int [16]){0});
+    M(int *,foo,,2); // first declare foo[][2]
+    M(malloc(80),foo,10); // allocate 80 heap bytes as foo[10][2]
+
+    M(int *,foo,); // declare simple (dim=1) foo
+    M(auto,foo,10); // allocate foo[10] on-stack
+    ```
+- **Re-assign** memory `$(storage, name, index)`:
+    ```
+    M(malloc(80),foo,40); // similar to assignment
+    ```
+- **Share memory** shae foo.id (a uint16_t ID):
+    ```
+    M(foo.id, bar); // bar now shares memory with foo 
+
+    Callee_function(foo.id, other_inputs); // share with callee
      ```
-- **Define** memory `$(name, index) = value`:
+- **Read / write** memory `$(name,index) = value`:
     ```
     // single dim array types
-    $(foo, 5) = 10;
+    $(foo,5) = 10;
 
     // multi-dim array types
-    $(bar[1][2], 5) = 10;
+    $(bar,5,7,2) = 10;
      ```
-- **Share** memory:
+- **Access metadata** M(foo) is *struct {addr, size}:
      ```
-    // share memory with another safe type
-    foo.id = baz.id;
+    uint64_t temp = M(foo)->size;
 
-    // share memory with callee
-    callee(int foo.id, other_inputs);
+    void *temp = M(foo)->addr;
      ```
-- **Raw** access:
+- **Raw** access: m(foo) is the current addr (L value)
      ```
-    // (safe) ptr arithmetic
-    $(foo).addr++
+    m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
 
-    // (unsafe escape hatch) access, w/o check:
-    $(foo).addr[5] = 10;
+    $(foo)[5] = 10; // unsafe escape hatch
      ```
-- **De**-allocate:
+- **De**-allocate: double frees are redundant (later elided by compiler)
      ```
-    // automatic metadata update for on-stack memories.
-    // free & munmap thinly wrapped so that double frees are redundant.
-
     free(foo);   // on-heap memory
     munmap(foo); // mmapped memory
      ```

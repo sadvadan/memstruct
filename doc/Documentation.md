@@ -31,8 +31,7 @@ This document explains how to configure and use the memstruct.h library.
 - Safe to include in multiple translation units.
 
 - A 'safe ptr' being a unique anonymous struct type, doesn't mix with other types, including safe ptrs; it can't be naively de-referenced, or cast either. safety propagates: a safe foo is used only through `m()` / `M()` / `foo.id` semantics.
-- Thread safe: allocated with non-clashable IDs, metadata is immutable: reads are freely shared among threads. during deallocs, targeted clobbers force cache coherency: strict `ASM qword` & constraint `ASM "=m"` consolidate the behavior w/o needing atomics.
-- Logical concurrency for strict causal orderings is designed (mutex / atomics etc) by the user, and is orthogonal to the lib: inherent (on target `x86_64`) metadata-wise thread safety != data-wise thread safety!
+- Thread safety: memstruct is thread safe except for `free()` & `munmap()`, for which the solution is the same general advice: while de-allocating a shared memory, one must use writer / reader barrier. in all other circumstances, metadata is immutable and addresses private -- & memstruct remains untouched.
 
 ## Configuration
 

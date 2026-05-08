@@ -53,7 +53,7 @@ This document explains how to configure and use the memstruct.h library.
 
     therefore, when a safe ptr is declared as `M(type,foo,,j,k..)` the empty 3rd argument (you get comptime error if it isn't empty) is to signify that the dynamic index i is to be determined during allocation later as `M(allocator,foo,i)`.
 
-    if you only need a constant sized array then allocate as `M(allocator,foo,1)` and later access as `m(foo,0,j,k..)`.
+    if you only need a constant sized array then allocate as `M(allocator,foo,1)` and later access as `m(foo, ,j,k..)` i.e. with skip index so that the OOB check is fully comptime.
 
     or if the array is a simple array then `M(type,foo,,1)` or `M(type,foo,)`, then allocate as `M(allocator,foo,i)`, and access as `m(foo,i)`.
 

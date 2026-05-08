@@ -47,18 +47,19 @@
 #define MSTRCT_IDX9(i,j,k,l,m,n,o,p,q)    [i][j][k][l][m][n][o][p][q]
 #define MSTRCT_IDX10(i,j,k,l,m,n,o,p,q,r) [i][j][k][l][m][n][o][p][q][r]
 
-#define MSTRCT_$13(foo,...)               MSTRCT_ASSERT(MSTRCT_TOO_MANY_ARGS)
-#define MSTRCT_$12(foo,...)               MSTRCT_ASSERT(MSTRCT_TOO_MANY_ARGS)
-#define MSTRCT_$11(foo,...)               MSTRCT_GET(foo, MSTRCT_IDX10(__VA_ARGS__))
-#define MSTRCT_$10(foo,...)               MSTRCT_GET(foo, MSTRCT_IDX9(__VA_ARGS__))
-#define MSTRCT_$9(foo,...)                MSTRCT_GET(foo, MSTRCT_IDX8(__VA_ARGS__))
-#define MSTRCT_$8(foo,...)                MSTRCT_GET(foo, MSTRCT_IDX7(__VA_ARGS__))
-#define MSTRCT_$7(foo,...)                MSTRCT_GET(foo, MSTRCT_IDX6(__VA_ARGS__))
-#define MSTRCT_$6(foo,...)                MSTRCT_GET(foo, MSTRCT_IDX5(__VA_ARGS__))
-#define MSTRCT_$5(foo,...)                MSTRCT_GET(foo, MSTRCT_IDX4(__VA_ARGS__))
-#define MSTRCT_$4(foo,...)                MSTRCT_GET(foo, MSTRCT_IDX3(__VA_ARGS__))
-#define MSTRCT_$3(foo,...)                MSTRCT_GET(foo, MSTRCT_IDX2(__VA_ARGS__))
-#define MSTRCT_$2(foo,...)                MSTRCT_GET(foo, MSTRCT_IDX1(__VA_ARGS__)[0])
+#define MSTRCT_$14(foo,i,...)             MSTRCT_ASSERT(MSTRCT_TOO_MANY_ARGS)
+#define MSTRCT_$13(foo,i,...)             MSTRCT_ASSERT(MSTRCT_TOO_MANY_ARGS)
+#define MSTRCT_$12(foo,i,...)             MSTRCT_GET(foo, i, MSTRCT_IDX10(__VA_ARGS__))
+#define MSTRCT_$11(foo,i,...)             MSTRCT_GET(foo, i, MSTRCT_IDX9(__VA_ARGS__))
+#define MSTRCT_$10(foo,i,...)             MSTRCT_GET(foo, i, MSTRCT_IDX8(__VA_ARGS__))
+#define MSTRCT_$9(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX7(__VA_ARGS__))
+#define MSTRCT_$8(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX6(__VA_ARGS__))
+#define MSTRCT_$7(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX5(__VA_ARGS__))
+#define MSTRCT_$6(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX4(__VA_ARGS__))
+#define MSTRCT_$5(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX3(__VA_ARGS__))
+#define MSTRCT_$4(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX2(__VA_ARGS__))
+#define MSTRCT_$3(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX1(__VA_ARGS__))
+#define MSTRCT_$2(foo,i,...)              MSTRCT_GET(foo, i, [0])
 #define MSTRCT_$1(foo)                    MSTRCT_GET0(foo)
 #define MSTRCT_$0()                       MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
@@ -114,10 +115,8 @@
 #define m(...) MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 #define M(...) MSTRCT_CAT2(MSTRCT_$$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
-#ifdef NMSTRCT
-  #define MSTRCT_C 0
-#else
-  #define MSTRCT_C 1
+#ifndef NMSTRCT
+  #define NMSTRCT 0
 #endif
 
 #ifdef MSTRCT_HARD
@@ -214,14 +213,17 @@ mstrct_shadow() {
 
 }
 
-// memstruct; if dim=1: index=[i][j][k]...; elseif dim=0: index=[1]
+// memstruct; see doc
 #define MSTRCT_T(type, index, enm)  \
 struct {  \
   uint16_t id; \
   /* ref[0] */ struct {char a[enm];} ref[0];     \
   /* typ[0] */ typeof(type) typ[0] __attribute__((packed)); \
+  /* con[0] */ struct {char a[((MSTRCT_CON(type)) ? ((__builtin_constant_p(sizeof(char index))) ? 1 : 0) : 0)];} con[0];   \
   /* dim[0] */ char (*dim[0])[]index __attribute__((packed)); \
 } __attribute__((aligned(2)))
+
+#define MSTRCT_CON(type) __builtin_types_compatible_p(typeof(type) const *, type *)
 
 typedef struct  {uint16_t id;} mstrct_proto;
 typedef struct  {void *addr; uint64_t size;} mstrct_meta;
@@ -294,6 +296,8 @@ __attribute__((weak, warning("MSTRCT ERR: namellocation FAILED!!")))
 void MSTRCT__ALLOC_FAIL(void);
 __attribute__((weak, warning("MSTRCT ERR: third argument must be EMPTY (it belongs to actual memory)!!")))
 void MSTRCT__NON_EMPTY_THIRD_ARG(void);
+__attribute__((weak, warning("MSTRCT ERR: 3rd arg is empty but the array isn't const!! should be a *CONST, and CONST SIZE!")))
+void MSTRCT__NON_CONST_ARR(void);
 
 static mstrct_func mstrct_err_tab[] = { // err vtable
   MSTRCT__NULL,
@@ -302,7 +306,8 @@ static mstrct_func mstrct_err_tab[] = { // err vtable
   MSTRCT__WRONG_TYPE_OF_ARG,
   MSTRCT__TOO_MANY_ARGS,
   MSTRCT__ALLOC_FAIL,
-  MSTRCT__NON_EMPTY_THIRD_ARG
+  MSTRCT__NON_EMPTY_THIRD_ARG,
+  MSTRCT__NON_CONST_ARR
 };
 
 __attribute__((hot)) static inline void 
@@ -424,12 +429,16 @@ mstrct_check(uint16_t id, char *addr, uint64_t type_size, int line, uint64_t ind
 #define MSTRCT_LET1(id) ((mstrct_meta *)(mstrct_addr2(id)))
 
 // get
-#define MSTRCT_GET(name, index) MSTRCT_CAT2(MSTRCT_GET_, MSTRCT_C)(name, index)
+#define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), NMSTRCT)(name, i, index)
 
-#define MSTRCT_GET_0(name, index) (*(MSTRCT_GET0(name) + MSTRCT_FLAT(name, index)))
+#define MSTRCT_GET_11(name, i, index) (*(MSTRCT_GET0(name) + MSTRCT_FLAT(name, [i] index)))
 
-#define MSTRCT_GET_1(name, index) (*((typeof(name.typ[0])) (mstrct_check(name.id, MSTRCT_GETX(name), \
-  MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, index))) + MSTRCT_FLAT(name, index)))
+#define MSTRCT_GET_10(name, i, index) (*((typeof(name.typ[0])) (mstrct_check(name.id, MSTRCT_GETX(name), \
+  MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [i] index))) + MSTRCT_FLAT(name, [i] index)))
+
+#define MSTRCT_GET_01(name, i, index)  \
+  (__builtin_choose_expr((sizeof(name.con[0])), MSTRCT_GET_11(name,0,index), MSTRCT_ASSERT(NON_CONST_ARR)))
+#define MSTRCT_GET_00(name, i, index) MSTRCT_GET_01(name, i, index)
 
 // put
 #define MSTRCT_PUT(store, name, range, counter) \
@@ -442,11 +451,11 @@ if (mstrct_ptr == (char *)2) {   \
   MSTRCT_GET0(name) = (void *)&MSTRCT_CAT2(mstrct_arr_, __LINE__); mstrct_ptr = (char *)1; \
 }
 
-#define MSTRCT_CLEAN(line, off, store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_C, MSTRCT_AUTO(store))(line, off)
-#define MSTRCT_CLEAN_00(line, off)
+#define MSTRCT_CLEAN(line, off, store) MSTRCT_CAT3(MSTRCT_CLEAN_, NMSTRCT, MSTRCT_AUTO(store))(line, off)
 #define MSTRCT_CLEAN_10(line, off)
-#define MSTRCT_CLEAN_11(line, off) __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, line) = off;
-#define MSTRCT_CLEAN_01(line, off)
+#define MSTRCT_CLEAN_00(line, off)
+#define MSTRCT_CLEAN_01(line, off) __attribute__((cleanup(mstrct_cleanup))) uint16_t MSTRCT_CAT2(mstrct_s_, line) = off;
+#define MSTRCT_CLEAN_11(line, off)
 
 #define MSTRCT_LET(typ, name, empty, index, counter) MSTRCT_CAT2(MSTRCT_LET_, MSTRCT_ARG_COUNT(empty))(typ,name,index,counter)
 #define MSTRCT_LET_0(typ, name, index, counter) MSTRCT_T(typ, index, counter) name
@@ -459,7 +468,7 @@ if (mstrct_ptr == (char *)2) {   \
   mstrct_checksum((__builtin_strstr(#memory, "realloc") != NULL),   \
   (__builtin_strstr(#memory, "mremap") != NULL), (mstrct_proto *)&(name), __LINE__);  \
   name.id = MSTRCT_DEF_META(counter,(uint64_t)mstrct_ptr,((uint64_t)sizeof(*(name.typ[0]))* (range) * MSTRCT_DSIZ(name))); \
-  MSTRCT_CAT2(mstrct_leak_, MSTRCT_C)((mstrct_proto *)&(name), __LINE__); /* leak check */  \
+  MSTRCT_CAT2(mstrct_leak_, NMSTRCT)((mstrct_proto *)&(name), __LINE__); /* leak check */  \
 } while(0)
 
 #define MSTRCT_LET2(_id, name) do {   \
@@ -469,7 +478,7 @@ if (mstrct_ptr == (char *)2) {   \
 } while(0)
 
 static inline void 
-mstrct_leak_1(mstrct_proto * name, int line) {char a;
+mstrct_leak_0(mstrct_proto * name, int line) {char a;
   if ((int64_t)((char *)&a - mstrct_ptr) > 0 || (mstrct_ptr - (char *)environ) > 0) /* not on regular stack */ {
     mstrct_pack temp; temp._d = name->id; temp._s = (uint16_t)line;
     uint64_t diff = (uint64_t)mstrct_string - (uint64_t)mstrct_refstr;
@@ -480,7 +489,7 @@ mstrct_leak_1(mstrct_proto * name, int line) {char a;
 }
 
 static inline void
-mstrct_leak_0(__attribute__((unused)) mstrct_proto * name, __attribute__((unused)) int line) {mstrct_ptr = (char *)1;}
+mstrct_leak_1(__attribute__((unused)) mstrct_proto * name, __attribute__((unused)) int line) {mstrct_ptr = (char *)1;}
 
 static inline void 
 mstrct_checksum(int a, int b, mstrct_proto *name, int line) {

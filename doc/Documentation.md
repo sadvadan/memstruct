@@ -37,7 +37,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Include `mstrct.h`.
 - Optionally, `#define NMSTRCT 1` to disable all checks for production, if needed. you can use this in local segments as well, for local disable.
-- Use `MSTRCT_L` flag for choosing hardening level of error reporting.
+- Use `#define MSTRCT_L value` to choose hardening level of error reporting.
 ```
     default 0: print detailed err, continue with default "the arr start value"
     strict  1: print detailed err, halt program with segfault at error site

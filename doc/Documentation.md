@@ -199,6 +199,7 @@ This document explains how to configure and use the memstruct.h library.
 - **memstruct:**
 mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only the type field may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
+    // memstruct layout
     struct {
       uint16_t id;
       struct {char a[enm];} ref[0];
@@ -219,14 +220,15 @@ mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's 
 
 ```
     // meta data struct layout
-    typedef struct  {
-                        void *addr;
-                        uint64_t size;
-                    } mstrct_meta;
+    typedef
+    struct  {
+      void *addr;
+      uint64_t size;
+    } mstrct_meta;
 ```
 
 ##  Troubleshooting
-LTS for memstruct is ensured as mstrct.h will be used in a forthcoming project. currently, however, mstrct.h is steadily gaining test coverage. so, bugs/errors can be directly reported here. Raise an issue if you need to discuss or ask clarification, too.
+LTS for memstruct is ensured as mstrct.h will be used in a forthcoming project. currently, however, mstrct.h is steadily gaining test coverage. so, bugs/errors can be directly reported here. raise an issue if you need to discuss or ask clarification.
 
 ## ![memstruct banner](banner.svg) Contributing guidelines
 

@@ -131,37 +131,68 @@ This document explains how to configure and use the memstruct.h library.
  
 - **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. Moreover, addr / metadata is `NULL`-ed so double frees are redundant. User knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
 
-## API reference (WARNING: completely outdated)
+## API reference (WARNING: outdated)
 
-- `$(...)` **macro:**
+- `M(...)` **macro:**
 ```
-    // metadata (L-value)
-    $(foo): 
-    foo = safe ptr name
+    // metadata (R-value)
+    M(foo): 
+    foo = memstruct name
+    returns: *struct  {void *addr; uint64_t size;}
+    field access: M(foo)->addr, M(foo)->size
 
-    // data (L-value)
-    $(foo, index):
-    foo = safe ptr name, index = a numeric type
+    // memory sharing
+    M(bar.id, foo):
+    bar = original memstruct holding a memory
+    id = uint16_t field of bar
+    foo = another memstruct now sharing the same memory
 
-    // safe ptr declaration
-    $(type, foo, ):
-    type = ptr typ, foo = a new name (or one masking another), or a struct's field name
+    // simple (dynamic range = 1) stack/ static re/assignment
+    M(storage, foo):          // OR, M(storage, foo, 1)
+    foo = memstruct name
+    storage (keyword) = static / __thread static / auto
 
-    // safe ptr declaration and definition
-    $(type, foo, range, addr): 
-    type = ptr type, foo = new name (or masks another), range = a numeric type, addr = 64 bit val
+    // dynamic range i stack/ static array re/assignment
+    M(storage, foo, i):
+    foo = memstruct name; storage (keyword) = static / __thread static / auto
+    i = dynamic range of the static or stack array 
+
+    // dynamic range i allocator (not block scoped) based array re/assignment
+    M(allocator, foo, i):
+    foo = memstruct name
+    i = range of the static or stack array 
+    allocator = your C std or custom allocator with native syntax; note: alloca also supported
+
+    // simple (static range = 1) memstruct declaration
+    M(type, foo, ):          // OR, M(type, foo, , 1) 
+    type = ptr type, e.g. const int * volatile, etc
+    foo = (new) memstruct name
     
-    // safe ptr declaration and definition as VLA or fixed size array
-    $(type, foo, range, ): 
-    type = ptr type, foo = new name (or one masking another), range = a numeric type
+    // static range (j,k,...) memstruct declaration
+    M(type, foo, , j, k,...):
+    type = ptr type, e.g. const int * volatile, etc
+    foo = (new) memstruct name
+    j,k,... = static range of foo 
+ 
+    // current memory address as L-value
+    m(foo):
+    foo = memstruct name
+ 
+    // simple GET (static index assumed to be 0) as L-value
+    m(foo, i): 
+    foo = memstruct name
+    i = sole (dynamic) index
 
-    // safe ptr re-assignment
-    $( , foo, range, addr): 
-    foo = a safe ptr name , range = a numeric type, addr = 64 bit value
+    // GET (at dynamic index i and static indexes j,k,...) as L-value
+    m(foo, i, j, k,...): 
+    foo = memstruct name
+    i = sole (dynamic) index
+    j, k,... = static indexes
 
-    // safe ptr re-assignment as VLA or fixed size array
-    $( , foo, range, ): 
-    foo = a safe ptr name , range = a numeric type
+    // GET (when there is no dynamic index, but static indexes j,k,...) as L-value
+    m(foo, , j, k,...):     // OR, m(foo, 0, j, k,...) but this incurs unnecessary runtime OOB check 
+    foo = memstruct name
+    j, k,... = static indexes
 
 ```
 

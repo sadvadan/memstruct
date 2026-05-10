@@ -2,7 +2,7 @@
 # ![memstruct banner](banner.svg) memstruct DOCUMENT
 
 This document explains how to configure and use the memstruct.h library.
-(**NOTE: this document is currently outdated from API reference ONWS.**)
+
 
 ## Table of contents
 
@@ -131,9 +131,9 @@ This document explains how to configure and use the memstruct.h library.
  
 - **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. Moreover, addr / metadata is `NULL`-ed so double frees are redundant. User knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
 
-## API reference (WARNING: outdated)
+## API reference
 
-- `M(...)` **macro:**
+- `M()`/`m()` **macro:**
 ```
     // metadata (R-value)
     M(foo): 
@@ -189,56 +189,44 @@ This document explains how to configure and use the memstruct.h library.
     i = sole (dynamic) index
     j, k,... = static indexes
 
-    // GET (when there is no dynamic index, but static indexes j,k,...) as L-value
-    m(foo, , j, k,...):     // OR, m(foo, 0, j, k,...) but this incurs unnecessary runtime OOB check 
+    // GET (when there is no dynamic index, only static indexes j,k,...) as L-value
+    m(foo, , j, k,...):     // OR, m(foo, 0, j, k,...) but this incurs additional runtime OOB check over the static check 
     foo = memstruct name
     j, k,... = static indexes
 
 ```
 
 - **memstruct:**
-mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only id and type fields may be of immediate user interest in general, even as the rest play equal role in memory safety.
+mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only the type field may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
     struct {
-      union {
-        uint32_t id;
-        struct {
-          uint16_t _d;
-          uint16_t _s;
-          type typ[0];
-          struct {char a[line];}  lin[0];
-          struct {char a[range];} ran[0];
-          struct {char a[card];}  car[0];
-          struct {char a[cons];}  con[0];
-        };
-      };
+      uint16_t id;
+      struct {char a[enm];} ref[0];
+      type typ[0];
+      struct {char a[0/1];}  con[0];
+      char (*dim[0])[][index];
     }
 
     // field description:
-       foo.id: public API
-       foo._d: (private) the offset of metadata in custom static segment
-       foo._s: (private) usually static ID for immediate access
-       typeof(foo.typ[0]): ptr type
-       sizeof(foo.lin[0]): __LINE__ at declaration site
-       sizeof(foo.ran[0]): memory range if static, else 0
-       sizeof(foo.car[0]): cardinality of name, 1 if not multidim
-       sizeof(foo.con[0]): 1 if ptr is *const type, 0 if not
+       foo.id: metadata ID; also, public API
+       sizeof(foo.ref[0]): address ID
+       typeof(foo.typ[0]): pointer type
+       sizeof(foo.con[0]): 1 if ptr is *const type & total memory size is fixed, 0 if not
+       dim[0]: holds geometry of - static indexes [index], and dynamic index []
 
 ```
-- **metadata:** metadata fields are accessed as `$(foo).metadata` e.g. `$(foo).addr`, `$(foo).size`, `$(foo).base` and `typeof($(foo).addr)`. This API is mainly for internal use, but also made available to enable ptr arithmetic (like so: `$(foo).addr++`), and to meet the metadata access needs of the occasional user. **Note:** since multidim names don't have separate metadata for each element, `$(foo[i][j]..).metadata` results in error -- there is only `$(foo).metadata` available.
-- **Raw access** of data through `$(foo).addr[index]` (verbose on purpose!) is allowed, mainly for occasional cases e.g. when clear performance benefits (of raw access) can be proven and/or primary check is already hoisted before a hot loop. 
+- **metadata:** metadata fields are accessed as `M(foo)->addr` and `M(foo)->size`
 
 ```
     // meta data struct layout
     typedef struct  {
-      ptr_type        addr; // (mutable)   ptr addr
-      const uint64_t  size; // (immutable) memory byte size
-      ptr_type const  base; // (immutable) base addr
-    }
+                        void *addr;
+                        uint64_t size;
+                    } mstrct_meta;
 ```
 
 ##  Troubleshooting
-LTS for memstruct is ensured as mstrct.h will be used in a forthcoming project. Currently, however, mstrct.h is at an initial stage. So, bugs/errors can be directly reported here. Raise an issue if you need to discuss or ask clarification, too.
+LTS for memstruct is ensured as mstrct.h will be used in a forthcoming project. currently, however, mstrct.h is steadily gaining test coverage. so, bugs/errors can be directly reported here. Raise an issue if you need to discuss or ask clarification, too.
 
 ## ![memstruct banner](banner.svg) Contributing guidelines
 

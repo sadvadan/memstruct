@@ -129,7 +129,7 @@ This document explains how to configure and use the memstruct.h library.
     free(foo);   // on-heap memory
     munmap(foo); // mmapped memory
  
-- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. Moreover, addr / metadata is `NULL`-ed so double frees are redundant. User knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
+- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / metadata is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
 
 ## API reference
 
@@ -197,7 +197,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
 
 - **memstruct:**
-mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. As the layout below shows, only the type field may be of immediate user interest in general, even as the rest play equal role in memory safety.
+mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. as the layout below shows, only the type field may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
     // memstruct layout
     struct {
@@ -220,11 +220,10 @@ mstrct.h targets ptrs holding array-like memory. Much like how a ptr variable's 
 
 ```
     // meta data struct layout
-    typedef
     struct  {
       void *addr;
       uint64_t size;
-    } mstrct_meta;
+    }
 ```
 
 ##  Troubleshooting

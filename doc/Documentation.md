@@ -246,8 +246,6 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 ## ![memstruct banner](banner.svg) Contributing guidelines
 
-TODO: CONTRIBUTING.md
-
 ### How to help
 
 - Fix bugs, typos, or improve tests.
@@ -271,4 +269,4 @@ Search existing issues before opening a new one.
 When reporting bugs, include commands, versions, and a minimal example.
 
 License:
-By contributing, you agree your code will be distributed under the project’s license (see LICENSE).
+By contributing, you agree your code will be distributed under the project’s license (see [LICENSE]).

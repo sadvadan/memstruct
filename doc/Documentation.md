@@ -230,17 +230,17 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - I disabled checks with `#define NMSTRCT 1` but the metadata is still getting stored in bss
 
-    this is a feature: a) custom bss segment is `qword`-aligned to speedup fetches e.g. of addresses; b) foo.id used in easy memory sharing points to metadata segment; c) additionally, freeing a memory needs the base address for safe de-allocation. memstruct therefore subscribes to "memory is cheap, performance not", and may not be a good fit for extremely memory constrained applications.
+    this is a feature: a) custom bss segment is `qword`-aligned & cache friendly to speedup fetches; b) foo.id, used in hassle-free memory sharing, refers to metadata bss segment; and, c) freeing a memory needs the base address for safe de-allocation. memstruct therefore subscribes to "memory is cheap, performance is not" - & may not be a good fit for severely memory constrained contexts.
 
 - Memstruct is catching all the bugs but the program isn't panicking
 
-    this is a feature, at the hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening to 1 (`#define MSTRCT_L 1`) to cause segfault at the site after error print, or 2 to cause exit after the error print. default level 0 subscribe to fail safe design as the default mode.
+    this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening to 1 (`#define MSTRCT_L 1`) to cause segfault at the site after error print, or 2 to cause exit after the error print. default level 0 subscribe to fail safe design as the default mode.
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
     the most convenient method is to expand the macro locally in your code editor itself. currently, clangd LSP works well at it.
 
-- I found what seems to be a deficiency in memstruct
+- I found what seems to be a bug/deficiency in memstruct
 
     you're welcome: raise an issue in the repo, and if possible a merge request as contributor.
 

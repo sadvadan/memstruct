@@ -12,13 +12,13 @@ This document explains how to configure and use the memstruct.h library.
 - [Usage](#usage)  
 - [API reference](#api-reference)  
 - [Troubleshooting](#troubleshooting)  
-- [Contributing guidelines](#contributing)
+- [Contributing guidelines](#contributing-guidelines)
 
 ## Overview
 
-- **Working:** the 'safe ptr' carries comptime data in its type system. the error reporting system supplements this with const foldings and SSA from compiler-optimizer, leading to -- fully comptime, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are part of OOB check with no extra overhead.
+- **Working:** the 'safe ptr' (henceforth called memstruct) carries comptime data in its type system. the error reporting system supplements this with const foldings and SSA from compiler-optimizer, leading to -- fully comptime, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are part of OOB check with no extra overhead.
 
-- **Ergonomy:** a 'safe ptr' is basically a unique, anonymous struct type on the 'outside' but also the size of a `uint16_t` (like an ID), casually passed around among stakeholders.
+- **Ergonomy:** a memstruct is basically a unique, anonymous struct type on the 'outside' but also the size of a `uint16_t` (like an ID), casually passed around among stakeholders.
 
 - **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a static segment.
 
@@ -30,7 +30,7 @@ This document explains how to configure and use the memstruct.h library.
 - No external dependencies; only standard `C` headers.
 - Safe to include in multiple translation units.
 
-- A 'safe ptr' being a unique anonymous struct type, doesn't mix with other types, including safe ptrs; it can't be naively de-referenced, or cast either. safety propagates: a safe foo is used only through `m()` / `M()` / `foo.id` semantics.
+- A memstruct being a unique anonymous struct type, doesn't mix with other types, including other memstructs; it can't be naively de-referenced, or cast either. safety propagates: a safe foo is used only through `m()` / `M()` / `foo.id` semantics.
 - Thread safety: memstruct is thread safe except for de-allocations (during multi-threading), which - per the general practice - must be placed under write/read barriers; examples: `free()`, `munmap()`, `mremap()`, `realloc()`. in all other circumstances, metadata is immutable and addresses are private, and memstruct remains thread safe.
 
 ## Configuration
@@ -49,11 +49,11 @@ This document explains how to configure and use the memstruct.h library.
 
 - **Working theory**: a memory array `foo[ i ][ j ][ k ]..` is constructed of two components-
 
-    a) the static part `foo[ ][ j ][ k ]..` that is with constant indexes and part of the safe ptr type system, and
+    a) the static part `foo[ ][ j ][ k ]..` that is with constant indexes and part of the memstruct type system, and
 
     b) the dynamic part `foo[ i ][ ][ ]..` where the single index i is dynamically decided during memory allocation to foo.
 
-    therefore, when a safe ptr is declared as `M(type,foo,,j,k..)` the empty 3rd argument (you get comptime error if it isn't empty) is to signify that the dynamic index i is to be determined during allocation later as `M(allocator,foo,i)`.
+    therefore, when a memstruct is declared as `M(type,foo,,j,k..)` the empty 3rd argument (you get comptime error if it isn't empty) is to signify that the dynamic index i is to be determined during allocation later as `M(allocator,foo,i)`.
 
     if you only need a constant sized array then allocate as `M(allocator,foo,1)` and later access as `m(foo, ,j,k..)` i.e. with skip index so that the OOB check is fully comptime.
 
@@ -76,7 +76,7 @@ This document explains how to configure and use the memstruct.h library.
 
     the dereferencing `m(foo)[index]` is however an escape hatch where checks don't apply. document each use case with proper reason, especially given you can always use `#define NMSTRCT 1` to flag a section as unsafe. memstruct offers subscriptive, not prescriptive, safety: user is able to deliberate safety bypass at program, sub-program, or line level; or, memory safe code is able to co-exist with legacy code.
 
-- **memstruct declaration:** declare a "safe ptr" foo as `M(ptr_type, foo, multi_dim_index)`.
+- **memstruct declaration:** declare a memstruct foo as `M(ptr_type, foo, multi_dim_index)`.
     ```
     // foo[][1]
     M(long int *,foo,); // or: M(long int *,foo,,1)
@@ -86,7 +86,7 @@ This document explains how to configure and use the memstruct.h library.
 
     // valid as a field declaration within a struct type definition
     ```
-- **Assignment:** map the safe ptr onto a memory as `M(storage, foo, single_index)`.
+- **Assignment:** map the memstruct onto a memory as `M(storage, foo, single_index)`.
     ```
     M(malloc(80),foo,10); // allocate 80 heap bytes as foo[10][2]
 
@@ -131,7 +131,7 @@ This document explains how to configure and use the memstruct.h library.
     free(foo);   // on-heap memory
     munmap(foo); // mmapped memory
  
-- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates safe ptr (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / metadata is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
+- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates memstruct (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / metadata is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
 
 ## API reference
 

@@ -35,15 +35,15 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Configuration
 
-- Optionally, `#define NMSTRCT 1` to disable all checks for production, if needed. you can use this in local segments as well, for local disable.
-- Use `#define MSTRCT_STRICT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
+- In your file, optionally include `#define NMSTRCT 1` to disable all checks for production, if needed. **note**: you can use this in local segments as well, for local disable like so: `#define NMSTRCT 1` `unsafe code here` `#undef NMSTRCT`.
+- Include `#define MSTRCT_STRICT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
 ```
     default       : print detailed err, continue with default "the arr start value"
     MSTRCT_STRICT : print detailed err, halt program with segfault at error site
     MSTRCT_HARD   : print detailed err, exit program with mstrct_status code
 ```
 - Include `mstrct.h`.
-- Alternatively, use `-DNMSTRCT=1` and `-DMSTRCT_STRICT` or `-DMSTRCT_HARD` directly as compiler flags.
+- Alternatively, instead of directives in your source, use `-DNMSTRCT=1` and `-DMSTRCT_STRICT` or `-DMSTRCT_HARD` directly as compiler flags during compilation.
 
 ## Usage
 

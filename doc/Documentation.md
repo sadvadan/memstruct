@@ -271,6 +271,6 @@ Search existing issues before opening a new one.
 When reporting bugs, include commands, versions, and a minimal example.
 
 License:
-By contributing, you agree your code will be distributed under the project’s license (see LICENSE).
+By contributing, you agree your code will be distributed under the project’s license (see [LICENSE]).
 
 ![memstruct banner](banner.svg)

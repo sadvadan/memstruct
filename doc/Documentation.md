@@ -236,7 +236,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - Memstruct is catching all the bugs but the program isn't panicking
 
-    this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening to 1 (`#define MSTRCT_L 1`) to cause segfault at the site after error print, or 2 to cause exit after the error print. default level 0 subscribe to fail safe design as the default mode.
+    this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening level to 1 (`#define MSTRCT_STRICT`) to cause segfault at the site after error print, or 2 (`#define MSTRCT_HARD`) to cause exit after the error print. default level 0 subscribe to fail safe design as the default mode.
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     

@@ -218,7 +218,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
        dim[0]: holds geometry of - static indexes [index], and dynamic index []
 
 ```
-- **metadata:** metadata fields are accessed as `M(foo)->addr` and `M(foo)->size`
+- **metadata:** metadata fields are accessed as `M(foo)->addr` and `M(foo)->size` (R-values)
 
 ```
     // meta data struct layout

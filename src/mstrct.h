@@ -292,9 +292,9 @@ __attribute__((weak, warning("MSTRCT ERR: INCOMPATIBLE arg(s)!")))
 void MSTRCT__WRONG_TYPE_OF_ARG(void);
 __attribute__((weak, warning("MSTRCT ERR: too MANY args!")))
 void MSTRCT__TOO_MANY_ARGS(void);
-__attribute__((weak, warning("MSTRCT ERR: namellocation FAILED!!")))
+__attribute__((weak, warning("MSTRCT ERR: memstruct allocation FAILED!!")))
 void MSTRCT__ALLOC_FAIL(void);
-__attribute__((weak, warning("MSTRCT ERR: third argument must be EMPTY (it belongs to actual memory)!!")))
+__attribute__((weak, warning("MSTRCT ERR: M(...) third argument must be EMPTY (it belongs to actual memory)!!")))
 void MSTRCT__NON_EMPTY_THIRD_ARG(void);
 __attribute__((weak, warning("MSTRCT ERR: 3rd arg is empty but the array isn't const!! should be a *CONST, and CONST SIZE!")))
 void MSTRCT__NON_CONST_ARR(void);

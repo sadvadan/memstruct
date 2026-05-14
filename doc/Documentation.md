@@ -35,7 +35,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Configuration
 
-- In your file, optionally include `#define NMSTRCT 1` to disable all checks for production, if needed. **note**: you can use this in local segments as well, for local disable like so: `#define NMSTRCT 1` `unsafe code here` `#undef NMSTRCT`.
+- In your source file, optionally include `#define NMSTRCT 1` to disable all checks for production, if needed. **note**: you can use this in local segments as well, for local disable like so: `#define NMSTRCT 1` `unsafe code here` `#undef NMSTRCT`.
 - Include `#define MSTRCT_STRICT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
 ```
     (default)     : print detailed err, continue with default "the arr start value"
@@ -64,11 +64,11 @@ This document explains how to configure and use the memstruct.h library.
 - **Memory sharing:** memstruct field id is simply passed around to share memory. 
 ```
     M(foo.id, bar); // makes bar refer the same memory as foo, but retain its type "view"
-    callee_function(uint16_t id, other_inputs); // callee is given foo.id to access memory, metadata
+    callee_function(uint16_t id, other_inputs); // callee is given foo.id to access memory and metadata
 ```
 - **Safe access of data:** 
 
-    `m(foo,index)` is equivalent to `foo[index]`. or `M(foo,i,j,k..)` to `foo[ i ][ j ][ k ]`..
+    `m(foo,index)` is equivalent to `foo[index]`. or `m(foo,i,j,k..)` to `foo[ i ][ j ][ k ]`..
 
 - **Raw access (w/o checks) of data:** 
 
@@ -131,7 +131,7 @@ This document explains how to configure and use the memstruct.h library.
     free(foo);   // on-heap memory
     munmap(foo); // mmapped memory
  
-- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates memstruct (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / metadata is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's better to over-use the overloaded free() or munmap(), as redundant frees get **elided by the compiler**, rather than corrupt memory.
+- **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates memstruct (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / size is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the overloaded free() or munmap(), as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
 ## API reference
 
@@ -208,7 +208,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
       type typ[0];
       struct {char a[0/1];}  con[0];
       char (*dim[0])[][index];
-    }
+    } foo;
 
     // field description:
        foo.id: metadata ID; also, public API

@@ -74,7 +74,7 @@ This document explains how to configure and use the memstruct.h library.
 
     `m(foo)` is the raw address on which ptr arithmetic is applicable, and is an L value. ptr arithmetic by itself is not unsafe.
 
-    the dereferencing `m(foo)[index]` is however an escape hatch where checks don't apply. document each use case with proper reason, especially given you can always use `#define NMSTRCT` to flag a section as unsafe. memstruct offers subscriptive, not prescriptive, safety: user is able to deliberate safety bypass at program, sub-program, or line level; or, memory safe code is able to co-exist with legacy code.
+    the dereferencing `m(foo)[index]` is however an escape hatch where checks don't apply. document each use case with proper reason, especially given you can always use `#define NMSTRCT 1` to flag a section as unsafe. memstruct offers subscriptive, not prescriptive, safety: user is able to deliberate safety bypass at program, sub-program, or line level; or, memory safe code is able to co-exist with legacy code.
 
 - **memstruct declaration:** declare a "safe ptr" foo as `M(ptr_type, foo, multi_dim_index)`.
     ```

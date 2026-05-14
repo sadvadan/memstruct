@@ -35,7 +35,6 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Configuration
 
-- Include `mstrct.h`.
 - Optionally, `#define NMSTRCT 1` to disable all checks for production, if needed. you can use this in local segments as well, for local disable.
 - Use `#define MSTRCT_STRICT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
 ```
@@ -43,6 +42,8 @@ This document explains how to configure and use the memstruct.h library.
     MSTRCT_STRICT : print detailed err, halt program with segfault at error site
     MSTRCT_HARD   : print detailed err, exit program with mstrct_status code
 ```
+- Include `mstrct.h`.
+
 ## Usage
 
 - **Working theory**: a memory array `foo[ i ][ j ][ k ]..` is constructed of two components-

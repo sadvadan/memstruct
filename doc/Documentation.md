@@ -64,16 +64,28 @@ This document explains how to configure and use the memstruct.h library.
 - **Memory sharing:** memstruct field id is simply passed around to share memory. 
 ```
     M(foo.id, bar); // makes bar refer the same memory as foo, but retain its type "view"
-    callee_function(uint16_t id, other_inputs); // callee is given foo.id to access memory and metadata
+    callee_function(uint16_t foo.id, other_args); // callee is given foo.id to access memory and metadata
 ```
 - **Safe access of data:** 
 
-    `m(foo,index)` is equivalent to `foo[index]`. or `m(foo,i,j,k..)` to `foo[ i ][ j ][ k ]`..
+    `m(foo,index)` is equivalent to `foo[index]`. or `m(foo,i,j,k..)` to `foo[ i ][ j ][ k ]..`
 
+    Read / write memory: `m(name,index) = value`.
+    ```
+    // single dim array types
+    m(foo,5) = 10;
+
+    // multi-dim array types
+    m(bar,5,7,2) = 10;
+     ```
 - **Raw access (w/o checks) of data:** 
 
     `m(foo)` is the raw address on which ptr arithmetic is applicable, and is an L value. ptr arithmetic by itself is not unsafe.
+     ```
+    m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
 
+    m(foo)[5] = 10; // unsafe escape hatch
+     ```
     the dereferencing `m(foo)[index]` is however an escape hatch where checks don't apply. document each use case with proper reason, especially given you can always use `#define NMSTRCT 1` to flag a section as unsafe. memstruct offers subscriptive, not prescriptive, safety: user is able to deliberate safety bypass at program, sub-program, or line level; or, memory safe code is able to co-exist with legacy code.
 
 - **memstruct declaration:** declare a memstruct foo as `M(ptr_type, foo, multi_dim_index)`.
@@ -100,31 +112,11 @@ This document explains how to configure and use the memstruct.h library.
     ```
     M(malloc(80),foo,40); // same as assignment
     ```
-- **Share** memory: simply pass around `foo.id` (a `uint16_t`).
-    ```
-    M(foo.id, bar); // bar now shares memory with foo 
-
-    Callee_function(foo.id, other_inputs); // share with callee
-     ```
-- **Read / write** memory: `m(name,index) = value`.
-    ```
-    // single dim array types
-    m(foo,5) = 10;
-
-    // multi-dim array types
-    m(bar,5,7,2) = 10;
-     ```
 - **Metadata** access: `M(foo)` is `*struct {addr, size}`.
      ```
     uint64_t temp = M(foo)->size; // byte size as R value
 
     void *temp = M(foo)->addr; // base addr as R value
-     ```
-- **Raw** access: `m(foo)` is the current addr (L value).
-     ```
-    m(foo)++; // ptr arithmetic; safe, as it's not dereferenced yet
-
-    m(foo)[5] = 10; // unsafe escape hatch
      ```
 - **De**-allocate: double frees are redundant (later elided by compiler).
      ```

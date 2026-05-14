@@ -43,6 +43,7 @@ This document explains how to configure and use the memstruct.h library.
     MSTRCT_HARD   : print detailed err, exit program with mstrct_status code
 ```
 - Include `mstrct.h`.
+- Alternatively, use `-DNMSTRCT=1` and `-DMSTRCT_STRICT` or `-DMSTRCT_HARD` directly as compiler flags.
 
 ## Usage
 

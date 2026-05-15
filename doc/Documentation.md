@@ -31,7 +31,7 @@ This document explains how to configure and use the memstruct.h library.
 - Safe to include in multiple translation units.
 
 - A memstruct being a unique anonymous struct type, doesn't mix with other types, including other memstructs; it can't be naively de-referenced, or cast either. safety propagates: a safe foo is used only through `m()` / `M()` / `foo.id` semantics.
-- Thread safety: memstruct is thread safe except for de-allocations (during multi-threading), which - per the general practice - must be placed under write/read barriers; examples: `free()`, `munmap()`, `mremap()`, `realloc()`. in all other circumstances, metadata is immutable and addresses are private, and memstruct remains thread safe.
+- Thread safety: library is thread-safe for metadata but user must protect data writes - including de/re-allocations - while multithreading is ON.
 
 ## Configuration
 

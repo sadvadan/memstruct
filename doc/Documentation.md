@@ -234,6 +234,10 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
     
     the most convenient method is to expand the macro locally in your code editor itself. currently, clangd LSP works well at it.
 
+- How to quickly know if unsafe escape hatch `m(foo)[i]` has been used in a file?
+
+    search `[` or `]` in your editor to quickly find out.
+
 - I found what seems to be a bug/deficiency in memstruct
 
     you're welcome: raise an issue in the repo, and if possible a merge request as contributor.

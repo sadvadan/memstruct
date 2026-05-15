@@ -261,12 +261,12 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
    ```bash
    git checkout -b fix/foo-bug
    ```
-Issues:
+2. Issues:
 Search existing issues before opening a new one.
 
-When reporting bugs, include commands, versions, and a minimal example.
+3. When reporting bugs, include commands, versions, and a minimal example.
 
-License:
+4. License:
 By contributing, you agree your code will be distributed under the project’s license (see  [LICENSE](../LICENSE)).
 
 ![memstruct banner](banner.svg)

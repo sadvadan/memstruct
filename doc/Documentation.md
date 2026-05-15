@@ -30,8 +30,8 @@ This document explains how to configure and use the memstruct.h library.
 - No external dependencies; only standard `C` headers.
 - Safe to include in multiple translation units.
 
-- A memstruct being a unique anonymous struct type, doesn't mix with other types, including other memstructs; it can't be naively de-referenced, or cast either. safety propagates: a safe foo is used only through `m()` / `M()` / `foo.id` semantics.
-- Thread safety: library is thread-safe for metadata but user must protect data writes - including de/re-allocations - while multithreading is ON.
+- A memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either; it is used only through `m()` / `M()` semantics.
+- Thread safety: library is thread-safe but user must protect writes - including de/re-allocations - while multithreading is ON.
 
 ## Configuration
 

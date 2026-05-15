@@ -240,7 +240,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - I need to use the library for a closed source work at our company
 
-    you may contact the author for separate licensing.
+    you may contact the author for separate licensing, or sponsoring.
 
 ## Contributing guidelines
 

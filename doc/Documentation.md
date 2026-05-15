@@ -86,7 +86,7 @@ This document explains how to configure and use the memstruct.h library.
 
     m(foo)[5] = 10; // unsafe escape hatch
      ```
-    the dereferencing `m(foo)[index]` is however an escape hatch where checks don't apply. document each use case with proper reason, especially given you can always use `#define NMSTRCT 1` to flag a section as unsafe. memstruct offers subscriptive, not prescriptive, safety: user is able to deliberate safety bypass at program, sub-program, or line level; or, memory safe code is able to co-exist with legacy code.
+    the dereferencing `m(foo)[index]` is however an escape hatch where checks don't apply. user is able to deliberately bypass safety at program, sub-program, or line level; also, memory safe code is able to co-exist with legacy code.
 
 - **memstruct declaration:** declare a memstruct foo as `M(ptr_type, foo, multi_dim_index)`.
     ```
@@ -232,19 +232,19 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
-    the most convenient method is to expand the macro locally in your code editor itself. currently, clangd LSP works well at it.
+    the most convenient method is to expand the macro locally in your code editor itself. currently, clangd LSP works well at it. or, more conventionally, pre-compile with -E flag into expanded source.
 
-- How to quickly know if unsafe escape hatch `m(foo)[i]` has been used in a file that has otherwise fully adapted memstruct?
+- How to quickly know if unsafe escape hatch `m(foo)[i]` has been used in a file that otherwise conforms to the library?
 
     search `[` or `]` in your editor to quickly find out.
 
 - I found what seems to be a bug/deficiency in memstruct
 
-    you're welcome: raise an issue in the repo, and if possible a merge request as contributor.
+    feel encouraged to raise an issue in the repo, and if possible a merge request as contributor!
 
 - I need to use the library for a closed source work at our company
 
-    you may contact the author for separate licensing, or sponsoring.
+    you may contact the author for separate licensing, or, consider sponsoring.
 
 ## Contributing guidelines
 

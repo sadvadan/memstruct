@@ -244,7 +244,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - Where is the LTS release?
 
-    currently a GitHub release is not deemed necessary: you may use the latest memstruct.h directly.
+    presently, you may use the latest memstruct.h directly. with sufficient test coverage a release will be expected in future.
 
 - I found what seems to be a bug/deficiency in memstruct
 

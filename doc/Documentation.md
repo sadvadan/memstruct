@@ -240,7 +240,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - Under which scenarios it's advisable to use `unsafe` blocks (aka `#define NMSTRCT 1`) or escape hatches (`m(foo)[i]`)?
     
-    it's never necessary, actually. memstruct is `C` native, so syscalls or other `C` libs that have safety records (through testing!) of decades, can be used as is without making use of `unsafe`. suppose a `C` library's API has for input an addr and a size; one may feed it: `M(foo)->addr` and `M(foo)->size` to enforce safety at the interface. if you are making a `C` library yourself, you may instead use `foo.id` for greater efficiency - but that's that: memstruct is already `C` and can leverage legacy `C` code without using `unsafe`.in other cases such as say `unsafe` is faster in a gainful way (!) in a hot path - then `unsafe` may be justified.
+    it's nearly never necessary. memstruct is `C` native - so syscalls or `C` libs that have decades old safety records - can be used as is: suppose, a `C` lib's API has inputs - addr & size - that can be fed as: `M(foo)->addr` and `M(foo)->size` to enforce safety at the interface. or, if you are making a `C` library yourself, you may instead use `foo.id` for greater efficiency - but that's that. in other cases such as say `unsafe` is proven faster in a gainful way (!) in a hot path - can justify `unsafe`.
 
 - Where is the LTS release?
 

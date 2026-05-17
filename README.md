@@ -67,9 +67,9 @@ C + memstruct = performance + memory safety
 
     `M(foo)` is the `void *` addr of meadata; cast this as `mstrct *` to get metadata:
      ```
-    uint64_t temp = ((mstrct *)M(foo))->size; // byte size as R value
+    uint64_t temp = ((mstrct *)M(foo))->size; // const byte size
 
-    void *temp = ((mstrct *)M(foo))->addr; // base addr as R value
+    void *temp = ((mstrct *)M(foo))->addr; // const base addr
      ```
 - **Raw** access
 

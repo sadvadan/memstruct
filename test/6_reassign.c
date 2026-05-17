@@ -9,7 +9,7 @@ int main(void) {
   
   M(int * volatile, foo,,12); // foo[][12]
 
-  M(var.id,foo); // share memory: foo -> foo[1][12]
+  M(M(var),foo); // share memory: foo -> foo[1][12]
 
   M(auto,var,16); // remap var -> var[16][1]
 

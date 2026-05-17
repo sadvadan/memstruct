@@ -14,7 +14,7 @@ int main(void) {
     printf("foo[8], with checks: %d\n", m(foo,8)); // fetch (with checks)
 
     M(int *const,bar,,2,6); // declare multidm type bar[][2][6]
-    M(foo.id,bar); // share memory with foo
+    M(M(foo),bar); // share memory with foo
     
     printf("bar[0][1][2], w/o checks: %d\n", m(bar)[8]); // fetch (no checks)
     printf("bar[0][1][2], with checks: %d\n", m(bar,0,1,2)); // fetch (with checks)

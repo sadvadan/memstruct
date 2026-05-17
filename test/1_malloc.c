@@ -10,7 +10,7 @@ int main(void) {
 
   m(foo,5) = 10; // define foo[5][0]
 
-  printf("size of safe ptr should be 2. check: %zu\n", sizeof(foo));
+  printf("size of a memstruct should be 4. check: %zu\n", sizeof(foo));
   printf("var[5], with checks: %d\n", m(foo,5)); // fetch memory (with checks)
   printf("var[5], w/o checks: %d\n", m(foo)[5]); // fetch memory (no checks)
   free(foo); // comment this to see leak warning
@@ -18,7 +18,7 @@ int main(void) {
 }
 
 /* out
-size of safe ptr should be 2. check: 2
+size of safe ptr should be 4. check: 4
 var[5], w/o checks: 10
 var[5], with checks: 10;
 */

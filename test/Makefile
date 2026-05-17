@@ -1,7 +1,6 @@
 # compiler and flags
-USE_THREAD = # change it to -pthread if multithreading in src
 CC = gcc
-CFLAG = -O0 -g -Wall -Wextra $(USE_THREAD)
+CFLAG = -O0 -g -Wall -Wextra
 TARGET = out
 
 # source and header files

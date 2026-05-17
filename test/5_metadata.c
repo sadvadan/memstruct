@@ -9,8 +9,8 @@ int main(void) {
   m(var,5) = 10; // define var[5][0]
 
   printf("ptr_addr: %p\n", m(var)); // fetch addr
-  printf("arr_byte_size: %zu\n", M(var.id)->size); // fetch memory size in bytes
-  printf("base_addr: %p\n", M(var.id)->addr); // fetch memory base addr
+  printf("arr_byte_size: %zu\n", ((mstrct *)M(var))->size); // fetch memory size in bytes
+  printf("base_addr: %p\n", ((mstrct *)M(var))->addr); // fetch memory base addr
 
   free(var);
   return 0;

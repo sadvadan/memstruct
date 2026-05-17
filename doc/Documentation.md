@@ -3,6 +3,7 @@
 
 This document explains how to configure and use the memstruct.h library.
 
+(**NOTE**: this document is currently under update)
 
 ## Table of contents
 

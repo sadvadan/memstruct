@@ -13,7 +13,7 @@
  *  to check OOB/UAF/NULL-deref/double-free and leaks
  *
  *  with flag NMSTRCT checks can be disabled. there's
- *  also hardening flag MSTRCT_L to suit err handling
+ *  a hardening flag (see, doc) to suit err handling.
  *
  **/
 

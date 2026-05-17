@@ -47,11 +47,11 @@ C + memstruct = performance + memory safety
     ```
 - **Share** memory
 
-    simply pass around `foo.id` (a `uint16_t`):
+    simply pass around `M(foo)` (a `void *` addr of metadata):
     ```
-    M(foo.id, bar); // bar now shares memory with foo 
+    M(M(foo), bar); // bar now shares memory with foo 
 
-    Callee_function(foo.id, other_inputs); // share with callee
+    Callee_function(M(foo), other_inputs); // share with callee
      ```
 - **Read / write** memory
 
@@ -65,11 +65,11 @@ C + memstruct = performance + memory safety
      ```
 - **Metadata** access
 
-    `M(foo)` is `*struct {addr, size}`:
+    `M(foo)` is the `void *` addr of meadata; cast this as `mstrct *` to get metadata:
      ```
-    uint64_t temp = M(foo)->size; // byte size as R value
+    uint64_t temp = ((mstrct *)M(foo))->size; // byte size as R value
 
-    void *temp = M(foo)->addr; // base addr as R value
+    void *temp = ((mstrct *)M(foo))->addr; // base addr as R value
      ```
 - **Raw** access
 

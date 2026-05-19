@@ -15,6 +15,7 @@ C + memstruct = performance + memory safety
 ## 🚀 Quick Start
 
 - **Include**
+
     `mstrct.h` in your file.
 - **Declare** a memstruct:
     ```
@@ -39,14 +40,14 @@ C + memstruct = performance + memory safety
     ```
     M(malloc(80),foo,40);         // same as assignment
     ```
-- **Share** memory
+- **Share** memory:
     ```
     M(M(foo), bar);               // bar now shares memory with foo 
 
     // share memory with callee
     Callee_function(M(foo), other_inputs);
      ```
-- **Read / write** memory
+- **Read / write** memory:
     ```
     // single dim array types
     m(foo,5) = 10;
@@ -54,13 +55,13 @@ C + memstruct = performance + memory safety
     // multi-dim array types
     m(bar,5,7,2) = 10;
      ```
-- **Metadata** access
+- **Metadata** access:
      ```
     uint64_t temp = M(foo)->size; // const byte size
 
     void *temp = M(foo)->addr;    // const base addr
      ```
-- **Raw** access
+- **Raw** access:
      ```
     m(foo)++;                     // ptr arithmetic; safe , as not dereferenced yet
 

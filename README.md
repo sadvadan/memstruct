@@ -54,7 +54,7 @@ C + memstruct = performance + memory safety
 
     m(bar)[5] = 10;               // unsafe escape hatch
      ```
-- **De**-allocate memstruct: double free is harmless (get elided).
+- **De**-allocate memstruct: double free is harmless (gets elided, hurray).
      ```
     free(foo);                    // on-heap memory
 

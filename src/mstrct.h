@@ -253,8 +253,6 @@ __attribute__((weak, warning("MSTRCT ERR: memstruct allocation FAILED!!")))
 void MSTRCT__ALLOC_FAIL(void);
 __attribute__((weak, warning("MSTRCT ERR: M(...) third argument must be EMPTY (it belongs to runtime index)!!")))
 void MSTRCT__NON_EMPTY_THIRD_ARG(void);
-__attribute__((weak, warning("MSTRCT ERR: for static OOB test, arr should be *CONST, of CONST SIZE, and index COMPTIME known!")))
-void MSTRCT__NON_STATIC_CASE(void);
 
 static mstrct_func mstrct_err_tab[] = { // err vtable
   MSTRCT__NULL,
@@ -263,8 +261,7 @@ static mstrct_func mstrct_err_tab[] = { // err vtable
   MSTRCT__WRONG_TYPE_OF_ARG,
   MSTRCT__TOO_MANY_ARGS,
   MSTRCT__ALLOC_FAIL,
-  MSTRCT__NON_EMPTY_THIRD_ARG,
-  MSTRCT__NON_STATIC_CASE
+  MSTRCT__NON_EMPTY_THIRD_ARG
 };
 
 __attribute__((hot)) static inline void 

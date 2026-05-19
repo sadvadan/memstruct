@@ -30,12 +30,11 @@ C + memstruct = performance + memory safety
     M(malloc(2800),bar,10);       // allocate bar on-heap as int[10][2][5][7]
     ```
 - **Re-allocate** memory: same as allocation, `M(storage, name, index)`.
-- **Share** memory:
+- **Share** memory: simply pass around `M(foo)` which is a ptr to metadata.
     ```
     M(M(foo), bar);               // bar now shares memory with foo 
-
-    // share memory with callee
-    Callee_function(M(foo), other_inputs);
+    
+    func(M(foo), other_inputs);   // share memory with callee
      ```
 - **Read / write** memory:
     ```
@@ -58,6 +57,7 @@ C + memstruct = performance + memory safety
 - **De**-allocate memstruct:
      ```
     free(foo);                    // on-heap memory
+
     munmap(foo);                  // mmapped memory
      ```
 ## 📖 Documentation 

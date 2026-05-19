@@ -149,7 +149,7 @@ This document explains how to configure and use the memstruct.h library.
     M(allocator, foo, i):
     foo = memstruct name
     i = dynamic range of the array 
-    allocator = your C std or custom allocator with native syntax
+    allocator = your C std or custom allocator
     note:
       a) alloca, as it isn't block scoped, is also supported by this syntax
       b) any preceding cast e.g. (char *) etc for the allocator is not only

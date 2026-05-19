@@ -19,9 +19,9 @@ C + memstruct = performance + memory safety
     `mstrct.h` in your file.
 - **Declare and allocate** a memstruct:
 
-    declaration: `M(ptr_type, name,, static_indexes)`;
+    declaration prototype: `M(ptr_type, name,, static_indexes)`
 
-    allocation: `M(storage, name, dynamic_index)`;
+    allocation prototype: `M(storage, name, dynamic_index)`
     ```
     M(int *,foo,);                // declare simple foo as int[][1]
     M(auto,foo,10);               // allocate on-stack foo as int[10][1]

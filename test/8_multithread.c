@@ -20,7 +20,7 @@ void* thread_func(void* arg) {
   int tid = (int)((uintptr_t)pthread_self() % 1000);
 
   M(int *, view,);
-  M(arg, view);                              // share memory
+  M((mstrct *)arg, view);                 // share memory
 
   for (int i = 0; i < 1000; i++) {
     int idx = (tid + i * 13) % ARRAY_SIZE;

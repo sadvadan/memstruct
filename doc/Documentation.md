@@ -96,7 +96,7 @@ This document explains how to configure and use the memstruct.h library.
 
     // valid as a field declaration within a struct type definition
     ```
-- **Assignment:** map the memstruct onto a memory as `M(storage, foo, single_index)`.
+- **Allocate:** memory to a memstruct as `M(storage, foo, single_index)`.
     ```
     M(malloc(80),foo,10);           // allocate 80 heap bytes as foo[10][2]
 
@@ -106,7 +106,7 @@ This document explains how to configure and use the memstruct.h library.
 
     // memstruct supports all kind of allocators (should return a ptr)
     ```
-- **Re-assign** memory:
+- **Re-allocate** memory to a memstruct:
     ```
     M(malloc(80),foo,40);           // same as assignment
     ```

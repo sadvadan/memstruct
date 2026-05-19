@@ -29,8 +29,7 @@ C + memstruct = performance + memory safety
 
     // declaration can be as a field inside a struct
     ```
-- **Assign** 
-
+- **Allocate** 
     map onto a memory `M(storage,name,index)` like so:
     ```
     M(int *,foo,);                          // declare simple (dim=1) foo
@@ -39,8 +38,7 @@ C + memstruct = performance + memory safety
     M(int *,foo,,2);                        // first declare foo[][2]
     M(malloc(80),foo,10);                   // allocate 80 heap bytes as foo[10][2]
     ```
-- **Re-assign** memory:
-
+- **Re-allocate** memory:
     `M(storage,name,index)`:
     ```
     M(malloc(80),foo,40);                   // same as assignment

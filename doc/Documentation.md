@@ -224,11 +224,11 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - I disabled checks with `#define NMSTRCT` but the metadata is still getting stored in bss
 
-    this is a feature: a) custom bss segment is `qword`-aligned & cache friendly to speedup fetches; b) `M(foo)`, used in hassle-free memory sharing, refers to metadata bss segment; and, c) freeing a memory needs the base address for safe de-allocation. memstruct therefore subscribes to "memory is cheap, performance is not" - & may not be a good fit for severely memory constrained contexts.
+    this is a feature: a) custom bss segment is `qword`-aligned & cache friendly to speedup fetches; b) `M(foo)`, used in hassle-free memory sharing, refers metadata bss segment; and, c) freeing a memory needs the base address for safe de-allocation. though metadata memory footprint is understandably small, memstruct may not be a good fit for severely memory constrained contexts.
 
 - Memstruct is catching all the bugs but the program isn't panicking
 
-    this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening level to 1 (`#define MSTRCT_STRICT`) to cause segfault at the site after error print, or 2 (`#define MSTRCT_HARD`) to cause exit after the error print. default level 0 subscribe to fail safe design as the default mode.
+    this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening level to 1 (`#define MSTRCT_STRICT`) to cause segfault at the site after error print, or 2 (`#define MSTRCT_HARD`) to cause exit after the error print. default level 0 subscribes to fail safe design as the default mode.
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
@@ -244,7 +244,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 
-    you are right: for example during arena allocation, you may want individual spatial safety for sub-allocations but not temporal safety as de-allocation happens only once for the whole arena memory block. to achieve this, wrap the sub-allocations with `#define NMSTRCT` and `#undef NMSTRCT` on either side (see repo test sample, 9_arena.c).
+    right, e.g. in arena allocation, you may want individual spatial safety for sub-allocations but not temporal safety as de-allocation happens once for the whole arena. for this, wrap each sub-allocation with `#define NMSTRCT` and `#undef NMSTRCT` (see repo test case 9).
 
 - Where is the LTS release?
 

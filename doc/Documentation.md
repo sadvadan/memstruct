@@ -240,7 +240,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - Under which scenarios is it advisable to use `unsafe` blocks (aka `#define NMSTRCT`) or escape hatches (`m(foo)[i]`)?
     
-    it's nearly never necessary: memstruct is `C` native & uses, as is, syscalls & `C` libs (having empirical safety records). so, a `C` lib's API having inputs - addr & size can be fed `M(foo)->addr` & `M(foo)->size` safely. or, if you were authoring a `C` lib today, you may simply use `M(foo)`. in other cases such as, say, raw access is faster (benchmark it!) in a hot path - `unsafe` can be justified.
+    it's nearly never necessary: memstruct is `C` native & uses, as is, syscalls & `C` libs (having empirical safety records). so, a `C` lib's API needing inputs - base_addr & byte_size can be fed `M(foo)->addr` & `M(foo)->size` safely. or, if you were authoring a `C` lib today, you may want to simply use `M(foo)`. in other cases such as, say, raw access is gainfully (!) faster in some hot path - `unsafe` can be justified.
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 

@@ -224,7 +224,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - I disabled checks with `#define NMSTRCT` but the metadata is still getting stored in bss
 
-    this is a feature: a) custom bss segment is `qword`-aligned & cache friendly to speedup fetches; b) foo.id, used in hassle-free memory sharing, refers to metadata bss segment; and, c) freeing a memory needs the base address for safe de-allocation. memstruct therefore subscribes to "memory is cheap, performance is not" - & may not be a good fit for severely memory constrained contexts.
+    this is a feature: a) custom bss segment is `qword`-aligned & cache friendly to speedup fetches; b) `M(foo)`, used in hassle-free memory sharing, refers to metadata bss segment; and, c) freeing a memory needs the base address for safe de-allocation. memstruct therefore subscribes to "memory is cheap, performance is not" - & may not be a good fit for severely memory constrained contexts.
 
 - Memstruct is catching all the bugs but the program isn't panicking
 

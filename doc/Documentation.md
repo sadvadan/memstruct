@@ -148,7 +148,11 @@ This document explains how to configure and use the memstruct.h library.
     M(allocator, foo, i):
     foo = memstruct name
     i = range of the static or stack array 
-    allocator = your C std or custom allocator with native syntax; note: alloca also supported
+    allocator = your C std or custom allocator with native syntax
+    note:
+      a) alloca, as it isn't block scoped, is also supported by this syntax
+      b) any preceding cast e.g. (char *) etc for the allocator is not only
+         not required, but will also produce comptime pre-processor error
 
     // simple (static range = 1) memstruct declaration
     M(type, foo, ):          // OR, M(type, foo, , 1) 

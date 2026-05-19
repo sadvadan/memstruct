@@ -46,19 +46,19 @@ C + memstruct = performance + memory safety
      ```
     uint64_t temp = M(foo)->size; // const byte size
 
-    void *temp = M(foo)->addr;    // const base addr
+    void *temp = M(bar)->addr;    // const base addr
      ```
 - **Raw** access:
      ```
     m(foo)++;                     // ptr arithmetic; safe , as not dereferenced yet
 
-    m(foo)[5] = 10;               // unsafe escape hatch
+    m(bar)[5] = 10;               // unsafe escape hatch
      ```
-- **De**-allocate memstruct:
+- **De**-allocate memstruct: double free is harmless (get elided).
      ```
     free(foo);                    // on-heap memory
 
-    munmap(foo);                  // mmapped memory
+    munmap(bar);                  // mmapped memory
      ```
 ## 📖 Documentation 
 - See: [Documentation](doc/Documentation.md)

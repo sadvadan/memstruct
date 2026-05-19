@@ -396,8 +396,10 @@ mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t inde
 // put
 #define MSTRCT_PUT(store, name, range, counter) \
 store typeof(*(name.typ[0])) MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_ptr = (char *)2, (range) * MSTRCT_DSIZ(name))]; \
-name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)&MSTRCT_CAT2(mstrct_arr_, __LINE__),  \
+if (mstrct_ptr == (char *)2) {   \
+  name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)&MSTRCT_CAT2(mstrct_arr_, __LINE__),  \
   ((uint64_t)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;  \
+}  \
 MSTRCT_CLEAN(__LINE__, name._id, store) \
 if (mstrct_ptr == (char *)2) {   \
   mstrct_addrx(sizeof(name.ref[0]));   \

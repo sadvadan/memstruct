@@ -141,7 +141,8 @@ This document explains how to configure and use the memstruct.h library.
 
     // dynamic range i stack/ static array re/assignment
     M(storage, foo, i):
-    foo = memstruct name; storage (keyword) = static / __thread static / auto
+    foo = memstruct name
+    storage (keyword) = static / __thread static / auto
     i = dynamic range of the static or stack array 
 
     // dynamic range i allocator (not block scoped) based array re/assignment

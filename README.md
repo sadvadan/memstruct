@@ -17,29 +17,19 @@ C + memstruct = performance + memory safety
 - **Include**
 
     `mstrct.h` in your file.
-- **Declare** a memstruct:
-    ```
-    // single dim foo (interal rep: foo[][1])
-    M(int *,foo,);
+- **Declare and allocate** a memstruct:
 
-    // multidim foo (internal rep: foo[][2][5][7])
-    M(int *const,foo,,2,5,7);
+    declaration: `M(ptr_type, name,, static_indexes)`;
 
-    // declaration can be as a field inside a struct
+    allocation: `M(storage, name, dynamic_index)`;
     ```
-- **Allocate** memory to a memstruct:
-    ```
-    M(int *,foo,);                // declare simple (dim=1) foo
-    M(auto,foo,10);               // allocate foo[10] on-stack
+    M(int *,foo,);                // declare simple foo as int[][1]
+    M(auto,foo,10);               // allocate on-stack foo as int[10][1]
 
-    M(int *,foo,,2);              // first declare foo[][2]
-    M(malloc(80),foo,10);         // allocate 80 heap bytes as foo[10][2]
+    M(int *const,bar,,2,5,7);     // declare multidim bar as int[][2][5][7]
+    M(malloc(2800),bar,10);       // allocate bar on-heap as int[10][2][5][7]
     ```
-- **Re-allocate** memory:
-    `M(storage,name,index)`:
-    ```
-    M(malloc(80),foo,40);         // same as assignment
-    ```
+- **Re-allocate** memory: same as allocation, `M(storage, name, index)`.
 - **Share** memory:
     ```
     M(M(foo), bar);               // bar now shares memory with foo 
@@ -49,11 +39,9 @@ C + memstruct = performance + memory safety
      ```
 - **Read / write** memory:
     ```
-    // single dim array types
-    m(foo,5) = 10;
+    m(foo,5) = 10;                // simple memstruct
 
-    // multi-dim array types
-    m(bar,5,7,2) = 10;
+    m(bar,5,7,2) = 10;            // multidim memstruct
      ```
 - **Metadata** access:
      ```
@@ -69,8 +57,8 @@ C + memstruct = performance + memory safety
      ```
 - **De**-allocate memstruct:
      ```
-    free(foo);                       // on-heap memory
-    munmap(foo);                     // mmapped memory
+    free(foo);                    // on-heap memory
+    munmap(foo);                  // mmapped memory
      ```
 ## 📖 Documentation 
 - See: [Documentation](doc/Documentation.md)

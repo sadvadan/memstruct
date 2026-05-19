@@ -142,13 +142,13 @@ This document explains how to configure and use the memstruct.h library.
     // dynamic range i block-or-static-scoped array allocation/ re-allocation
     M(storage, foo, i):
     foo = memstruct name
+    i = dynamic range of the array 
     storage (keyword) = static / __thread static / auto
-    i = dynamic range of the static or stack array 
 
     // dynamic range i not-block-nor-static-scoped array allocation/ re-allocation
     M(allocator, foo, i):
     foo = memstruct name
-    i = dynamic range of the static or stack array 
+    i = dynamic range of the array 
     allocator = your C std or custom allocator with native syntax
     note:
       a) alloca, as it isn't block scoped, is also supported by this syntax

@@ -180,9 +180,8 @@ This document explains how to configure and use the memstruct.h library.
     m(foo, ,j,k,...): // OR, m(foo,0,j,k,...) but this one incurs runtime OOB check
     foo = memstruct name
     j, k,... = comptime known indexes
-    note:
-      this optimized path fallbacks to m(foo,0,j,k..) if any indexes are dynamic,
-      or type isn't *const, or size isn't comptime known
+    note: this optimized path fallbacks to m(foo,0,j,k..) if -
+      a) any indexes are dynamic, or b) type isn't *const
 
 ```
 

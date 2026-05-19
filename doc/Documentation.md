@@ -1,5 +1,5 @@
 
-# ![memstruct banner](banner.svg) memstruct DOCUMENT
+# ![memstruct banner](../banner.svg) memstruct DOCUMENT
 
 This document explains how to configure and use the memstruct.h library.
 
@@ -181,7 +181,7 @@ This document explains how to configure and use the memstruct.h library.
     foo = memstruct name
     j, k,... = comptime known indexes
     note:
-    a) this optimized path, fallbacks to m(foo,0,j,k..) if indexes are dymanic
+    a) this optimized path fallbacks to m(foo,0,j,k..) if indexes are dymanic
     b) for optimized path, type should be *const & size comptime known
 
 ```
@@ -285,4 +285,4 @@ Search existing issues before opening a new one.
 4. License:
 By contributing, you agree your code will be distributed under the project’s license (see  [LICENSE](../LICENSE)).
 
-![memstruct banner](banner.svg)
+![memstruct banner](../banner.svg)

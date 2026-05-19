@@ -390,9 +390,11 @@ mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t inde
 #define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0])) (mstrct_check(name._id, MSTRCT_GETX(name), \
   MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [i] index))) + MSTRCT_FLAT(name, [i] index)))
 
-#define MSTRCT_GET_00(name, i, index) (*({if ((!sizeof(name.con[0])) || (!__builtin_constant_p(sizeof(char index)))) {  \
-  MSTRCT_ASSERT(NON_STATIC_CASE);}; MSTRCT_GET0(name) + MSTRCT_FLAT(name, [0] index);}))
-#define MSTRCT_GET_01(name, i, index) MSTRCT_GET_00(name, i, index)
+#define MSTRCT_GET_00(name, i, index) MSTRCT_GET_10(name, [0], index)
+
+#define MSTRCT_GET_01(name, i, index) (*((sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))) ?   \
+  (MSTRCT_GET0(name) + MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) (mstrct_check(name._id, MSTRCT_GETX(name), \
+  MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [0] index))) + MSTRCT_FLAT(name, [0] index))))
 
 // put
 #define MSTRCT_PUT(store, name, range, counter) \

@@ -177,10 +177,12 @@ This document explains how to configure and use the memstruct.h library.
     j, k,... = static indexes
 
     // GET (when there is no dynamic index, only static indexes j,k,...) as L-value
-    m(foo, , j, k,...): // OR, m(foo, 0, j, k,...) but this one incurs runtime OOB check
+    m(foo, ,j,k,...): // OR, m(foo,0,j,k,...) but this one incurs runtime OOB check
     foo = memstruct name
     j, k,... = comptime known indexes
-    note: for this to work, foo must be *const type with comptime known index sizes J,K..
+    note:
+    a) this optimized path, fallbacks to m(foo,0,j,k..) if indexes are dymanic
+    b) for optimized path, type should be *const & size comptime known
 
 ```
 

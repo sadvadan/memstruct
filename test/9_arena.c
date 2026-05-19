@@ -1,3 +1,5 @@
+// custom arena allocator using memstruct safety guarantee
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>

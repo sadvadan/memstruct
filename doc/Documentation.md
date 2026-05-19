@@ -242,7 +242,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - How to allocate memory with spatial checks enabled but temporal checks enabled?
 
-    you are right: for example during arena allocation, you may want individual spatial safety for sub-allocations but not temporal safety as de-allocation happens only once for the whole arena memory block. to achieve this, wrap the sub-allocations with `#defien NMSTRCT` and `#undef NMSTRCT` on either side (see repo test sample, 9_arena.c).
+    you are right: for example during arena allocation, you may want individual spatial safety for sub-allocations but not temporal safety as de-allocation happens only once for the whole arena memory block. to achieve this, wrap the sub-allocations with `#define NMSTRCT` and `#undef NMSTRCT` on either side (see repo test sample, 9_arena.c).
 
 - Where is the LTS release?
 

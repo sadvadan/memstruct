@@ -137,7 +137,7 @@ This document explains how to configure and use the memstruct.h library.
     M(M(bar), foo):
     bar = original memstruct holding a memory
     foo = another memstruct now sharing the same memory
-    note: any mstrct * as 1st argument suffices
+    note: any valid mstrct * as 1st argument suffices
 
     // dynamic range i block-or-static-scoped array allocation/ re-allocation
     M(storage, foo, i):

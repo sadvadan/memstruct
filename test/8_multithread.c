@@ -1,4 +1,4 @@
-// Simple multithreading example
+// multithreading
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +9,7 @@
 #define NUM_THREADS 8
 #define ARRAY_SIZE  10000
 
-M(int *, shared,);
+M(int *, shared,);                        // memstruct to hold (shared) memory
 
 // simple mutex for write synchronization
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -65,4 +65,15 @@ int main(void) {
   pthread_mutex_destroy(&mutex);
   return 0;
 }
-
+/* out (typical):
+=== memstruct .id multithreading test ===
+Thread 616 done
+Thread 304 done
+Thread 680 done
+Thread 992 done
+Thread 368 done
+Thread 432 done
+Thread 56 done
+Thread 744 done
+Test finished. Modified elements: 3120 / 10000
+*/

@@ -130,7 +130,7 @@ This document explains how to configure and use the memstruct.h library.
     // metadata
     M(foo): 
     foo = memstruct name
-    returns: void * address of metadata struct  {const void *addr; const uint64_t size;}
+    returns: type mstrct *, pointing to struct  {const void *addr; const uint64_t size;}
     field access: M(foo)->addr = base address, M(foo)->size = total memory size in bytes
 
     // memory sharing

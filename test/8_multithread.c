@@ -1,5 +1,4 @@
-// Simple multithreading .id test
-// in makefile change (may not be reqd on your compiler) value of USE_THREAD to -pthread
+// Simple multithreading example
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +12,6 @@
 M(int *, shared,);
 
 // simple mutex for write synchronization
-// library is thread-safe for metadata but user must protect data writes including dealloc/realloc
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void* thread_func(void* arg) {
@@ -25,7 +23,7 @@ void* thread_func(void* arg) {
   for (int i = 0; i < 1000; i++) {
     int idx = (tid + i * 13) % ARRAY_SIZE;
 
-    pthread_mutex_lock(&mutex);           // protect write
+    pthread_mutex_lock(&mutex);           // protect write!
     m(view, idx) = tid;
     pthread_mutex_unlock(&mutex);
   }
@@ -45,14 +43,15 @@ int main(void) {
   for (int i = 0; i < ARRAY_SIZE; i++)
     m(shared, i) = 0;
 
-  pthread_t threads[NUM_THREADS];
+  M(pthread_t *, threads,);
+  M(auto, threads, NUM_THREADS);          // allocate pthreads on stack
 
   for (int i = 0; i < NUM_THREADS; i++) {
-    pthread_create(&threads[i], NULL, thread_func, M(shared));   // pass shared
+    pthread_create(&m(threads,i), NULL, thread_func, M(shared));   // pass shared
   }
 
   for (int i = 0; i < NUM_THREADS; i++) {
-      pthread_join(threads[i], NULL);
+      pthread_join(m(threads,i), NULL);
   }
 
   int count = 0;

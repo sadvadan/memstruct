@@ -88,21 +88,21 @@ This document explains how to configure and use the memstruct.h library.
 
 - **memstruct declaration:** declare a memstruct foo as `M(ptr_type, foo, multi_dim_index)`.
     ```
-    // foo[][1]
+    // int[][1]
     M(long int *,foo,);             // or: M(long int *,foo,,1)
 
-    // foo[][2][5]
+    // char[][2][5]
     M(char * const,foo,,2,5);
 
     // valid as a field declaration within a struct type definition
     ```
 - **Allocate:** memory to a memstruct as `M(storage, foo, single_index)`.
     ```
-    M(malloc(80),foo,10);           // allocate 80 heap bytes as foo[10][2]
+    M(malloc(80),foo,10);           // allocate 80 heap bytes as type[10][
 
-    M(auto,foo,10);                 // allocate foo[10] on-stack segment
+    M(auto,foo,10);                 // allocate type[10][ on-stack segment
 
-    M(static,foo,10);               // allocate foo[10] on-static segment
+    M(static,foo,10);               // allocate type[10][ on-static segment
 
     // memstruct supports all kind of allocators (should return a ptr)
     ```

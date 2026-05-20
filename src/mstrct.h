@@ -160,8 +160,8 @@ __asm__ (
         ".zero 16\n\t"
       ".popsection\n\t"
       "movq \\addr, .Lmstrct.meta.\\counter(%rip)\n\t"
-      "movq \\size, 8+.Lmstrct.meta.\\counter(%rip)\n\t"
     ".endif \n\t"
+    "movq \\size, 8+.Lmstrct.meta.\\counter(%rip)\n\t"
     "leaq .Lmstrct.meta.\\counter(%rip), \\meta_addr\n\t"
   ".endm\n\t"
 );

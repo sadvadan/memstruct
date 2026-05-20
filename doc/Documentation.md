@@ -123,6 +123,8 @@ This document explains how to configure and use the memstruct.h library.
  
 - **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates memstruct (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / size is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the overloaded free() or munmap(), as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
+- **Loop optimization**: at >O0, memstruct hoists checks in any case, so that at worst only single, pipelined, cmp op remains for subsequent OOB checks. to force the best case scenario (complete elison) in loops, e.g. in `for (int i = 0; i < 5; i++)` change the syntax to: `for (int i = 0; i < m(foo,); i++)` so that `m(foo,)` (check API reference) returns the i_max in such a way that the calculation is equivalent to the strictest OOB check: resulting in complete check elison for the in-body `m(foo,i)` fetches (at >O0). 
+
 ## API reference
 
 - `M()`/`m()` **macro:**
@@ -170,7 +172,13 @@ This document explains how to configure and use the memstruct.h library.
     m(foo):
     foo = memstruct name
  
-    // simple GET (static index assumed to be 0) as L-value
+    // current index_max
+    m(foo, ):
+    foo = memstruct name
+    returns: max index size based on total size & current address
+    note: a) index_max is +ive value, and b) index < index_max
+
+    // simple GET (static index defaults as 0) as L-value
     m(foo, i): 
     foo = memstruct name
     i = sole (dynamic) index
@@ -182,7 +190,8 @@ This document explains how to configure and use the memstruct.h library.
     j, k,... = static indexes
 
     // GET (when there's only static indexes j,k,...) as L-value
-    m(foo, ,j,k,...): // OR, m(foo,0,j,k,...) but this one incurs runtime OOB check
+    // same as m(foo,0,j,k,...) but tries to elide runtime OOB check
+    m(foo, ,j,k,...): 
     foo = memstruct name
     j, k,... = comptime known indexes
     note: this optimized path fallbacks to m(foo,0,j,k..) if -

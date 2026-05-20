@@ -59,7 +59,7 @@
 #define MSTRCT_$5(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX3(__VA_ARGS__))
 #define MSTRCT_$4(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX2(__VA_ARGS__))
 #define MSTRCT_$3(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX1(__VA_ARGS__))
-#define MSTRCT_$2(foo,i,...)              MSTRCT_GET(foo, i, [0])
+#define MSTRCT_$2(foo,i,...)              MSTRCT_CAT2(MSTRCT_M2, MSTRCT_ARG_COUNT(i))(foo, i)
 #define MSTRCT_$1(foo)                    MSTRCT_GET0(foo)
 #define MSTRCT_$0()                       MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
@@ -102,6 +102,9 @@
 
 #define MSTRCT_M10(foo) MSTRCT_LET1(foo)
 #define MSTRCT_M11(store) MSTRCT_$$$1(store)
+
+#define MSTRCT_M20(foo, i) MSTRCT_GET1(foo)
+#define MSTRCT_M21(foo, i) MSTRCT_GET(foo, i, [0])
 
 #define MSTRCT_M301(memory, foo, idx) MSTRCT_LET3(memory, foo, idx, __COUNTER__)
 #define MSTRCT_M311(store, foo, idx) MSTRCT_$$$3(store, foo, idx)
@@ -380,6 +383,8 @@ mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t inde
 #define MSTRCT_LET1(name) mstrct_addr2((uint64_t)name._id)
 
 // get
+#define MSTRCT_GET1(name) mstrct_oob_up(MSTRCT_TSIZ(name), MSTRCT_GETX(name), name._id)
+
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK)(name, i, index)
 
 #define MSTRCT_GET_10(name, i, index) (*(MSTRCT_GET0(name) + MSTRCT_FLAT(name, [i] index)))

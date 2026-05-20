@@ -35,7 +35,7 @@ void* thread_func(void* arg) {
 int main(void) {
   pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-  printf("=== memstruct .id multithreading test ===\n");
+  printf("=== memstruct multithreading test ===\n");
 
   M(malloc(ARRAY_SIZE * sizeof(int)), shared, ARRAY_SIZE);
 
@@ -66,7 +66,7 @@ int main(void) {
   return 0;
 }
 /* out (typical):
-=== memstruct .id multithreading test ===
+=== memstruct multithreading test ===
 Thread 616 done
 Thread 304 done
 Thread 680 done

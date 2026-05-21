@@ -40,22 +40,22 @@ int main(void) {
   M(malloc(ARRAY_SIZE * sizeof(int)), shared, ARRAY_SIZE);
 
   // initialize
-  for (int i = 0; i < ARRAY_SIZE; i++)
+  for (int i = 0; i < m(shared,); i++)    // m(shared,) = i_max = ARRAY_SIZE
     m(shared, i) = 0;
 
   M(pthread_t *, threads,);
   M(auto, threads, NUM_THREADS);          // allocate pthreads on stack
 
-  for (int i = 0; i < NUM_THREADS; i++) {
+  for (int i = 0; i < m(threads,); i++) { // m(threads,) = i_max = NUM_THREADS
     pthread_create(&m(threads,i), NULL, thread_func, M(shared));   // pass shared
   }
 
-  for (int i = 0; i < NUM_THREADS; i++) {
+  for (int i = 0; i < m(threads,); i++) { // m(threads,) = i_max = NUM_THREADS
       pthread_join(m(threads,i), NULL);
   }
 
   int count = 0;
-  for (int i = 0; i < ARRAY_SIZE; i++) {
+  for (int i = 0; i < m(shared,); i++) { // m(shared,) = i_max = ARRAY_SIZE
       if (m(shared, i) != 0) count++;
   }
 

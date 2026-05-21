@@ -375,7 +375,7 @@ mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t inde
 // addr L-val
 #define MSTRCT_GET0(name) (*((typeof(name.typ[0]) *) MSTRCT_ADDR(sizeof(name.ref[0]))))
 
-#define MSTRCT_GETX(name) (char *)(*((typeof(name.typ[0]) *) MSTRCT_ADDR(sizeof(name.ref[0]))))
+#define MSTRCT_GETX(name) (char *)(*((char **) MSTRCT_ADDR(sizeof(name.ref[0]))))
 #define MSTRCT_TSIZ(name) sizeof(*((typeof(name.typ[0]))0))
 #define MSTRCT_DSIZ(name) sizeof((*name.dim[0])[0])
 #define MSTRCT_FLAT(name, multi_index) ((uint64_t)(&(*(typeof(name.dim[0]))0) multi_index))
@@ -383,7 +383,7 @@ mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t inde
 #define MSTRCT_LET1(name) mstrct_addr2((uint64_t)name._id)
 
 // get
-#define MSTRCT_GET1(name) mstrct_oob_up(MSTRCT_TSIZ(name), MSTRCT_GETX(name), name._id)
+#define MSTRCT_GET1(name) (int64_t)mstrct_oob_up(MSTRCT_TSIZ(name), MSTRCT_GETX(name), name._id)
 
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK)(name, i, index)
 

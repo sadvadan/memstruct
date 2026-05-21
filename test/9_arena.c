@@ -76,7 +76,7 @@ int main() {
   M(arena_alloc(&arena, 5 * sizeof(float)), prices, 5);
   #undef NMSTRCT
  
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < m(prices,); i++) { // i_max = m(prices,) = 5
     m(prices,i) = i * 10.5f;
   }
 

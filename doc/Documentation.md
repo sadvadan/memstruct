@@ -15,7 +15,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- **Working:** the 'safe ptr' (henceforth called memstruct) carries comptime data in its type system. the error reporting system supplements this with const foldings and SSA from compiler-optimizer, leading to -- fully comptime, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are part of OOB check with no extra overhead.
+- **Working:** the 'safe ptr' (henceforth called memstruct) carries comptime data in its type system. the error reporting system supplements this with const foldings and SSA from compiler-optimizer, leading to -- fully comptime, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are part of OOB check and incur no extra overhead.
 
 - **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a static segment.
 
@@ -123,7 +123,7 @@ This document explains how to configure and use the memstruct.h library.
  
 - **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates memstruct (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / size is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the overloaded free() or munmap(), as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
-- **Loop optimization**: at >O0, memstruct hoists checks in any case, so that at worst only single, pipelined, cmp op remains for subsequent OOB checks. to force the best case scenario (complete elison) in loops, e.g. in `for (int i = 0; i < 5; i++)` change the syntax to: `for (int i = 0; i < m(foo,); i++)` so that `m(foo,)` (check API reference) returns the i_max in such a way that the calculation is equivalent to the strictest OOB check: resulting in complete check elison for the in-body `m(foo,i)` fetches (at >O0). 
+- **Loop optimization**: generally at >O0 memstruct hoists the checks, and at worst only (pipelined) single cmp ops remain for subsequent OOB checks. to force complete elison in loops, e.g. in `for (int i = 0; i < 50; i++)` change the syntax to: `for (int i = 0; i < m(foo,); i++)` where `m(foo,)` = i_max, and `i < m(foo,)` becomes the strictest OOB check so that checks in `m(foo,i)` get fully elided at >O0. 
 
 ## API reference
 
@@ -175,8 +175,10 @@ This document explains how to configure and use the memstruct.h library.
     // current index_max
     m(foo, ):
     foo = memstruct name
-    returns: max index size based on total size & current address
-    note: a) index_max is +ive value, and b) index < index_max
+    returns: index_max = max index size, based on total size & current address
+    note:
+      a) index_max is +ive int64_t value, and
+      b) array index < index_max
 
     // simple GET (static index defaults as 0) as L-value
     m(foo, i): 

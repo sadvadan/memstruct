@@ -258,13 +258,13 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - Under which scenarios safety must be by-passed?
     
-    a) rare edge cases where raw accesses are gainfully faster. b) arena allocations (see next paragraph) that suppress temporal safety. c) program wide safety supression in production release (rare, too).
+    a) (possible) edge cases where raw accesses are gainfully faster. b) (low level) arena allocations that suppress temporal safety. c) (`-DNMSTRCT`) program wide safety supression in production release (rare, too).
 
-    NOTE: when interfacing with legacy `C` code, base_addr & byte_size can be shared as `M(foo)->addr` & `M(foo)->size` safely; empirically proven safety of legacy C codebase is accepted. however, if you were authoring a `C` lib today, you may want to use `M(foo)` instead of relying on empirical safety that may take decades to materialise!
+    NOTE: when interfacing with legacy `C` code, base_addr & byte_size can be shared as `M(foo)->addr` & `M(foo)->size` safely; empirically proven safety of legacy C code is accepted. however, if you were authoring a `C` lib today, you may want to use `M(foo)` instead of relying on empirical safety that may take decades to realize!
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 
-    e.g. in arena allocation you may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with `#define NMSTRCT` and `#undef NMSTRCT` (see repo test case 9). tradeoff: arenas are a bit low-level in the sense there is no temporal safety (UAF) for individual sub-arrays.
+    e.g. in arena allocation you may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with `#define NMSTRCT` and `#undef NMSTRCT` (see test #9). tradeoff: no temporal safety (UAF) for individual sub-arrays.
 
 - When is the LTS release?
 

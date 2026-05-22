@@ -256,13 +256,15 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
     search `[` or `]` in your editor to quickly find out.
 
-- Under which scenarios is it advisable to use `unsafe` blocks (aka `#define NMSTRCT`) or escape hatches (`m(foo)[i]`)?
+- Under which scenarios safety must be by-passed?
     
-    it's rarely necessary: memstruct is `C` native & uses, as is, syscalls & `C` libs (having empirical safety records). so, a `C` lib's API needing inputs - base_addr & byte_size can be fed `M(foo)->addr` & `M(foo)->size` safely. or, if you were authoring a `C` lib today, you may want to simply use `M(foo)`. in other cases such as, say, raw access is gainfully (!) faster in some hot path - `unsafe` can be justified.
+    a) rare edge cases where raw accesses are gainfully faster. b) arena allocations (see next paragraph) that suppress temporal safety. c) program wide safety supression in production release.
+
+    NOTE: when interfacing with legacy `C` code, base_addr & byte_size can be shared as `M(foo)->addr` & `M(foo)->size` safely; empirically proven safety of legacy C codebase is accepted. however, if you were authoring a `C` lib today, you may want to use `M(foo)` instead of relying on empirical safety that may take decades to materialise!
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 
-    this may be required e.g. in arena allocation where you may want individual spatial safety for sub-allocations but not temporal safety as de-allocation happens once for the whole arena. for this, wrap each sub-allocation with `#define NMSTRCT` and `#undef NMSTRCT` (see repo test case 9).
+    e.g. in arena allocation you may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with `#define NMSTRCT` and `#undef NMSTRCT` (see repo test case 9). tradeoff: there is no temporal safety (UAF) for individual sub-arrays.
 
 - When is the LTS release?
 

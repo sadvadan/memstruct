@@ -84,18 +84,20 @@
 #define MSTRCT_$$$2(store,foo)            MSTRCT_PUT(store, foo, 1, __COUNTER__)
 #define MSTRCT_$$$1(store)                MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
-#define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT_, arg)) /* 1=storage, 0=no_storage */
+#define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT_, arg)) /*2=mremap/realloc, 1=storage, 0=no_store*/
 #define MSTRCT_AUTO(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(_MSTRCT_, arg)) /* 1=auto, 0=not_auto */
 
 #define MSTRCT_auto ~,1
 #define MSTRCT_static ~,1
 #define MSTRCT___thread ~,1
+#define MSTRCT_realloc ~,~,2
+#define MSTRCT_mremap ~,~,2
 #define _MSTRCT___thread
 #define _MSTRCT_static
 #define _MSTRCT_auto ~,1
 
-#define MSTRCT_ARG3(_1, _2, _3, ...) _3
-#define MSTRCT_HAS_COMMA(...) MSTRCT_ARG3(__VA_ARGS__, 1, 0)
+#define MSTRCT_ARG4(_1, _2, _3, _4, ...) _4
+#define MSTRCT_HAS_COMMA(...) MSTRCT_ARG4(__VA_ARGS__, 2, 1, 0)
 
 #define MSTRCT_MACR16(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,NAME,...) NAME
 #define MSTRCT_ARG_COUNT(...) MSTRCT_MACR16(10 __VA_OPT__(,) ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
@@ -110,6 +112,8 @@
 #define MSTRCT_M311(store, foo, idx) MSTRCT_$$$3(store, foo, idx)
 #define MSTRCT_M300(typ, foo, empty) MSTRCT_LET(typ, foo, empty, [1], __COUNTER__)
 #define MSTRCT_M310(store, foo, empty) MSTRCT_$$$2(store,foo)
+#define MSTRCT_M320(rememory, foo, empty) MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
+#define MSTRCT_M321(rememory, foo, idx) MSTRCT_LET4(rememory, foo, idx)
 
 // API
 #define m(...) MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
@@ -172,7 +176,7 @@ __asm__ (
 __asm__ (
   ".macro MSTRCT.2 id, value, base\n\t"
   "movslq \\id, %rax\n\t" // extend id to 8B
-    "movq \\value, 8(\\base, %rax, 8)\n\t"
+  "movq \\value, 8(\\base, %rax, 8)\n\t"
   ".endm\n\t"
 );
 
@@ -423,13 +427,20 @@ if (mstrct_ptr == (char *)2) {   \
 
 // bind
 #define MSTRCT_LET3(memory, name, range, counter) do {   \
-  mstrct_addrx(sizeof(name.ref[0]));   \
-  mstrct_ptr = (char *)(memory); *((char **) MSTRCT_ADDR(sizeof(name.ref[0]))) = mstrct_ptr;   \
-  mstrct_checksum((__builtin_strstr(#memory, "realloc") != NULL),   \
-  (__builtin_strstr(#memory, "mremap") != NULL), (mstrct_proto *)&(name), __LINE__);  \
+  mstrct_addrx(sizeof(name.ref[0])); mstrct_ptr = (char *)(memory);  \
+  *((char **) MSTRCT_ADDR(sizeof(name.ref[0]))) = mstrct_ptr;   \
   name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)mstrct_ptr, \
     ((uint64_t)sizeof(*(name.typ[0]))* (range) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;   \
   MSTRCT_CAT2(mstrct_leak_, MSTRCT_CHK)((mstrct_proto *)&(name), __LINE__); /* leak check */  \
+} while(0)
+
+#define MSTRCT_LET4(rememory, name, range) do {   \
+  mstrct_addrx(sizeof(name.ref[0])); mstrct_ptr = (char *)(rememory);   \
+  *((char **) MSTRCT_ADDR(sizeof(name.ref[0]))) = mstrct_ptr;   \
+  uint64_t *temp = (uint64_t *)mstrct_addr2((uint64_t)name._id);   \
+  *temp = (uint64_t)mstrct_ptr; *(temp + 1) =  ((uint64_t)sizeof(*(name.typ[0]))* (range) * MSTRCT_DSIZ(name));   \
+  mstrct_leak_0((mstrct_proto *)&(name), __LINE__);   \
+  __asm__ __volatile__ (" " : : : "memory"); \
 } while(0)
 
 #define MSTRCT_LET2(base, name) do {   \
@@ -441,6 +452,7 @@ if (mstrct_ptr == (char *)2) {   \
 
 static inline void 
 mstrct_leak_1(mstrct_proto * name, int line) {char a;
+  if (mstrct_ptr == NULL) {mstrct_error("allocation failed!!", MSTRCT_ALLOC_FAIL, line);}
   if ((int64_t)((char *)&a - mstrct_ptr) > 0 || (mstrct_ptr - (char *)environ) > 0) /* not on regular stack */ {
     mstrct_pack temp; temp._d = (uint32_t)(name->_id); temp._s = (uint32_t)line;
     on_exit(mstrct_leak, temp.ptr);
@@ -449,12 +461,9 @@ mstrct_leak_1(mstrct_proto * name, int line) {char a;
 }
 
 static inline void
-mstrct_leak_0(__attribute__((unused)) mstrct_proto * name, __attribute__((unused)) int line) {mstrct_ptr = (char *)1;}
-
-static inline void 
-mstrct_checksum(int a, int b, mstrct_proto *name, int line) {
-  if (a || b) {MSTRCT_SET((uint64_t)0,  name->_id);}
+mstrct_leak_0(__attribute__((unused)) mstrct_proto * name, __attribute__((unused)) int line) {
   if (mstrct_ptr == NULL) {mstrct_error("allocation failed!!", MSTRCT_ALLOC_FAIL, line);}
+  mstrct_ptr = (char *)1;
 }
 
 #endif

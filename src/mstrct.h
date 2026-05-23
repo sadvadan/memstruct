@@ -9,7 +9,7 @@
  *  A lightweight & fast single header library with a
  *  m-macro API for memory safety in calling program.
  *
- *  Leverages compile & runtime methods, and hoisting
+ *  Leverages compile-runtime methods & also hoisting
  *  to check OOB/UAF/NULL-deref/double-free and leaks
  *
  *  with flag NMSTRCT checks can be disabled. there's
@@ -84,7 +84,7 @@
 #define MSTRCT_$$$2(store,foo)            MSTRCT_PUT(store, foo, 1, __COUNTER__)
 #define MSTRCT_$$$1(store)                MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
-#define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT_, arg)) /*2=mremap/realloc, 1=storage, 0=no_store*/
+#define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT_, arg)) /* 2=reallocation, 1=store, 0=no_store */
 #define MSTRCT_AUTO(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(_MSTRCT_, arg)) /* 1=auto, 0=not_auto */
 
 #define MSTRCT_auto ~,1
@@ -92,9 +92,9 @@
 #define MSTRCT___thread ~,1
 #define MSTRCT_realloc ~,~,2
 #define MSTRCT_mremap ~,~,2
+#define _MSTRCT_auto  ~,1
 #define _MSTRCT___thread
 #define _MSTRCT_static
-#define _MSTRCT_auto ~,1
 
 #define MSTRCT_ARG4(_1, _2, _3, _4, ...) _4
 #define MSTRCT_HAS_COMMA(...) MSTRCT_ARG4(__VA_ARGS__, 2, 1, 0)

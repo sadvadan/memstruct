@@ -5,9 +5,9 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int *const,foo,); // declare safe type foo[][1]
+  M(int *const,foo,); // declare safe type int[][1]
 
-  // map foo -> foo[12][1] on-heap; NOTE: MAP_FAILED sanity check already included 
+  // map foo -> int[12][1] on-heap; NOTE: MAP_FAILED sanity check already included 
   M(mmap(NULL, 48, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0), foo, 12);
 
   m(foo,5) = 10; // define foo[5][0]

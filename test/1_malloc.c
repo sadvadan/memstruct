@@ -4,9 +4,9 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int *const,foo,); // declare safe type foo[][1]
+  M(int *const,foo,); // declare safe type int[][1]
 
-  M(malloc(48),foo,12); // map foo -> foo[12][1] on-heap
+  M(malloc(48),foo,12); // map foo -> int[12][1] on-heap
 
   m(foo,5) = 10; // define foo[5][0]
 
@@ -25,9 +25,9 @@ var[5], with checks: 10;
 
 /* try this const array variant too (for comptime OOB error):
   int main(void) {
-  M(int *const,foo,,12); // declare safe type foo[][12]
+  M(int *const,foo,,12); // declare safe type int[][12]
 
-  M(malloc(48),foo,1); // map foo -> foo[1][12] on-heap
+  M(malloc(48),foo,1); // map foo -> int[1][12] on-heap
 
   m(foo,,5) = 10; // define foo[5][0]
 

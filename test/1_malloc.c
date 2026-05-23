@@ -8,7 +8,7 @@ int main(void) {
 
   M(malloc(48),foo,12); // map foo -> int[12][1] on-heap
 
-  m(foo,5) = 10; // define foo[5][0]
+  m(foo,5) = 10; // define int[5][0]
 
   printf("size of a memstruct should be 4. check: %zu\n", sizeof(foo));
   printf("var[5], with checks: %d\n", m(foo,5)); // fetch memory (with checks)
@@ -29,7 +29,7 @@ var[5], with checks: 10;
 
   M(malloc(48),foo,1); // map foo -> int[1][12] on-heap
 
-  m(foo,,5) = 10; // define foo[5][0]
+  m(foo,,5) = 10; // define int[5][0]
 
   printf("size of safe ptr should be 2. check: %zu\n", sizeof(foo));
   printf("var[5], with checks: %d\n", m(foo,,5)); // fetch memory (with checks)

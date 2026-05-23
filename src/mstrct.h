@@ -435,8 +435,7 @@ if (mstrct_ptr == (char *)2) {   \
 } while(0)
 
 #define MSTRCT_LET4(rememory, name, range) do {   \
-  mstrct_addrx(sizeof(name.ref[0])); mstrct_ptr = (char *)(rememory);   \
-  *((char **) MSTRCT_ADDR(sizeof(name.ref[0]))) = mstrct_ptr;   \
+  mstrct_ptr = (char *)(rememory); *((char **) MSTRCT_ADDR(sizeof(name.ref[0]))) = mstrct_ptr;   \
   uint64_t *temp = (uint64_t *)mstrct_addr2((uint64_t)name._id);   \
   *temp = (uint64_t)mstrct_ptr; *(temp + 1) =  ((uint64_t)sizeof(*(name.typ[0]))* (range) * MSTRCT_DSIZ(name));   \
   mstrct_leak_0((mstrct_proto *)&(name), __LINE__);   \

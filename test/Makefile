@@ -5,8 +5,8 @@ TARGET = out
 
 # source and header files
 # 1_malloc.c 2_multidim_arr.c 3_UAF.c 4_ptr_arith.c 5_metadata.c
-# 6_reassign.c 7_hardening.c 8_multithread.c 9_arena.c
-SRCS = 1_malloc.c # change this to your test file name, goto test folder, run make
+# 6_reassign.c 7_hardening.c 8_multithread.c 9_arena.c 10_mmap.c
+SRCS = 10_mmap.c # change this to your test file name, goto test folder, run make
 DEPS = ../src/mstrct.h
 
 # default rule

@@ -28,11 +28,11 @@ This document explains how to configure and use the memstruct.h library.
 - Safe to include in multiple TUs; designed to work across TUs.
 
 - A memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m()` / `M()` semantics.
-- Thread safety: library is thread-safe but user must protect data writes (includes de/re-allocations) while multithreading is ON.
+- Thread safety: library is thread-safe but user must protect data writes (includes de/re-allocations) **while** multithreading is ON.
 
 ## Configuration
 
-- In your source file, optionally include `#define NMSTRCT` to disable all checks for production, if needed. **note**: you can use this in local segments as well, for local disable like so: `#define NMSTRCT` `unsafe code here` `#undef NMSTRCT`.
+- In source, optionally include `#define NMSTRCT` to disable all checks for production. this can be used in local segments as well, for local disable, like so: `#define NMSTRCT` `unsafe code here` `#undef NMSTRCT`.
 - Include `#define MSTRCT_STRICT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
 ```
     (default)     : print detailed err, continue with default "the arr start value"
@@ -40,7 +40,7 @@ This document explains how to configure and use the memstruct.h library.
     MSTRCT_HARD   : print detailed err, exit program with mstrct_status code
 ```
 - Include `mstrct.h`.
-- Alternatively, instead of directives in your source, use `-DNMSTRCT` and `-DMSTRCT_STRICT` or `-DMSTRCT_HARD` directly as compiler flags during compilation.
+- Alternatively, instead of directives in source, use `-DNMSTRCT` and `-DMSTRCT_STRICT` / `-DMSTRCT_HARD` directly as compiler flags during compilation.
 
 ## Usage
 
@@ -123,7 +123,7 @@ This document explains how to configure and use the memstruct.h library.
  
 - **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates memstruct (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / size is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the overloaded free() or munmap(), as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
-- **Loop optimization**: generally at >O0 memstruct hoists the checks, and at worst only (pipelined) single cmp ops remain for subsequent OOB checks. to force complete elison in loops, e.g. in `for (int i = 0; i < 50; i++)` change the syntax to: `for (int i = 0; i < m(foo,); i++)` where `m(foo,)` = i_max, and `i < m(foo,)` becomes the strictest OOB check so that checks in `m(foo,i)` get fully elided at >O0. 
+- **Loop optimization**: at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for any later check. to force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(foo,); i++)` where `m(foo,)` = i_max, and expression `i < m(foo,)` is the strictest OOB check (resulting in elision of other checks). `m(foo,)` is evaluated only once as it calls a `const` attribute function. 
 
 ## API reference
 
@@ -158,6 +158,8 @@ This document explains how to configure and use the memstruct.h library.
       a) alloca, as it isn't block scoped, is also supported by this syntax
       b) any preceding cast e.g. (char *) etc for the allocator is not only
          not required, but will also produce comptime pre-processor error
+      c) realloc and mremap result in the update of the existing metadata,
+         whereas other allocators result in the creation of new metadata
 
     // simple (static range = 1) memstruct declaration
     M(type, foo, ):          // OR, M(type, foo, , 1) 

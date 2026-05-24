@@ -7,7 +7,7 @@ C + memstruct = performance + memory safety
 
 - **Code size**    - memstruct.h is a single file <400 LoC library with no external dependencies.
 - **Memory safety**- targets pointers to cover UAF, NULL deref, OOB, leaks, & double free.
-- **Performance**  - comptime, or largely elided / hoisted runtime checks; uses good amount of asm to retain / improve C speed.
+- **Performance**  - comptime / largely elided / hoisted runtime checks; uses good amount of asm to retain / improve C speed.
 - **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
 - **Robustness**   - type checked C code underneath (your code editor itself flags bad memstruct grammar).
 - **Target**       - gcc, clang: -std=gnu99 &ONWS, x86_64. "batteries" included: opt-out, & hardening flags.
@@ -30,13 +30,13 @@ C + memstruct = performance + memory safety
     M(malloc(2800),bar,10);       // allocate bar on-heap as int[10][2][5][7]
     ```
 - **Re-allocate** memory: same as allocation, `M(storage, name, index)`.
-- **Share** memory: simply pass around `M(foo)` which is a ptr to metadata.
+- **Share** memory: simply pass around `M(name)` which is a ptr to metadata.
     ```
     M(M(foo), bar);               // bar now shares memory with foo 
     
     func(M(foo), other_inputs);   // share memory with callee
      ```
-- **Read / write** memory:
+- **Read / write** memory: `m(name,i,j...) is safe name[i][j]...`
     ```
     m(foo,5) = 10;                // simple memstruct
 
@@ -54,7 +54,7 @@ C + memstruct = performance + memory safety
 
     m(bar)[5] = 10;               // unsafe escape hatch
      ```
-- **De**-allocate memstruct: double free is harmless (gets elided, hurray).
+- **De**-allocate memstruct: double free is idempotent (gets elided, hurray).
      ```
     free(foo);                    // on-heap memory
 

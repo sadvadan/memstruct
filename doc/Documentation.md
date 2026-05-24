@@ -256,13 +256,13 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - How to quickly know if unsafe escape hatch `m(foo)[i]` has been used in a file that otherwise conforms to the library?
 
-    search `[` or `]` in your editor to quickly find out.
+    search `[` or `]` in your editor to quickly find out. complete safety can thus be easily enforced at project level.
 
 - Under which scenarios safety can be by-passed?
     
     a) (possible) edge cases where raw accesses are gainfully faster. b) (low level) arena allocations that suppress temporal safety. c) (design) temporal safety suppression to let OS reclaim the memory. d) (flag `-DNMSTRCT`) program wide safety supression in production release (rare, too).
 
-    NOTE: when interfacing with legacy `C` code, base_addr & byte_size can be shared as `M(foo)->addr` & `M(foo)->size` safely; empirically proven safety of legacy C code is accepted. however, if you were authoring a `C` lib today, you may want to use `M(foo)` instead of relying on empirical safety that may take decades to realize!
+    NOTE: when interfacing with legacy `C` code, base_addr & byte_size can be shared as `M(foo)->addr` & `M(foo)->size` safely; empirically proven safety of legacy C code is accepted. however, if you were authoring a `C` lib today, you may want to use `M(foo)` and memstruct instead of relying on empirical safety that may take decades to realize!
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 

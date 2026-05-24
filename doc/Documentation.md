@@ -260,7 +260,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - Under which scenarios safety must be by-passed?
     
-    a) (possible) edge cases where raw accesses are gainfully faster. b) (low level) arena allocations that suppress temporal safety. c) (design) temporal safety suppression if OS is made to reclaim memory. d) (flag `-DNMSTRCT`) program wide safety supression in production release (rare, too).
+    a) (possible) edge cases where raw accesses are gainfully faster. b) (low level) arena allocations that suppress temporal safety. c) (design) temporal safety suppression if OS is let reclaim the memory. d) (flag `-DNMSTRCT`) program wide safety supression in production release (rare, too).
 
     NOTE: when interfacing with legacy `C` code, base_addr & byte_size can be shared as `M(foo)->addr` & `M(foo)->size` safely; empirically proven safety of legacy C code is accepted. however, if you were authoring a `C` lib today, you may want to use `M(foo)` instead of relying on empirical safety that may take decades to realize!
 

@@ -23,12 +23,10 @@ This document explains how to configure and use the memstruct.h library.
 
 - Bare minimum safety checks; additionally: opt-out & hardening flags.
 - Supports on-heap, on-stack, and custom allocators.
-- Single‑header; no separate `.c` file needed.
-- No external dependencies; only standard `C` headers.
-- Safe to include in multiple TUs; designed to work across TUs.
+- Single‑header; no separate `.c` file needed. no external dependencies; only standard `C` headers. safe to include in multiple TUs; designed to work across TUs.
 
-- A memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m()` / `M()` semantics.
-- Thread safety: library is thread-safe but user must protect writes e.g. de/re-allocations **while** multithreading is ON. memstruct therefore doesn't impose any requirement above that related to multi-threading.
+- Imposed discipline: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics.
+- Thread safety: library is thread-safe but user must protect writes e.g. de/re-allocations **while** multithreading is ON. note that this is a generic requirement of multi-threading itself, and isn't specific to memstruct.
 
 ## Configuration
 

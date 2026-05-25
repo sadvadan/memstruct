@@ -256,7 +256,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - How to quickly know if unsafe escape hatch `m(foo)[i]` has been used in a file that otherwise conforms to the library?
 
-    search `[` or `]` in your editor to quickly find out. complete safety can thus be easily enforced at project level.
+    search `[` or `]` in your editor to quickly find out. complete safety can thus be **easily enforced** at project level.
 
 - Under which scenarios safety can be by-passed?
     

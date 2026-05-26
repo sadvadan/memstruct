@@ -402,9 +402,26 @@ mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t inde
   (MSTRCT_GET0(name) + MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) (mstrct_check(name._id, MSTRCT_GETX(name), \
   MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [0] index))) + MSTRCT_FLAT(name, [0] index))))
 
-// put
+#define MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES(a,b,...) /* deliberate fail for single input (a) */
+#define MSTRCT_FULL(...) __VA_ARGS__
 #define MSTRCT_PUT(store, name, range, counter) \
-store typeof(*(name.typ[0])) MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_ptr = (char *)2, (range) * MSTRCT_DSIZ(name))]; \
+MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES range))(store, name, range, counter)
+
+// put
+#define MSTRCT_PUT_0(store, name, range, counter) store typeof(*(name.typ[0]))   \
+MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_ptr = (char *)2, MSTRCT_DSIZ(name))] = {MSTRCT_FULL(range)}; \
+if (mstrct_ptr == (char *)2) {   \
+name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)&MSTRCT_CAT2(mstrct_arr_, __LINE__),  \
+  ((uint64_t)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;  \
+}  \
+MSTRCT_CLEAN(__LINE__, name._id, store) \
+if (mstrct_ptr == (char *)2) {   \
+  mstrct_addrx(sizeof(name.ref[0]));   \
+  MSTRCT_GET0(name) = (void *)&MSTRCT_CAT2(mstrct_arr_, __LINE__); mstrct_ptr = (char *)1; \
+}
+
+#define MSTRCT_PUT_1(store, name, range, counter) store typeof(*(name.typ[0]))   \
+MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_ptr = (char *)2, (range) * MSTRCT_DSIZ(name))]; \
 if (mstrct_ptr == (char *)2) {   \
   name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)&MSTRCT_CAT2(mstrct_arr_, __LINE__),  \
   ((uint64_t)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;  \

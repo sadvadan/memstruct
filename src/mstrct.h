@@ -290,7 +290,7 @@ mstrct_leak(int status, void *ptr) {
 
 static inline void
 mstrct_cleanup(uint32_t *ptr) {
-  MSTRCT_SET((uint64_t)0,  (*ptr));
+  if (*ptr != 0) {MSTRCT_SET((uint64_t)0,  (*ptr));}
 }
 
 static inline void
@@ -409,7 +409,7 @@ MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PAREN
 
 // put
 #define MSTRCT_PUT_0(store, name, range, counter) store typeof(*(name.typ[0]))   \
-MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_ptr = (char *)2, MSTRCT_DSIZ(name))] = {MSTRCT_FULL(range)}; \
+MSTRCT_CAT2(mstrct_arr_, __LINE__) [(name._id = 0, mstrct_ptr = (char *)2, MSTRCT_DSIZ(name))] = {MSTRCT_FULL(range)}; \
 if (mstrct_ptr == (char *)2) {   \
 name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)&MSTRCT_CAT2(mstrct_arr_, __LINE__),  \
   ((uint64_t)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;  \
@@ -421,7 +421,7 @@ if (mstrct_ptr == (char *)2) {   \
 }
 
 #define MSTRCT_PUT_1(store, name, range, counter) store typeof(*(name.typ[0]))   \
-MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_ptr = (char *)2, (range) * MSTRCT_DSIZ(name))]; \
+MSTRCT_CAT2(mstrct_arr_, __LINE__) [(name._id = 0, mstrct_ptr = (char *)2, (range) * MSTRCT_DSIZ(name))]; \
 if (mstrct_ptr == (char *)2) {   \
   name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)&MSTRCT_CAT2(mstrct_arr_, __LINE__),  \
   ((uint64_t)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;  \

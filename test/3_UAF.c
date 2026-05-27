@@ -30,7 +30,7 @@ foo[8], with checks: 10
 bar[0][1][2], w/o checks: 10
 bar[0][1][2], with checks: 10
 MSTRCT ERR: USE_AFTER_FREE; originated at line: 23, file: 3_UAF.c; err status: 1711
-foo[5], with checks: (garbage at foo[0] with settings MSTRCT_L = 0)
+foo[8], with checks: (garbage at foo[0] with settings MSTRCT_L = 0)
 */
 
 

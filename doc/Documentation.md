@@ -110,7 +110,7 @@ This document explains how to configure and use the memstruct.h library.
 
     M(static,foo,(1,3,4));          // allocate, initialize 1st 3 elems as {1,3,4}
 
-    // initiaizer list is only for auto / static arrays having static-only indexes
+    /* initiaizer list is only for auto / static arrays having static-only indexes */
     ```
 - **Metadata** access: `M(foo)` is a `mstrct *` where `mstrct` is the metadata struct `{base_addr, size}`.
      ```

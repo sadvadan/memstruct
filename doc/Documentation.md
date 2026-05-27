@@ -96,24 +96,21 @@ This document explains how to configure and use the memstruct.h library.
 
     // valid as a field declaration within a struct type definition
     ```
-- **Allocate:** memory to a memstruct as `M(storage, foo, single_index)`.
+- **Allocate / re-allocate:** memory to a memstruct `M(storage, foo, single_index)`.
     ```
+    // memstruct supports all kinds of allocators (should return a ptr)
+
     M(malloc(80),foo,10);           // allocate 80 heap bytes as type[10][
 
     M(auto,foo,10);                 // allocate type[10][ on-stack segment
 
-    M(auto,foo,(1,));               // allocate, initialize all static elements as 1
-
     M(static,foo,10);               // allocate type[10][ on-static segment
 
-    M(static,foo,(1,3,4));          // allocate with initializer list {1,3,4}
+    M(auto,foo,(1,));               // allocate, initialize 1st elem as 1
 
-    // memstruct supports all kind of allocators (should return a ptr)
-    // initiaizer list is only for static and auto arrays having static-only indexes
-    ```
-- **Re-allocate** memory to a memstruct:
-    ```
-    M(malloc(80),foo,40);           // same as assignment
+    M(static,foo,(1,3,4));          // allocate, initialize 1st 3 elems as {1,3,4}
+
+    // initiaizer list is only for auto / static arrays having static-only indexes
     ```
 - **Metadata** access: `M(foo)` is is a `mstrct *` where `mstrct` is the metadata struct `{base addr, size}`.
      ```
@@ -124,6 +121,7 @@ This document explains how to configure and use the memstruct.h library.
 - **De**-allocate: double frees are redundant (later elided by compiler).
      ```
     free(foo);                      // on-heap memory
+
     munmap(foo);                    // mmapped memory
  
 - **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates memstruct (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / size is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the overloaded free() or munmap(), as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
@@ -134,13 +132,13 @@ This document explains how to configure and use the memstruct.h library.
 
 - `M()`/`m()` **macro:**
 ```
-    // metadata
+    // GET metadata
     M(foo): 
     foo = memstruct name
     returns: ptr type mstrct *, pointing to struct  {const void *addr; const uint64_t size;}
     field access: M(foo)->addr = base address, M(foo)->size = total memory size in bytes
 
-    // memory sharing
+    // SHARE memory
     M(M(bar), foo):
     bar = original memstruct holding a memory
     foo = another memstruct now sharing the same memory
@@ -148,23 +146,22 @@ This document explains how to configure and use the memstruct.h library.
       a) any valid (mstrct *) type as 1st argument suffices
       b) if the ptr to the metadata is a (void *), cast it to (mastrct *) first
 
-    // dynamic range i block-or-static-scoped array allocation/ re-allocation
+    // ALLOCATION/ RE-ALLOCATION of block-or-static-scoped array over dynamic range i 
     M(storage, foo, i):
     foo = memstruct name
-    i = dynamic range of the array 
+    i = dynamic range of the array (static indexes are optionally declared in memstruct) 
     storage (keyword) = static / __thread static / auto
 
-    // initializer list leveraged block-or-static-scoped array allocation/ re-allocation
+    // ALLOCATION/ RE-ALLOCATION of fixed size block-or-static-scoped array with initializers
     M(storage, foo, (a,...)):
     foo = memstruct name
     (a,...) = initializer list {a,...} 
     storage (keyword) = static / __thread static / auto
     note:
-      a) initializer (a,) generates default value a for all elements
-      b) initializer list (a,b,...) conforms or matches static dimension in foo's type
-      c) initializer (a) gives compile time error, to avoid mistaking as dynamic range i
+      a) initializer list (a,...) goes to populate static indexes in foo's type
+      b) initializer (a) gives compile time error, to avoid mistaking as dynamic range i
 
-    // dynamic range i not-block-nor-static-scoped array allocation/ re-allocation
+    // ALLOCATION/ RE-ALLOCATION of not-block-nor-static-scoped array over dynamic range i 
     M(allocator, foo, i):
     foo = memstruct name
     i = dynamic range of the array 
@@ -176,22 +173,22 @@ This document explains how to configure and use the memstruct.h library.
       c) realloc and mremap result in the update of the existing metadata,
          whereas other allocators result in the creation of new metadata
 
-    // simple (static range = 1) memstruct declaration
+    // MEMSTRUCT declaration, simple (static range = 1)
     M(type, foo, ):          // OR, M(type, foo, , 1) 
     type = ptr type, e.g. const int * volatile, etc
     foo = (new) memstruct name
     
-    // static range (j,k,...) memstruct declaration
+    // MEMSTRUCT declaration for static range (j,k,...)
     M(type, foo, , j, k,...):
     type = ptr type, e.g. const int * volatile, etc
     foo = (new) memstruct name
     j,k,... = static range of foo 
  
-    // current memory address as L-value
+    // ADDRESS of current memory, as L-value
     m(foo):
     foo = memstruct name
  
-    // current index_max
+    // INDEX_MAX, current
     m(foo, ):
     foo = memstruct name
     returns: index_max = max index size, based on total size & current address
@@ -199,18 +196,18 @@ This document explains how to configure and use the memstruct.h library.
       a) index_max is +ive int64_t value, and
       b) array index < index_max
 
-    // simple GET (static index defaults as 0) as L-value
+    // GET data, simple (static index defaults as 0), as L-value
     m(foo, i): 
     foo = memstruct name
     i = sole (dynamic) index
 
-    // GET (at dynamic index i and static indexes j,k,...) as L-value
+    // GET data (at dynamic index i and static indexes j,k,...), as L-value
     m(foo, i, j, k,...): 
     foo = memstruct name
     i = sole (dynamic) index
     j, k,... = static indexes
 
-    // GET (when there's only static indexes j,k,...) as L-value
+    // GET data (when there's only static indexes j,k,...), as L-value
     // same as m(foo,0,j,k,...) but tries to elide runtime OOB check
     m(foo, ,j,k,...): 
     foo = memstruct name
@@ -285,7 +282,7 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
 
 - When is the LTS release?
 
-    presently, you may use the latest memstruct.h directly. LTS will soon follow sufficient test coverage.
+    you may use the latest memstruct.h (always passes the test suite) directly. LTS will soon follow sufficient test coverage.
 
 - I found what seems to be a bug/deficiency in memstruct
 

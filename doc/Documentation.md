@@ -158,8 +158,10 @@ This document explains how to configure and use the memstruct.h library.
     (a,...) = initializer list {a,...} 
     storage (keyword) = static / __thread static / auto
     note:
-      a) initializer list (a,...) goes to populate static indexes in foo's type
-      b) initializer (a) gives compile time error, to avoid mistaking as dynamic range i
+      a) initializer list (a,...) goes to populate static range in foo.
+         there is no dynamic index (i.e. is zero).
+      b) initializer (a) gives compile time error, to avoid mistaking as dynamic range i.
+         use (a,) instead if only the first element is to be initialized (with value a).
 
     // ALLOCATION/ RE-ALLOCATION of not-block-nor-static-scoped array over dynamic range i 
     M(allocator, foo, i):
@@ -208,10 +210,9 @@ This document explains how to configure and use the memstruct.h library.
     j, k,... = static indexes
 
     // GET data (when there's only static indexes j,k,...), as L-value
-    // same as m(foo,0,j,k,...) but tries to elide runtime OOB check
     m(foo, ,j,k,...): 
     foo = memstruct name
-    j, k,... = comptime known indexes
+    j, k,... = compile-time known indexes
     note: this optimized path fallbacks to m(foo,0,j,k..) if -
       a) any indexes are dynamic, or
       b) type isn't *const

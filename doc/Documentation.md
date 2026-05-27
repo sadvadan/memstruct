@@ -98,7 +98,7 @@ This document explains how to configure and use the memstruct.h library.
     ```
 - **Allocate / re-allocate:** memory to a memstruct `M(storage, foo, single_index)`.
     ```
-    // memstruct supports all kinds of allocators (should return a ptr)
+    /* memstruct supports different allocators (should return base ptr) */
 
     M(malloc(80),foo,10);           // allocate 80 heap bytes as type[10][
 
@@ -112,7 +112,7 @@ This document explains how to configure and use the memstruct.h library.
 
     // initiaizer list is only for auto / static arrays having static-only indexes
     ```
-- **Metadata** access: `M(foo)` is is a `mstrct *` where `mstrct` is the metadata struct `{base addr, size}`.
+- **Metadata** access: `M(foo)` is a `mstrct *` where `mstrct` is the metadata struct `{base_addr, size}`.
      ```
     uint64_t temp = M(foo)->size;   // byte size as R value
 

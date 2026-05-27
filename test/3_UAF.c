@@ -19,7 +19,7 @@ int main(void) {
     printf("bar[0][1][2], w/o checks: %d\n", m(bar)[8]);    // fetch (no checks)
     printf("bar[0][1][2], with checks: %d\n", m(bar,0,1,2));// fetch (with checks)
   }
-  printf("foo[8], w/o checks: %d\n", m(foo)[8]);            // fetch (no checks): this will segfault!
+  //printf("foo[8], w/o checks: %d\n", m(foo)[8]);          // fetch (no checks): uncomment this to see segfault!
   printf("foo[8], with checks: %d\n", m(foo,8));            // fetch (with checks): generates UAF report!
 
   return 0;

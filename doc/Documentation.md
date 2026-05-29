@@ -144,7 +144,8 @@ This document explains how to configure and use the memstruct.h library.
     foo = another memstruct now sharing the same memory
     note:
       a) any valid (mstrct *) type as 1st argument suffices
-      b) if the ptr to the metadata is a (void *), cast it to (mastrct *) first
+      b) if the ptr to the metadata is a (void *), cast it to (mstrct *) first
+      c) Function(M(foo),...) is how memory is shared with callees even across TUs
 
     // ALLOCATION/ RE-ALLOCATION of block-or-static-scoped array over dynamic range i 
     M(storage, foo, i):

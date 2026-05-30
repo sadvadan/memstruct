@@ -176,7 +176,9 @@ This document explains how to configure and use the memstruct.h library.
       b) any preceding cast e.g. (char *) etc for the allocator is not only
          not required, but will also produce comptime pre-processor error
       c) realloc and mremap result in the update of the existing metadata,
-         whereas other allocators result in the creation of new metadata
+         whereas other allocators result in the creation of new metadata.
+      d) a custom re-allocator needs to get registered with memstruct before
+         using with memstruct. presently, only realloc & mremap are registered.
 
     // MEMSTRUCT declaration, simple (static range = 1)
     M(type, foo, ):          // OR, M(type, foo, , 1) 

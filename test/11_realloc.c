@@ -9,6 +9,7 @@ int main(void) {
   M(int *,foo,); // declare int[][1]
   M(int *,bar,); // declare int[][1]
 
+  // note: sanity checks (if ptr == NULL etc) are implicit
   M(malloc(32), foo, 8); // int[8][1]
   M(mmap(NULL, 48, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0), bar, 12); // int[12][1]
 
@@ -18,7 +19,7 @@ int main(void) {
   printf("foo[5], before realloc: %d\n", m(foo,5));   // fetch memory (before realloc)
   printf("bar[9], before realloc: %d\n\n", m(bar,9)); // fetch memory (before realloc)
 
-  // re-allocation; note: M(foo) is implicitly cast to (void *) bas_addr
+  // re-allocation; note: a) M(foo) is implicitly cast to (void *) bas_addr; b) sanity checks are implicit
   M(realloc(M(foo)->addr, 60), foo, 15); // int[15][1]
   M(mremap(M(bar)->addr, 48, 44, MREMAP_MAYMOVE), bar, 11); // int[11][1]
 

@@ -33,8 +33,6 @@
 #define MSTRCT_CAT1(a)                    MSTRCT_DEF1(a)
 #define MSTRCT_CAT2(a,b)                  MSTRCT_DEF2(a,b)
 #define MSTRCT_CAT3(a,b,c)                MSTRCT_CAT2(a, MSTRCT_CAT2(b,c))
-#define MSTRCT_CAT4(a,b,c,d)              MSTRCT_CAT2(MSTRCT_CAT2(a,b), MSTRCT_CAT2(c,d))
-#define MSTRCT_CAT5(a,b,c,d,e)            MSTRCT_CAT2(a, MSTRCT_CAT4(b,c,d,e))
 
 #define MSTRCT_IDX1(i)                    [i]
 #define MSTRCT_IDX2(i,j)                  [i][j]

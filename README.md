@@ -44,17 +44,17 @@ C + memstruct = performance + memory safety
      ```
 - **Metadata** access:
      ```
-    uint64_t temp = M(foo)->size; // const byte size
+    uint64_t temp = M(foo)->size; // byte size
 
-    void *temp = M(bar)->addr;    // const base addr
+    void *temp = M(bar)->addr;    // base addr
      ```
 - **Raw** access:
      ```
-    m(foo)++;                     // ptr arithmetic; safe , as not dereferenced yet
+    m(foo)++;                     // ptr arithmetic; safe, as not dereferenced yet
 
-    m(bar)[5] = 10;               // unsafe escape hatch
+    m(bar)[5] = 10;               // unsafe, escape hatch
      ```
-- **De**-allocate memstruct: double free is idempotent (gets elided, hurray).
+- **De**-allocate memstruct: double free is idempotent (gets elided!).
      ```
     free(foo);                    // on-heap memory
 

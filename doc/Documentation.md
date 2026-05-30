@@ -117,6 +117,8 @@ This document explains how to configure and use the memstruct.h library.
     uint64_t temp = M(foo)->size;   // byte size as R value
 
     void *temp = M(foo)->addr;      // base addr as R value
+
+    typeof(foo.typ[0])              // ptr type
      ```
 - **De**-allocate: double frees are redundant (later elided by compiler).
      ```
@@ -240,13 +242,13 @@ mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's 
        dim[0]: holds geometry of - static indexes [index], and dynamic index []
 
 ```
-- **metadata:** metadata fields are accessed as `M(foo)->addr` and `M(foo)->size` (const values)
+- **metadata:** metadata fields are accessed as `M(foo)->addr` and `M(foo)->size`
 
 ```
     // meta data struct layout
     typedef struct  {
-      const void *addr;
-      const uint64_t size;
+      void *addr;
+      uint64_t size;
     } mstrct;
 
     // field description:

@@ -204,7 +204,7 @@ __asm__ (
 #define MSTRCT_CON(type) __builtin_types_compatible_p(typeof(type) const *, type *)
 
 typedef struct {int32_t _id;} mstrct_proto;
-typedef struct {const void *addr; const uint64_t size;} mstrct; // API
+typedef struct {void *addr; uint64_t size;} mstrct; // API
 typedef struct {union {void *ptr; struct {uint32_t _d; /*low*/ uint32_t _s; /*high*/};};} mstrct_pack;
 
 #define MSTRCT_DEF_META(counter, addr, size) ({uint64_t meta_addr; __asm__ __volatile__   \

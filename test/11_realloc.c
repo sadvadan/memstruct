@@ -20,7 +20,7 @@ int main(void) {
 
   // re-allocation; note: M(foo) is implicitly cast to (void *) bas_addr
   M(realloc(M(foo)->addr, 60), foo, 15); // int[15][1]
-  M(mremap(M(bar)->addr, 48, 44, MREMAP_MAYMOVE), bar, 12); // int[12][1]
+  M(mremap(M(bar)->addr, 48, 44, MREMAP_MAYMOVE), bar, 11); // int[11][1]
 
   printf("foo[5], after realloc: %d\n", m(foo,5)); // fetch memory (after realloc)
   printf("bar[9], after realloc: %d\n", m(bar,9)); // fetch memory (after realloc)

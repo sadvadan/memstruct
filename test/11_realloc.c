@@ -19,7 +19,7 @@ int main(void) {
   printf("foo[5], before realloc: %d\n", m(foo,5));   // fetch memory (before realloc)
   printf("bar[9], before realloc: %d\n\n", m(bar,9)); // fetch memory (before realloc)
 
-  // re-allocation; note: a) M(foo) is implicitly cast to (void *) bas_addr; b) sanity checks are implicit
+  // re-allocation; note: sanity checks are implicit
   M(realloc(M(foo)->addr, 60), foo, 15); // int[15][1]
   M(mremap(M(bar)->addr, 48, 44, MREMAP_MAYMOVE), bar, 11); // int[11][1]
 

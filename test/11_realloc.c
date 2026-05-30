@@ -1,4 +1,4 @@
-// create memstruct, mmap onto heap memory, munmap
+// create memstructs, allocate and then re-allocate
 
 #define _GNU_SOURCE
 #include <stdio.h>

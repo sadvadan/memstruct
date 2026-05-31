@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <sys/mman.h>
 
 #define MSTRCT_VER_MAJOR                  1
 #define MSTRCT_VER_MINOR                  0
@@ -103,7 +104,7 @@
 #define MSTRCT_M10(foo) MSTRCT_LET1(foo)
 #define MSTRCT_M11(store) MSTRCT_$$$1(store)
 
-#define MSTRCT_M20(foo, i) MSTRCT_GET1(foo)
+#define MSTRCT_M20(foo, i) MSTRCT_GET(foo,, [0])
 #define MSTRCT_M21(foo, i) MSTRCT_GET(foo, i, [0])
 
 #define MSTRCT_M301(memory, foo, idx) MSTRCT_LET3(memory, foo, idx, __COUNTER__)
@@ -129,11 +130,13 @@
   #endif
 #endif
 
-#ifdef __OPTIMIZE__
-  #define MSTRCT_O 1
+#ifdef MSTRCT_UINT64
+  #define MSTRCT_TYPE uint64_t
 #else
-  #define MSTRCT_O 0
+  #define MSTRCT_TYPE uint32_t
 #endif
+
+#define MSTRCT_SIZE (1ULL * 1024 * 1024 * 1024) // 1 GB
 
 typedef enum {
   MSTRCT_NULL                  = 1700,
@@ -148,89 +151,77 @@ typedef enum {
 extern char  **environ;
 static __thread char * mstrct_ptr  = (char *)1;
 static const char* const mstrct_string = __BASE_FILE__;
-__attribute__((weak, section(".mstrct_0, \"aw\", @nobits #"))) uint8_t mstrct_asm[8] = {0};
+__attribute__((weak)) void* mstrct_start;
+__attribute__((weak)) volatile size_t mstrct_offset;
 
-__asm__ (
-  ".macro MSTRCT.0 addr, counter\n\t"
-    "leaq .Lmstrct.\\counter(%rip), \\addr\n\t"
-  ".endm\n\t"
-);
+typedef struct {void *addr; uint64_t size;} mstrct; // API
+typedef struct {MSTRCT_TYPE i; int32_t _id;} mstrct_proto;
+typedef struct {union {void *ptr; struct {uint32_t _d; /*low*/ uint32_t _s; /*high*/};};} mstrct_pack;
 
-__asm__ (
-  ".macro MSTRCT.1 meta_addr, counter, addr, size\n\t"
-    ".ifndef .Lmstrct.meta.\\counter\n\t"
-      ".pushsection .mstrct_0, \"aw\", @nobits \n\t"
-        ".align 8\n\t"
-        ".Lmstrct.meta.\\counter:\n\t"
-        ".zero 16\n\t"
-      ".popsection\n\t"
-      "movq \\addr, .Lmstrct.meta.\\counter(%rip)\n\t"
-    ".endif \n\t"
-    "movq \\size, 8+.Lmstrct.meta.\\counter(%rip)\n\t"
-    "leaq .Lmstrct.meta.\\counter(%rip), \\meta_addr\n\t"
-  ".endm\n\t"
-);
+// arena allocation for metadata (mstrct)
+static inline uint64_t mstrct_alloc(const int line) {
+  uint64_t increment = 2;
 
-__asm__ (
-  ".macro MSTRCT.2 id, value, base\n\t"
-  "movslq \\id, %rax\n\t" // extend id to 8B
-  "movq \\value, 8(\\base, %rax, 8)\n\t"
-  ".endm\n\t"
-);
+  if (__builtin_expect(mstrct_start == NULL, 0)) { // cold path taken only once at start
+    void* virtual_space = mmap(NULL, MSTRCT_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
+    
+    if (virtual_space == MAP_FAILED) {return (uint64_t)-1;}
+    mstrct_start = virtual_space;
+    mstrct_offset = 0;
+  }
 
-__asm__ (
-  ".macro MSTRCT.3 counter\n\t"
-    ".ifndef .Lmstrct.\\counter\n\t"
-      ".pushsection .mstrct_1, \"aw\", @nobits \n\t"
-        ".align 8\n\t"
-        ".Lmstrct.\\counter:\n\t"
-        ".zero 8\n\t"
-      ".popsection\n\t"
-    ".endif \n\t"
-  ".endm\n\t"
-);
+  __asm__ __volatile__(
+      "lock xaddq %0, %1" // atomically adds increment to mstrct_offset; increment now holds the original value of mstrct_offset
+      : "+r" (increment), "+m" (mstrct_offset) // outputs/Inputs modified
+      :
+      : "memory"
+  );
+
+  if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) { // BOUNDS CHECK
+    printf("MSTRCT ERR: 1GB default metadata virtual size exceeded! originated at line: %d, file: %s; err status: %d;  \
+        HINT: do- #undef MSTRCT_SIZE #define MSTRCT_SIZE (enter_new_byte_size_here)\n", line, mstrct_string, 1715);
+    return (uint64_t)-1;
+  }
+
+  return increment;
+}
+
+__attribute__((const)) static inline mstrct*
+mstrct_mstrct(uint32_t offset) {
+    return (mstrct *)((uint64_t *)mstrct_start + offset);
+}
+
+__attribute__((const)) static inline void*
+mstrct_base(uint32_t offset) {
+    return *(void **)((uint64_t *)mstrct_start + offset);
+}
+
+__attribute__((const)) static inline uint64_t
+mstrct_size(uint32_t offset) {
+    return *(uint64_t *)((uint64_t *)mstrct_start + offset + 1);
+}
 
 // memstruct; see doc
-#define MSTRCT_T(type, index, enm) struct {  \
-  int32_t _id;  \
-  /* ref[0] */ struct {char a[enm];} ref[0];     \
+#define MSTRCT_T(type, index) struct {  \
+  MSTRCT_TYP(type) i; \
+  int32_t _id;   \
   /* typ[0] */ typeof(type) typ[0] __attribute__((packed)); \
   /* con[0] */ struct {char a[((MSTRCT_CON(type)) ? ((__builtin_constant_p(sizeof(char index))) ? 1 : 0) : 0)];} con[0];   \
   /* dim[0] */ char (*dim[0])[]index __attribute__((packed)); \
 }
 
 #define MSTRCT_CON(type) __builtin_types_compatible_p(typeof(type) const *, type *)
+#define MSTRCT_TYP(type) typeof((MSTRCT_CON(type))? (MSTRCT_TYPE const)0 : (MSTRCT_TYPE)0)
 
-typedef struct {int32_t _id;} mstrct_proto;
-typedef struct {void *addr; uint64_t size;} mstrct; // API
-typedef struct {union {void *ptr; struct {uint32_t _d; /*low*/ uint32_t _s; /*high*/};};} mstrct_pack;
-
-#define MSTRCT_DEF_META(counter, addr, size) ({uint64_t meta_addr; __asm__ __volatile__   \
-("MSTRCT.1 %0, %c1, %2, %3" : "=r" (meta_addr) : "i" (counter), "r" (addr), "r" (size)); meta_addr;})
-
-#define MSTRCT_ADDR(counter) MSTRCT_CAT2(mstrct_addr, MSTRCT_O)(counter)
-
-#define mstrct_addr0(counter) ({uint64_t a; __asm__ ("MSTRCT.0 %0, %c1" : "=r" (a) : "i" (counter)); a;})
-
-__attribute__((const, always_inline)) static inline uint64_t
-mstrct_addr1(int counter) {uint64_t addr; __asm__ ("MSTRCT.0 %0, %c1" : "=r" (addr) : "i" (counter)); return addr;}
-
-__attribute__((const)) static inline mstrct *
-mstrct_addr2(uint64_t runtime_off) {
-mstrct *_addr; __asm__ ("leaq (%2,%1,8), %0" : "=r" (_addr) : "r" (runtime_off), "r" (mstrct_asm)); return _addr;}
-
-#define mstrct_addrx(counter) __asm__ __volatile__ ("MSTRCT.3 %c0" : : "i" (counter))
-
-__attribute__((const)) static inline uint64_t
-mstrct_get0(int64_t runtime_off) {uint64_t _val;
-__asm__ ("movq (%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_asm)); return _val;}
-
-__attribute__((const)) static inline uint64_t
-mstrct_get1(int64_t runtime_off) {uint64_t _val;
-__asm__ ("movq 8(%2,%1,8), %0" : "=r" (_val) : "r" (runtime_off), "r" (mstrct_asm)); return _val;}
+__asm__ (
+  ".macro MSTRCT.0 id, value, base\n\t"
+  "movslq \\id, %rax\n\t" // extend id to 8B
+    "movq \\value, 8(\\base, %rax, 8)\n\t"
+  ".endm\n\t"
+);
 
 #define MSTRCT_SET(value, id) __asm__ __volatile__ \
-("MSTRCT.2 %0, %1, %2" : "+r"  (id) : "r"  (value), "r" (mstrct_asm) : "rax")
+("MSTRCT.0 %0, %1, %2" : "+r"  (id) : "r"  (value), "r" (mstrct_start) : "rax")
 
 // force return
 #define MSTRCT_RET() __asm__ __volatile__ ("movl $0, %%eax\n\t" "leave\n\t" "ret" : : : "eax")
@@ -280,7 +271,7 @@ mstrct_warn(int err_cond, int err_code, const char *err_msg, int line) {
 
 static inline void
 mstrct_leak(int status, void *ptr) {
-  if (mstrct_get1((int32_t)(uint64_t)ptr) != 0) {
+  if (mstrct_size((int32_t)(uint64_t)ptr) != 0) {
     printf("MSTRCT ERR: MEMORY_LEAK; for memory originated at line: %d, file: %s; exit status: %d\n",
     (int)(((uint64_t)ptr) >> 32), mstrct_string, status);
   }
@@ -295,7 +286,7 @@ static inline void
 mstrct_user_free(mstrct_proto *arg, int flag) {
   switch (flag) {
     case 0: {
-      if (mstrct_get1(arg->_id) != 0) {(free)((void *)mstrct_get0(arg->_id));}
+      if (mstrct_size(arg->_id) != 0) {(free)(mstrct_base(arg->_id));}
       MSTRCT_SET((uint64_t)0, arg->_id); break;
     }
     case 1: {
@@ -317,9 +308,9 @@ extern int (munmap)(void *addr, size_t len); // fwd declare munmap
 
 static inline uint64_t
 mstrct_munmap_1(mstrct_proto *arg, int line) {
-  int temp = 0; uint64_t size = mstrct_get1(arg->_id); 
+  int temp = 0; uint64_t size = mstrct_size(arg->_id); 
   if (size != 0) {
-    if ((munmap)((void *)mstrct_get0(arg->_id), size) == 0) {
+    if ((munmap)(mstrct_base(arg->_id), size) == 0) {
       MSTRCT_SET((uint64_t)0, arg->_id); return temp;
     } else {
        temp = 1; mstrct_error("de-allocation failed!!", MSTRCT_DE_ALLOC_FAIL, line); return temp;
@@ -347,22 +338,22 @@ mstrct_munmap_2(void **arg, uint64_t size, int line) {
 
 __attribute__((cold)) static inline char *
 mstrct_bounds_error(int32_t _d, uint64_t offset, int line) {
-  uint64_t size = mstrct_get1(_d);
+  uint64_t size = mstrct_size(_d);
   if (size == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line);}
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line);};
-  if (MSTRCT_L == 0) {return (char *)(mstrct_get0(_d) - offset);} else {return 0;}
+  if (MSTRCT_L == 0) {return (char *)(mstrct_base(_d) - offset);} else {return 0;}
 }
 
 __attribute__((const)) static inline uint64_t
 mstrct_oob_up(uint64_t unit_size, char *addr, int32_t _d) {
-  char *base = (char *)mstrct_get0(_d); uint64_t size = mstrct_get1(_d);
+  char *base = (char *)mstrct_base(_d); uint64_t size = mstrct_size(_d);
   int64_t limit = (base + size - addr)/ unit_size;
   if (limit < 0) {return 0;} else {return (uint64_t)limit;}
 }
 
 __attribute__((const)) static inline uint64_t
 mstrct_oob_lo(uint64_t unit_size, char *addr, int32_t _d) {
-  char *base = (char *)mstrct_get0(_d);
+  char *base = (char *)mstrct_base(_d);
   int64_t limit = (base - addr)/ unit_size;
   if (limit >= 0) {return UINT64_MAX;} else {return (uint64_t)limit;}
 }
@@ -374,32 +365,27 @@ mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t inde
   } else {return mstrct_bounds_error(id, (index * type_size), line);}
 }
 
-// addr L-val
-#define MSTRCT_GET0(name) (*((typeof(name.typ[0]) *) MSTRCT_ADDR(sizeof(name.ref[0]))))
-
-#define MSTRCT_GETX(name) (char *)(*((char **) MSTRCT_ADDR(sizeof(name.ref[0]))))
+// utility
+#define MSTRCT_GET0(name) (int64_t)mstrct_oob_up(MSTRCT_TSIZ(name), (char *)mstrct_base(name._id), name._id)
 #define MSTRCT_TSIZ(name) sizeof(*((typeof(name.typ[0]))0))
 #define MSTRCT_DSIZ(name) sizeof((*name.dim[0])[0])
-#define MSTRCT_FLAT(name, multi_index) ((uint64_t)(&(*(typeof(name.dim[0]))0) multi_index))
-
-#define MSTRCT_LET1(name) mstrct_addr2((uint64_t)name._id)
+#define MSTRCT_FLAT(name, multi_index) ((uint64_t)(&(*(typeof(name.dim[0]))0) multi_index) + name.i)
 
 // get
-#define MSTRCT_GET1(name) (int64_t)mstrct_oob_up(MSTRCT_TSIZ(name), MSTRCT_GETX(name), name._id)
-
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK)(name, i, index)
 
 #define MSTRCT_GET_10(name, i, index) (*(MSTRCT_GET0(name) + MSTRCT_FLAT(name, [i] index)))
 
-#define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0])) (mstrct_check(name._id, MSTRCT_GETX(name), \
+#define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0])) (mstrct_check(name._id, (char *)mstrct_base(name._id), \
   MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [i] index))) + MSTRCT_FLAT(name, [i] index)))
 
 #define MSTRCT_GET_00(name, i, index) MSTRCT_GET_10(name, [0], index)
 
 #define MSTRCT_GET_01(name, i, index) (*((sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))) ?   \
-  (MSTRCT_GET0(name) + MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) (mstrct_check(name._id, MSTRCT_GETX(name), \
-  MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [0] index))) + MSTRCT_FLAT(name, [0] index))))
+  (MSTRCT_GET0(name) + MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) (mstrct_check(name._id, \
+  (char *)mstrct_base(name._id), MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [0] index))) + MSTRCT_FLAT(name, [0] index))))
 
+// static/on-stack array initializer list handler                                                         
 #define MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES(a,b,...) /* deliberate fail for single input (a) */
 #define MSTRCT_PAR(a,b,...) {(a, b) __VA_OPT__(,) ##__VA_ARGS__}
 #define MSTRCT_FULL(...) __VA_ARGS__
@@ -409,72 +395,69 @@ MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PAREN
 // put
 #define MSTRCT_PUT_0(store, name, range, counter) store char  \
 MSTRCT_CLEAN(__LINE__, store) MSTRCT_CAT2(mstrct_arr_, __LINE__) [(uint64_t)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)] \
-__attribute__((aligned(__alignof__(*(name.typ[0]))))) = MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL(range)) ;   \
+__attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL(range)) ;   \
 if (mstrct_ptr == (char *)2) {   \
-  name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)&MSTRCT_CAT2(mstrct_arr_, __LINE__),  \
-  ((uint64_t)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;   \
-  mstrct_addrx(sizeof(name.ref[0])); MSTRCT_GET0(name) = (void *)&MSTRCT_CAT2(mstrct_arr_, __LINE__); \
+  name._id = mstrct_alloc(__LINE__);   \
+  mstrct *temp = mstrct_mstrct(name._id);  temp->addr = (void *)MSTRCT_CAT2(mstrct_arr_,__LINE__); \
+  temp->size = ((uint64_t)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)); \
+  mstrct_ptr = (char *)1; *(int *)&(name.i) = 0; \
   if (MSTRCT_CHK && MSTRCT_AUTO(store)) {*(uint32_t *)MSTRCT_CAT2(mstrct_arr_, __LINE__) = name._id;}  \
-  mstrct_ptr = (char *)1; \
 }
 
 #define MSTRCT_PUT_1(store, name, range, counter) store char  \
 MSTRCT_CLEAN(__LINE__,store) MSTRCT_CAT2(mstrct_arr_,__LINE__) [(range) * (uint64_t)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)] \
-__attribute__((aligned(__alignof__(*(name.typ[0]))))) = MSTRCT_PAR(mstrct_ptr = (char *)2, 0) ;   \
+__attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, 0) ;   \
 if (mstrct_ptr == (char *)2) {   \
-  name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)&MSTRCT_CAT2(mstrct_arr_, __LINE__),  \
-  ((uint64_t)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;   \
-  mstrct_addrx(sizeof(name.ref[0])); MSTRCT_GET0(name) = (void *)&MSTRCT_CAT2(mstrct_arr_, __LINE__); \
+  name._id = mstrct_alloc(__LINE__);   \
+  mstrct *temp = mstrct_mstrct(name._id); temp->addr = (void *)MSTRCT_CAT2(mstrct_arr_,__LINE__);  \
+  temp->size = ((uint64_t)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));  \
+  mstrct_ptr = (char *)1; *(int *)&(name.i) = 0;  \
   if (MSTRCT_CHK && MSTRCT_AUTO(store)) {*(uint32_t *)MSTRCT_CAT2(mstrct_clean_, __LINE__) = name._id;}  \
-  mstrct_ptr = (char *)1; \
 }                                                        
 
 #define MSTRCT_CLEAN(line, store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK, MSTRCT_AUTO(store))(line)
 #define MSTRCT_CLEAN_00(line)
 #define MSTRCT_CLEAN_10(line)
-#define MSTRCT_CLEAN_11(line) MSTRCT_CAT2(mstrct_clean_, line)[4] __attribute__((cleanup(mstrct_cleanup), aligned(4))),
+#define MSTRCT_CLEAN_11(line) MSTRCT_CAT2(mstrct_clean_, line)[4] __attribute__((cleanup(mstrct_cleanup), aligned(4), unused)),
 #define MSTRCT_CLEAN_01(line)
 
 #define MSTRCT_LET(typ, name, empty, index, counter) MSTRCT_CAT2(MSTRCT_LET_, MSTRCT_ARG_COUNT(empty))(typ,name,index,counter)
-#define MSTRCT_LET_0(typ, name, index, counter) MSTRCT_T(typ, index, counter) name
+#define MSTRCT_LET_0(typ, name, index, counter) MSTRCT_T(typ, index) name
 #define MSTRCT_LET_1(typ, name, index, counter) MSTRCT_ASSERT(NON_EMPTY_THIRD_ARG)
 
 // bind
-#define MSTRCT_LET3(memory, name, range, counter) do {   \
-  mstrct_addrx(sizeof(name.ref[0])); mstrct_ptr = (char *)(memory);  \
-  *((char **) MSTRCT_ADDR(sizeof(name.ref[0]))) = mstrct_ptr;   \
-  name._id = ((char *)MSTRCT_DEF_META(counter, (uint64_t)mstrct_ptr, \
-    ((uint64_t)sizeof(*(name.typ[0]))* (range) * MSTRCT_DSIZ(name))) - (char *)mstrct_asm) / 8;   \
-  MSTRCT_CAT2(mstrct_leak_, MSTRCT_CHK)((mstrct_proto *)&(name), __LINE__); /* leak check */  \
+#define MSTRCT_LET4(rememory, name, range) do {   \
+  mstrct_ptr = (char *)(rememory); mstrct *temp = mstrct_mstrct(name._id);  \
+  temp->addr = (void *)mstrct_ptr; temp->size = ((uint64_t)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
+  mstrct_leak_0(0, __LINE__); __asm__ __volatile__ (" " : : : "memory"); *(int *)&(name.i) = 0; \
 } while(0)
 
-#define MSTRCT_LET4(rememory, name, range) do {   \
-  mstrct_ptr = (char *)(rememory); *((char **) MSTRCT_ADDR(sizeof(name.ref[0]))) = mstrct_ptr;   \
-  uint64_t *temp = (uint64_t *)mstrct_addr2((uint64_t)name._id);   \
-  *temp = (uint64_t)mstrct_ptr; *(temp + 1) =  ((uint64_t)sizeof(*(name.typ[0]))* (range) * MSTRCT_DSIZ(name));   \
-  mstrct_leak_0((mstrct_proto *)&(name), __LINE__);   \
-  __asm__ __volatile__ (" " : : : "memory"); \
+#define MSTRCT_LET3(memory, name, range, counter) do {   \
+  mstrct_ptr = (char *)(memory); name._id = mstrct_alloc(__LINE__);  \
+  mstrct *temp = mstrct_mstrct(name._id); *(int *)&(name.i) = 0;  \
+  temp->addr = (void *)mstrct_ptr; temp->size = ((uint64_t)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
+  MSTRCT_CAT2(mstrct_leak_, MSTRCT_CHK)(name._id, __LINE__); /* leak check */  \
 } while(0)
 
 #define MSTRCT_LET2(base, name) do {   \
   if (!__builtin_types_compatible_p(typeof(base), mstrct *)) {MSTRCT_ASSERT(WRONG_TYPE_OF_ARG);}   \
-  name._id = ((char *)base - (char *)mstrct_asm) / 8; \
-  mstrct_addrx(sizeof(name.ref[0]));   \
-  *((char **) MSTRCT_ADDR(sizeof(name.ref[0]))) = (char *)mstrct_get0(name._id); \
+  name._id = ((char *)base - (char *)mstrct_start) / 8; *(int *)&(name.i) = 0; \
 } while(0)
 
+#define MSTRCT_LET1(name) mstrct_mstrct(name._id)
+
 static inline void 
-mstrct_leak_1(mstrct_proto * name, int line) {char a;
+mstrct_leak_1(uint32_t id, int line) {char a;
   if (mstrct_ptr == NULL) {mstrct_error("allocation failed!!", MSTRCT_ALLOC_FAIL, line);}
   if ((int64_t)((char *)&a - mstrct_ptr) > 0 || (mstrct_ptr - (char *)environ) > 0) /* not on regular stack */ {
-    mstrct_pack temp; temp._d = (uint32_t)(name->_id); temp._s = (uint32_t)line;
+    mstrct_pack temp; temp._d = id; temp._s = (uint32_t)line;
     on_exit(mstrct_leak, temp.ptr);
   } else {mstrct_error("wrong allocator!! use M(auto, foo, range) for block-scoped arrs!!", MSTRCT_ALLOC_FAIL, line);} 
   mstrct_ptr = (char *)1;
 }
 
 static inline void
-mstrct_leak_0(__attribute__((unused)) mstrct_proto * name, __attribute__((unused)) int line) {
+mstrct_leak_0(__attribute__((unused)) uint32_t id, __attribute__((unused)) int line) {
   if (mstrct_ptr == NULL) {mstrct_error("allocation failed!!", MSTRCT_ALLOC_FAIL, line);}
   mstrct_ptr = (char *)1;
 }

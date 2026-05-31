@@ -8,7 +8,7 @@ int main(void) {
   M(malloc(48),var,12); // var[12][1]
   m(var,5) = 10; // define var[5][0]
 
-  printf("ptr_addr: %p\n", m(var)); // fetch addr
+  printf("ptr_addr: %p\n", &m(var,0)); // fetch addr
   printf("arr_byte_size: %zu\n", M(var)->size); // fetch memory size in bytes
   printf("base_addr: %p\n", M(var)->addr); // fetch memory base addr
 

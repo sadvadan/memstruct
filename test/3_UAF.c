@@ -10,13 +10,11 @@ int main(void) {
 
     m(foo,8) = 10;                                          // define foo[8][0], with checks
 
-    printf("foo[8], w/o checks: %d\n", m(foo)[8]);          // fetch (no checks)
     printf("foo[8], with checks: %d\n", m(foo,8));          // fetch (with checks)
 
     M(int *const,bar,,2,6);                                 // declare multidm type bar[][2][6]
     M(M(foo),bar);                                          // share memory with foo
     
-    printf("bar[0][1][2], w/o checks: %d\n", m(bar)[8]);    // fetch (no checks)
     printf("bar[0][1][2], with checks: %d\n", m(bar,0,1,2));// fetch (with checks)
   }
   //printf("foo[8], w/o checks: %d\n", m(foo)[8]);          // fetch (no checks): uncomment this to see segfault!
@@ -25,9 +23,7 @@ int main(void) {
   return 0;
 }
 /* out
-foo[8], w/o checks: 10
 foo[8], with checks: 10
-bar[0][1][2], w/o checks: 10
 bar[0][1][2], with checks: 10
 MSTRCT ERR: USE_AFTER_FREE; originated at line: 23, file: 3_UAF.c; err status: 1711
 foo[8], with checks: (garbage at foo[0] with settings MSTRCT_L = 0)

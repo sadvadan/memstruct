@@ -15,7 +15,7 @@ int main(void) {
 
   m(var,10) = 10; // define var[1][10] as 10
 
-  printf("var[10], w/o checks: %d\n", m(var)[10]); // fetch (no checks)
+  printf("var[10], w/o checks: %d\n", (&m(var,0))[10]); // fetch (no checks)
   printf("var[10], with checks: %d\n", m(var,10)); // fetch (with checks)
   free(foo);
   return 0;

@@ -76,7 +76,7 @@ int main() {
   M(arena_alloc(&arena, 5 * sizeof(float)), prices, 5);
   #undef NMSTRCT
  
-  for (int i = 0; i < m(prices,); i++) { // i_max = m(prices,) = 5
+  for (int i = 0; i < m(prices); i++) { // i_max = m(prices,) = 5
     m(prices,i) = i * 10.5f;
   }
 
@@ -86,12 +86,12 @@ int main() {
   M(arena_alloc(&arena, 13 * sizeof(char)), greeting, 13);
   #undef NMSTRCT
 
-  strncpy(m(greeting), "Hello Arena!", M(greeting)->size);        // memory safe (unlike strcpy)!!
+  strncpy(M(greeting)->addr, "Hello Arena!", M(greeting)->size);        // memory safe (unlike strcpy)!!
 
   // Print the values to verify
   printf("Integer: %d\n", m(number,0));
   printf("Float array: %.1f, %.1f\n", m(prices,0), m(prices,1));
-  printf("String: %s\n", m(greeting));
+  printf("String: %s\n", (char *)M(greeting)->addr);
   printf("Arena usage: %zu/%zu bytes\n", arena.offset, arena.capacity);
 
   // 5. Clean up everything at once

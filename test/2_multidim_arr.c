@@ -9,14 +9,12 @@ int main(void) {
   
   m(foo,7,1,2) = 5; // define foo[7][1][2], with checks
 
-  printf("foo[7][1][2], w/o checks: %d\n", m(foo)[47]);
   printf("foo[7][1][2], with checks: %d\n", m(foo,7,1,2)); // fetch (with checks)
   free(foo);
   return 0;
 }
 
 /* out
- * foo[7][1][2], w/o checks: 5
  * foo[7][1][2], with checks: 5
 */
 

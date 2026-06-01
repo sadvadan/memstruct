@@ -259,7 +259,7 @@ This document explains how to configure and use the memstruct.h library.
        dim[0]: holds geometry of - static indexes [index], and dynamic index []
 
 ```
-- **metadata:** metadata fields are accessed as `M(foo)->addr` and `M(foo)->size`
+- **metadata:**
 
 ```
     // meta data struct layout

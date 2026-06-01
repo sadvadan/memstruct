@@ -41,7 +41,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Include `mstrct.h`.
 
-- Alternatively, instead of directives in source, use `-DNMSTRCT` / `-DMSTRCT_STRICT` / `-DMSTRCT_HARD` / `-DMSTRCT_UINT64` directly as compiler flags during compilation.
+- Alternatively, instead of directives in source, use `-DNMSTRCT` / `-DMSTRCT_STRICT` / `-DMSTRCT_HARD` / etc directly as compiler flags during compilation.
 
 - **More flags:**
 

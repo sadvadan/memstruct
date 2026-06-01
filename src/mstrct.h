@@ -153,11 +153,11 @@ typedef enum {
 extern char  **environ;
 static __thread char * mstrct_ptr  = (char *)1;
 static const char* const mstrct_string = __BASE_FILE__;
+
 __attribute__((weak)) void* mstrct_start;
-__attribute__((weak)) volatile size_t mstrct_offset;
+__attribute__((weak)) uint64_t mstrct_offset;
 
 typedef struct {void *addr; uint64_t size;} mstrct; // API
-typedef struct {MSTRCT_TYPE i; int32_t _id;} mstrct_proto;
 typedef struct {union {void *ptr; struct {uint32_t _d; /*low*/ uint32_t _s; /*high*/};};} mstrct_pack;
 
 // arena allocation for metadata (mstrct)
@@ -284,11 +284,11 @@ mstrct_cleanup(void *ptr) {
 }
 
 static inline void
-mstrct_user_free(mstrct_proto *arg, int flag) {
+mstrct_user_free(uint32_t *arg, int flag) {
   switch (flag) {
     case 0: {
-      if (mstrct_size(arg->_id) != 0) {(free)(mstrct_base(arg->_id));}
-      MSTRCT_SET((uint64_t)0, arg->_id); break;
+      if (mstrct_size(*arg) != 0) {(free)(mstrct_base(*arg));}
+      MSTRCT_SET((uint64_t)0, *arg); break;
     }
     case 1: {
       void *addr = *(void **)(arg);
@@ -303,14 +303,14 @@ mstrct_user_free(mstrct_proto *arg, int flag) {
 // overload free()
 #define free(arg) MSTRCT_FREE(arg)
 
-#define MSTRCT_FREE(arg) mstrct_user_free(((mstrct_proto *)&arg), (__builtin_classify_type(arg) == 5))
+#define MSTRCT_FREE(arg) mstrct_user_free(((uint32_t *)&(arg._id)), (__builtin_classify_type(arg) == 5))
 
 static inline uint64_t
-mstrct_munmap_1(mstrct_proto *arg, int line) {
-  int temp = 0; uint64_t size = mstrct_size(arg->_id); 
+mstrct_munmap_1(uint32_t *arg, int line) {
+  int temp = 0; uint64_t size = mstrct_size(*arg); 
   if (size != 0) {
-    if ((munmap)(mstrct_base(arg->_id), size) == 0) {
-      MSTRCT_SET((uint64_t)0, arg->_id); return temp;
+    if ((munmap)(mstrct_base(*arg), size) == 0) {
+      MSTRCT_SET((uint64_t)0, *arg); return temp;
     } else {
        temp = 1; mstrct_error("de-allocation failed!!", MSTRCT_DE_ALLOC_FAIL, line); return temp;
     }
@@ -329,7 +329,7 @@ mstrct_munmap_2(void **arg, uint64_t size, int line) {
 // overload munmap
 #define munmap(...)  MSTRCT_CAT2(MSTRCT_MUNMAP_, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
-#define MSTRCT_MUNMAP_1(arg) mstrct_munmap_1(((mstrct_proto *)&arg), __LINE__)
+#define MSTRCT_MUNMAP_1(arg) mstrct_munmap_1(((uint32_t *)&(arg._id)), __LINE__)
 #define MSTRCT_MUNMAP_2(arg, size) mstrct_munmap_2((void **)&arg, size, __LINE__)
 #define MSTRCT_MUNMAP_3(arg1, arg2, arg3) MSTRCT_ASSERT(TOO_MANY_ARGS)
 #define MSTRCT_MUNMAP_4(arg1, arg2, arg3, arg4) MSTRCT_ASSERT(TOO_MANY_ARGS)

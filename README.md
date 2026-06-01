@@ -5,9 +5,9 @@ C + memstruct = performance + memory safety
 
 ## 🎯 Features
 
-- **Code size**    - memstruct.h is a single file ~400 LoC library with no external dependencies.
+- **Code size**    - memstruct.h is a single file <400 LoC library with no external dependencies.
 - **Memory safety**- targets pointers to cover UAF, NULL deref, OOB, leaks, & double free.
-- **Performance**  - comptime / largely elided / hoisted runtime checks; uses good amount of asm to retain / improve C speed.
+- **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed.
 - **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
 - **Robustness**   - type checked C code underneath (your code editor itself flags bad memstruct grammar).
 - **Target**       - gcc, clang: -std=gnu99 &ONWS, x86_64. "batteries" included: opt-out, & hardening flags.
@@ -21,7 +21,7 @@ C + memstruct = performance + memory safety
 
     declaration prototype: `M(ptr_type, name,, static_indexes)`
 
-    allocation prototype: `M(storage, name, dynamic_index)`
+    allocation prototype: `M(allocate, name, dynamic_index)`
     ```
     M(int *,foo,);                // declare simple foo as int[][1]
     M(auto,foo,10);               // allocate on-stack foo as int[10][1]
@@ -29,7 +29,7 @@ C + memstruct = performance + memory safety
     M(int *const,bar,,2,5,7);     // declare multidim bar as int[][2][5][7]
     M(malloc(2800),bar,10);       // allocate bar on-heap as int[10][2][5][7]
     ```
-- **Re-allocate** memory: same as allocation, `M(storage, name, index)`.
+- **Re-allocate** memory: same as allocation, `M(re/allocate, name, dynamic_index)`.
 - **Share** memory: simply pass around `M(name)` which is a ptr to metadata.
     ```
     M(M(foo), bar);               // bar now shares memory with foo 
@@ -48,11 +48,13 @@ C + memstruct = performance + memory safety
 
     void *temp = M(bar)->addr;    // base addr
      ```
-- **Raw** access:
+- **index** arithmetic:
      ```
-    m(foo)++;                     // ptr arithmetic; safe, as not dereferenced yet
+    foo.i++;                      // array index increment
 
-    m(bar)[5] = 10;               // unsafe, escape hatch
+    foo.i--;                      // array index decrement
+
+    foo.i == 0;                   // set array index
      ```
 - **De**-allocate memstruct: double free is idempotent (gets elided!).
      ```

@@ -138,6 +138,8 @@ This document explains how to configure and use the memstruct.h library.
  
 - **Macro wrap of free() and munmap():** polymorphism - a) either de-allocates memstruct (`free(foo)`, `munmap(foo)`) or b) de-allocates a C ptr with C std API. moreover, addr / size is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the overloaded free() or munmap(), as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
+    **note:** macro wrap of free() and munmap() is the only place memstruct library interferes with `C`.
+
 - **Loop optimization**: at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for any later check. to force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(foo); i++)` where `m(foo)` = i_max, and expression `i < m(foo)` is the strictest OOB check (resulting in elision of other checks). `m(foo)` is evaluated only once as it calls a `const` attribute function. 
 
 ## API reference
@@ -239,7 +241,6 @@ This document explains how to configure and use the memstruct.h library.
 ```
 
 - **memstruct:**
-mstrct.h targets ptrs holding array-like memory. much like how a ptr variable's type carries static metadata about the data it points to, a memstruct carries even richer set of information in its type system. as the layout below shows, only the type field may be of immediate user interest in general, even as the rest play equal role in memory safety.
 ```
     // memstruct layout
     struct {

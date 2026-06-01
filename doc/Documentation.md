@@ -31,15 +31,23 @@ This document explains how to configure and use the memstruct.h library.
 ## Configuration
 
 - In source, optionally include `#define NMSTRCT` to disable all checks for production. this can be used to local segments as well, for local disable, like so: `#define NMSTRCT` `unsafe code here` `#undef NMSTRCT`.
+
 - Include `#define MSTRCT_STRICT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
 ```
     (default)     : print detailed err, continue with default "the arr start value"
     MSTRCT_STRICT : print detailed err, halt program with segfault at error site
     MSTRCT_HARD   : print detailed err, exit program with mstrct_status code
 ```
-- Optionally include `#define MSTRCT_UINT64` if your arrays may have index range in excess of `UINT32_MAX`. this can be applied locally as well: `#define MSTRCT_UINT64` `create your bigger memstruct here` `#undef MSTRCT_UINT64`.
+
 - Include `mstrct.h`.
+
 - Alternatively, instead of directives in source, use `-DNMSTRCT` / `-DMSTRCT_STRICT` / `-DMSTRCT_HARD` / `-DMSTRCT_UINT64` directly as compiler flags during compilation.
+
+- **More flags:**
+
+  optionally include `#define MSTRCT_UINT64` if your arrays may have index range in excess of `UINT32_MAX` **and** you need to do ptr arithmetic over that range. this can be applied locally as well: `#define MSTRCT_UINT64` `create your bigger memstruct here` `#undef MSTRCT_UINT64`. alternatively, global `-DMSTRCT_UINT64` compilation flag is also available.
+
+  metadata arena has pre-allocated virtual memory of 1GiB, exceeding which (rare as it is) memstruct issues an error and an instruction to a) `#undef MSTRCT_SIZE`, and b) `#define MSTRCT_SIZE [new arena size in bytes]`. as before, alternatively use `-DMSTRCT_SIZE=size` optionally in the compilation flag.
 
 ## Usage
 

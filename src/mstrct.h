@@ -136,7 +136,9 @@
   #define MSTRCT_TYPE uint32_t
 #endif
 
-#define MSTRCT_SIZE (1ULL * 1024 * 1024 * 1024) // 1 GB
+#ifndef MSTRCT_SIZE
+  #define MSTRCT_SIZE (1ULL * 1024 * 1024 * 1024) // 1 GiB
+#endif                                                  
 
 typedef enum {
   MSTRCT_NULL                  = 1700,
@@ -164,7 +166,6 @@ static inline uint64_t mstrct_alloc(const int line) {
 
   if (__builtin_expect(mstrct_start == NULL, 0)) { // cold path taken only once at start
     void* virtual_space = mmap(NULL, MSTRCT_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
-    
     if (virtual_space == MAP_FAILED) {return (uint64_t)-1;}
     mstrct_start = virtual_space;
     mstrct_offset = 0;
@@ -178,8 +179,8 @@ static inline uint64_t mstrct_alloc(const int line) {
   );
 
   if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) { // BOUNDS CHECK
-    printf("MSTRCT ERR: 1GB default metadata virtual size exceeded! originated at line: %d, file: %s; err status: %d;  \
-        HINT: do- #undef MSTRCT_SIZE #define MSTRCT_SIZE (enter_new_byte_size_here)\n", line, mstrct_string, 1715);
+    printf("MSTRCT ERR: 1GiB default metadata virtual size exceeded! originated at line: %d, file: %s; err status: %d;  \
+        HINT: place #define MSTRCT_SIZE [enter_new_byte_size_here] before #include \"mstrct.h\"\n", line, mstrct_string, 1715);
     return (uint64_t)-1;
   }
 
@@ -303,8 +304,6 @@ mstrct_user_free(mstrct_proto *arg, int flag) {
 #define free(arg) MSTRCT_FREE(arg)
 
 #define MSTRCT_FREE(arg) mstrct_user_free(((mstrct_proto *)&arg), (__builtin_classify_type(arg) == 5))
-
-extern int (munmap)(void *addr, size_t len); // fwd declare munmap
 
 static inline uint64_t
 mstrct_munmap_1(mstrct_proto *arg, int line) {

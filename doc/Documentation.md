@@ -45,7 +45,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - **More flags:**
 
-  optionally include `#define MSTRCT_UINT64` if your arrays may have index range in excess of `UINT32_MAX` **and** you need to do ptr arithmetic over that range. this can be applied locally as well: `#define MSTRCT_UINT64` `create your bigger memstruct here` `#undef MSTRCT_UINT64`. alternatively, global `-DMSTRCT_UINT64` compilation flag is also available.
+  optionally include `#define MSTRCT_INT64` if your arrays may have index range in excess of `INT32_MAX` **and** you need to do ptr arithmetic over that range. this can be applied locally as well: `#define MSTRCT_INT64` `create your bigger memstruct here` `#undef MSTRCT_INT64`. alternatively, global `-DMSTRCT_INT64` compilation flag is also available.
 
   metadata arena has pre-allocated virtual memory of 1GiB, exceeding which (rare as it is) memstruct issues an error and an instruction to place `#define MSTRCT_SIZE [new_arena_size_in_bytes]` before `#include mstrct.h`. as before, alternatively use `-DMSTRCT_SIZE=size` optionally in the compilation flag.
 

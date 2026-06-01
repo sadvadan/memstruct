@@ -130,10 +130,10 @@
   #endif
 #endif
 
-#ifdef MSTRCT_UINT64
-  #define MSTRCT_TYPE uint64_t
+#ifdef MSTRCT_INT64
+  #define MSTRCT_TYPE int64_t
 #else
-  #define MSTRCT_TYPE uint32_t
+  #define MSTRCT_TYPE int32_t
 #endif
 
 #ifndef MSTRCT_SIZE
@@ -205,7 +205,7 @@ mstrct_size(uint32_t offset) {
 // memstruct; see doc
 #define MSTRCT_T(type, index) struct {  \
   MSTRCT_TYP(type) i; \
-  int32_t _id;   \
+  uint32_t _id;   \
   /* typ[0] */ typeof(type) typ[0] __attribute__((packed)); \
   /* con[0] */ struct {char a[((MSTRCT_CON(type)) ? ((__builtin_constant_p(sizeof(char index))) ? 1 : 0) : 0)];} con[0];   \
   /* dim[0] */ char (*dim[0])[]index __attribute__((packed)); \
@@ -272,7 +272,7 @@ mstrct_warn(int err_cond, int err_code, const char *err_msg, int line) {
 
 static inline void
 mstrct_leak(int status, void *ptr) {
-  if (mstrct_size((int32_t)(uint64_t)ptr) != 0) {
+  if (mstrct_size((uint32_t)(uint64_t)ptr) != 0) {
     printf("MSTRCT ERR: MEMORY_LEAK; for memory originated at line: %d, file: %s; exit status: %d\n",
     (int)(((uint64_t)ptr) >> 32), mstrct_string, status);
   }
@@ -343,12 +343,12 @@ mstrct_bounds_error(int32_t _d, int line) {
 }
 
 __attribute__((const)) static inline uint64_t
-mstrct_limit(uint64_t unit_size, int32_t _d) {
+mstrct_limit(uint64_t unit_size, uint32_t _d) {
   return mstrct_size(_d) / unit_size;
 }
 
 __attribute__((hot)) static inline int64_t
-mstrct_check(int32_t id, uint64_t type_size, int line, int64_t index) {
+mstrct_check(uint32_t id, uint64_t type_size, int line, int64_t index) {
   if (mstrct_limit(type_size, id) > (uint64_t)index) {return index;}
   else {return mstrct_bounds_error(id, line);}
 }
@@ -357,7 +357,7 @@ mstrct_check(int32_t id, uint64_t type_size, int line, int64_t index) {
 #define MSTRCT_GET0(name) (int64_t)mstrct_limit(MSTRCT_TSIZ(name), name._id)
 #define MSTRCT_TSIZ(name) sizeof(*((typeof(name.typ[0]))0))
 #define MSTRCT_DSIZ(name) sizeof((*name.dim[0])[0])
-#define MSTRCT_FLAT(name, multi_index) ((uint64_t)(&(*(typeof(name.dim[0]))0) multi_index) + name.i)
+#define MSTRCT_FLAT(name, multi_index) ((int64_t)(&(*(typeof(name.dim[0]))0) multi_index) + name.i)
 
 // get
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK)(name, i, index)

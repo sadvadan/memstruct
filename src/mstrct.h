@@ -335,37 +335,26 @@ mstrct_munmap_2(void **arg, uint64_t size, int line) {
 #define MSTRCT_MUNMAP_4(arg1, arg2, arg3, arg4) MSTRCT_ASSERT(TOO_MANY_ARGS)
 #define MSTRCT_MUNMAP_0() MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
-__attribute__((cold)) static inline char *
-mstrct_bounds_error(int32_t _d, uint64_t offset, int line) {
-  uint64_t size = mstrct_size(_d);
-  if (size == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line);}
+__attribute__((cold)) static inline int64_t
+mstrct_bounds_error(int32_t _d, int line) {
+  if (mstrct_size(_d) == 0) {mstrct_error("USE_AFTER_FREE", MSTRCT_USE_AFTER_FREE, line);}
   else {mstrct_error("BOUNDS_CHECK_FAIL", MSTRCT_BOUNDS_CHECK_FAIL, line);};
-  if (MSTRCT_L == 0) {return (char *)(mstrct_base(_d) - offset);} else {return 0;}
+  return 0;
 }
 
 __attribute__((const)) static inline uint64_t
-mstrct_oob_up(uint64_t unit_size, char *addr, int32_t _d) {
-  char *base = (char *)mstrct_base(_d); uint64_t size = mstrct_size(_d);
-  int64_t limit = (base + size - addr)/ unit_size;
-  if (limit < 0) {return 0;} else {return (uint64_t)limit;}
+mstrct_limit(uint64_t unit_size, int32_t _d) {
+  return mstrct_size(_d) / unit_size;
 }
 
-__attribute__((const)) static inline uint64_t
-mstrct_oob_lo(uint64_t unit_size, char *addr, int32_t _d) {
-  char *base = (char *)mstrct_base(_d);
-  int64_t limit = (base - addr)/ unit_size;
-  if (limit >= 0) {return UINT64_MAX;} else {return (uint64_t)limit;}
-}
-
-__attribute__((hot)) static inline char *
-mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t index) {
-  if (mstrct_oob_up(type_size, addr, id) > (uint64_t)index || mstrct_oob_lo(type_size, addr, id) < (uint64_t)index) {
-    return addr;
-  } else {return mstrct_bounds_error(id, (index * type_size), line);}
+__attribute__((hot)) static inline int64_t
+mstrct_check(int32_t id, uint64_t type_size, int line, int64_t index) {
+  if (mstrct_limit(type_size, id) > (uint64_t)index) {return index;}
+  else {return mstrct_bounds_error(id, line);}
 }
 
 // utility
-#define MSTRCT_GET0(name) (int64_t)mstrct_oob_up(MSTRCT_TSIZ(name), (char *)mstrct_base(name._id), name._id)
+#define MSTRCT_GET0(name) (int64_t)mstrct_limit(MSTRCT_TSIZ(name), name._id)
 #define MSTRCT_TSIZ(name) sizeof(*((typeof(name.typ[0]))0))
 #define MSTRCT_DSIZ(name) sizeof((*name.dim[0])[0])
 #define MSTRCT_FLAT(name, multi_index) ((uint64_t)(&(*(typeof(name.dim[0]))0) multi_index) + name.i)
@@ -373,16 +362,16 @@ mstrct_check(int32_t id, char *addr, uint64_t type_size, int line, uint64_t inde
 // get
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK)(name, i, index)
 
-#define MSTRCT_GET_10(name, i, index) (*(MSTRCT_GET0(name) + MSTRCT_FLAT(name, [i] index)))
+#define MSTRCT_GET_10(name, i, index) (*((typeof(name.typ[0]))(mstrct_base(name._id)) + MSTRCT_FLAT(name, [i] index)))
 
-#define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0])) (mstrct_check(name._id, (char *)mstrct_base(name._id), \
-  MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [i] index))) + MSTRCT_FLAT(name, [i] index)))
+#define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0]))(mstrct_base(name._id)) +   \
+  mstrct_check(name._id, MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [i] index))))
 
 #define MSTRCT_GET_00(name, i, index) MSTRCT_GET_10(name, [0], index)
 
 #define MSTRCT_GET_01(name, i, index) (*((sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))) ?   \
-  (MSTRCT_GET0(name) + MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) (mstrct_check(name._id, \
-  (char *)mstrct_base(name._id), MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [0] index))) + MSTRCT_FLAT(name, [0] index))))
+  ((typeof(name.typ[0]))(mstrct_base(name._id)) + MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) \
+  (mstrct_base(name._id)) + mstrct_check(name._id, MSTRCT_TSIZ(name), __LINE__, MSTRCT_FLAT(name, [0] index)))))
 
 // static/on-stack array initializer list handler                                                         
 #define MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES(a,b,...) /* deliberate fail for single input (a) */

@@ -140,7 +140,7 @@ This document explains how to configure and use the memstruct.h library.
 
     **note:** macro wrap of free() and munmap() is the only place memstruct library interferes with `C`.
 
-- **Loop optimization**: at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for any later check. to force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(foo); i++)` where `m(foo)` = i_max, and expression `i < m(foo)` is the strictest OOB check (resulting in elision of other checks). `m(foo)` is evaluated only once as it calls a `const` attribute function. 
+- **Loop optimization**: at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for any later check. to force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(foo); i++)` where `m(foo)` = index_size, and expression `i < m(foo)` is the strictest OOB check (resulting in elision of other checks). `m(foo)` is evaluated only once as it calls a `const` attribute function. 
 
 ## API reference
 
@@ -213,7 +213,7 @@ This document explains how to configure and use the memstruct.h library.
     // INDEX_MAX, current
     m(foo):
     foo = memstruct name
-    returns: index_max = max index size, based on total size & current address
+    returns: index_max = max index size = total_size divided by type_size
     note:
       a) index_max is +ive int64_t value, and
       b) array index < index_max

@@ -3,7 +3,7 @@
 
 C + memstruct = performance + memory safety 
 
-## 🎯 Features
+## Features
 
 - **Code size**    - memstruct.h is a single file <400 LoC library with no external dependencies.
 - **Memory safety**- targets pointers to cover UAF, NULL deref, OOB, leaks, & double free.
@@ -12,7 +12,7 @@ C + memstruct = performance + memory safety
 - **Robustness**   - type checked C code underneath (your code editor itself flags bad memstruct grammar).
 - **Target**       - gcc, clang: -std=gnu99 &ONWS, x86_64. "batteries" included: opt-out, & hardening flags.
 
-## 🚀 Quick Start
+## Quick Start
 
 - **Include**
 
@@ -62,7 +62,7 @@ C + memstruct = performance + memory safety
 
     munmap(bar);                  // mmapped memory
      ```
-## 📖 Documentation 
+## Documentation 
 - See: [Documentation](doc/Documentation.md)
 
 ## License

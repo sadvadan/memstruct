@@ -16,7 +16,7 @@ int main(void) {
   printf("var[5], w/o checks: %d\n", (&m(foo,0))[5]); // fetch memory (no checks)
 
   // free the memory; NOTE: sanity check already included
-  munmap(foo); // comment this to see leak warning
+  M(munmap, foo); // comment this to see leak warning
   return 0;
 }
 /*out

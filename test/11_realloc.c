@@ -20,15 +20,15 @@ int main(void) {
   printf("bar[9], before realloc: %d\n\n", m(bar,9)); // fetch memory (before realloc)
 
   // re-allocation; note: sanity checks are implicit
-  M(realloc(M(foo)->addr, 60), foo, 15); // int[15][1]
-  M(mremap(M(bar)->addr, 48, 44, MREMAP_MAYMOVE), bar, 11); // int[11][1]
+  M(realloc(&m(foo,0), 60), foo, 15); // int[15][1]
+  M(mremap(&m(bar,0), 48, 44, MREMAP_MAYMOVE), bar, 11); // int[11][1]
 
   printf("foo[5], after realloc: %d\n", m(foo,5)); // fetch memory (after realloc)
   printf("bar[9], after realloc: %d\n", m(bar,9)); // fetch memory (after realloc)
 
   // free the memory; NOTE: sanity check already included
-  free(foo);   // comment this to see leak warning
-  munmap(bar); // comment this to see leak warning
+  M(free, foo);   // comment this to see leak warning
+  M(munmap, bar); // comment this to see leak warning
   return 0;
 }
 /*out

@@ -14,11 +14,12 @@ M(int *, shared,);                        // memstruct to hold (shared) memory
 // simple mutex for write synchronization
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void* thread_func(void* arg) {
+// worker
+void* thread_func(void *arg) {
   int tid = (int)((uintptr_t)pthread_self() % 1000);
 
-  M(int *, view,);
-  M((mstrct *)arg, view);                 // share memory
+  M(int *, view,) = {0};
+  view.id = (uint64_t)arg;                  // share memory
 
   for (int i = 0; i < 1000; i++) {
     int idx = (tid + i * 13) % ARRAY_SIZE;
@@ -47,7 +48,7 @@ int main(void) {
   M(auto, threads, NUM_THREADS);          // allocate pthreads on stack
 
   for (int i = 0; i < m(threads); i++) { // m(threads,) = i_max = NUM_THREADS
-    pthread_create(&m(threads,i), NULL, thread_func, M(shared));   // pass shared
+    pthread_create(&m(threads,i), NULL, thread_func, (void *)(uint64_t)shared.id);   // pass shared
   }
 
   for (int i = 0; i < m(threads); i++) { // m(threads,) = i_max = NUM_THREADS
@@ -61,7 +62,7 @@ int main(void) {
 
   printf("Test finished. Modified elements: %d / %d\n", count, ARRAY_SIZE);
 
-  free(shared);
+  M(free, shared);
   pthread_mutex_destroy(&mutex);
   return 0;
 }

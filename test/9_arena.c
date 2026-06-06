@@ -53,7 +53,7 @@ void arena_reset(Arena *arena) {
 
 // Free the entire arena back to the OS
 void arena_free(Arena *arena) {
-  free(arena->buffer);                 // free(memstruct) does NULLing of metadata internally
+  M(free, arena->buffer);                 // free(memstruct) does NULLing of metadata internally
   arena->capacity = 0;
   arena->offset = 0;
 }
@@ -65,16 +65,16 @@ int main() {
 
   // 2. Allocate an integer
   M(int *const, number,);
-  #define NMSTRCT                      // skip temporal safety 
+  #define NBMSTRCT                      // skip temporal safety 
   M(arena_alloc(&arena, sizeof(int)), number, 1);
   #undef NMSTRCT
   m(number,0) = 42;
 
   // 3. Allocate an array of floats
   M(float *const, prices,);
-  #define NMSTRCT                      // skip temporal safety 
+  #define NBMSTRCT                      // skip temporal safety 
   M(arena_alloc(&arena, 5 * sizeof(float)), prices, 5);
-  #undef NMSTRCT
+  #undef NBMSTRCT
  
   for (int i = 0; i < m(prices); i++) { // i_max = m(prices,) = 5
     m(prices,i) = i * 10.5f;
@@ -82,16 +82,16 @@ int main() {
 
   // 4. Allocate a string
   M(char *const, greeting,);
-  #define NMSTRCT                      // skip temporal safety 
+  #define NBMSTRCT                      // skip temporal safety 
   M(arena_alloc(&arena, 13 * sizeof(char)), greeting, 13);
-  #undef NMSTRCT
+  #undef NBMSTRCT
 
-  strncpy(M(greeting)->addr, "Hello Arena!", M(greeting)->size);        // memory safe (unlike strcpy)!!
+  strncpy(&m(greeting,0), "Hello Arena!", M(greeting));        // memory safe (unlike strcpy)!!
 
   // Print the values to verify
   printf("Integer: %d\n", m(number,0));
   printf("Float array: %.1f, %.1f\n", m(prices,0), m(prices,1));
-  printf("String: %s\n", (char *)M(greeting)->addr);
+  printf("String: %s\n", &m(greeting,0));
   printf("Arena usage: %zu/%zu bytes\n", arena.offset, arena.capacity);
 
   // 5. Clean up everything at once

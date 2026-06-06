@@ -7,9 +7,9 @@ int main(void) {
   M(int * ,var,); // var[][1]
   M(malloc(48),var,12); // var[12][1]
   
-  M(int * volatile, foo,,12); // foo[][12]
+  M(int * volatile, foo,,12) = {0}; // declare foo[][12], seed id & i with 0.
 
-  M(M(var),foo); // share memory: foo -> foo[1][12]
+  foo.id = var.id; // share memory: foo -> foo[1][12]
 
   M(auto,var,16); // remap var -> var[16][1]
 
@@ -17,7 +17,7 @@ int main(void) {
 
   printf("var[10], w/o checks: %d\n", (&m(var,0))[10]); // fetch (no checks)
   printf("var[10], with checks: %d\n", m(var,10)); // fetch (with checks)
-  free(foo);
+  M(free, foo);
   return 0;
 }
 

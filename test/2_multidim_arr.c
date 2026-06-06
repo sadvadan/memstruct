@@ -10,7 +10,7 @@ int main(void) {
   m(foo,7,1,2) = 5; // define foo[7][1][2], with checks
 
   printf("foo[7][1][2], with checks: %d\n", m(foo,7,1,2)); // fetch (with checks)
-  free(foo);
+  M(free, foo);
   return 0;
 }
 

@@ -12,7 +12,7 @@ int main(void) {
   var.i++; // ptr arithmetic
 
   printf("var[4], after ptr arith: %d\n", m(var,4)); // fetch memory
-  free(var);
+  M(free, var);
   return 0;
 }
 

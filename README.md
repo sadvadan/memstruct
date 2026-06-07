@@ -5,12 +5,12 @@ C + memstruct = performance + memory safety
 
 ## Features
 
-- **Code size**    - memstruct.h is a single file <400 LoC library with no external dependencies.
+- **Code size**    - memstruct.h is a single file 350 LoC library with no external dependencies.
 - **Memory safety**- targets pointers to cover UAF, NULL deref, OOB, leaks, & double free.
 - **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed.
 - **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
 - **Robustness**   - type checked C code underneath (your code editor itself flags bad memstruct grammar).
-- **Target**       - gcc, clang: -std=gnu99 &ONWS, x86_64. "batteries" included: opt-out, & hardening flags.
+- **Target**       - gcc, clang: -std=gnu99 &ONWS, 8-64 bit CPUs. batteries included: opt-out, hardening, & MCU flags.
 
 ## Quick Start
 
@@ -21,20 +21,22 @@ C + memstruct = performance + memory safety
 
     declaration prototype: `M(ptr_type, name,, static_indexes)`
 
-    allocation prototype: `M(allocate, name, dynamic_index)`
+    allocation prototype: `M(any_allocator, name, dynamic_index)`
     ```
     M(int *,foo,);                // declare simple foo as int[][1]
     M(auto,foo,10);               // allocate on-stack foo as int[10][1]
 
     M(int *const,bar,,2,5,7);     // declare multidim bar as int[][2][5][7]
     M(malloc(2800),bar,10);       // allocate bar on-heap as int[10][2][5][7]
+
+    M(int *,foo,) = {0};          // declare foo as int[][1] & assign foo.id=0 & foo.i=0
     ```
-- **Re-allocate** memory: same as allocation, `M(re/allocate, name, dynamic_index)`.
-- **Share** memory: simply pass around `M(name)` which is a ptr to metadata.
+- **Re-allocate** memory: same as allocation, `M(re-allocate, name, dynamic_index)`.
+- **Share** memory: simply pass around the int `foo.id`.
     ```
-    M(M(foo), bar);               // bar now shares memory with foo 
+    bar.id = foo.id;              // bar now shares memory with foo 
     
-    func(M(foo), other_inputs);   // share memory with callee
+    func(foo.id, other_inputs);   // share memory with callee
      ```
 - **Read / write** memory: `m(name,i,j...) is safe name[i][j]...`
     ```
@@ -44,9 +46,11 @@ C + memstruct = performance + memory safety
      ```
 - **Metadata** access:
      ```
-    uint64_t temp = M(foo)->size; // byte size
+    m(size foo)                   // byte size
 
-    void *temp = M(bar)->addr;    // base addr
+    m(base foo)                   // base addr
+
+    m(span foo)                   // index span
      ```
 - **index** arithmetic:
      ```
@@ -56,11 +60,13 @@ C + memstruct = performance + memory safety
 
     foo.i == 0;                   // set array index
      ```
-- **De**-allocate memstruct: double free is idempotent (gets elided!).
-     ```
-    free(foo);                    // on-heap memory
+- **De**-allocate memstruct: double de-allocation is idempotent (gets elided!).
 
-    munmap(bar);                  // mmapped memory
+    prototype: `M(any_de_allocator, name)`
+     ```
+    M(free, foo);                 // on-heap memory
+
+    M(munmap, bar);               // mmapped memory
      ```
 ## Documentation 
 - See: [Documentation](doc/Documentation.md)

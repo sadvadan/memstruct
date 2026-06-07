@@ -128,7 +128,7 @@ This document explains how to configure and use the memstruct.h library.
 
     /* initiaizer list is only for auto / static arrays having static-only indexes */
     ```
-- **Metadata** access: `M(foo)` is a `mstrct *` where `mstrct` is the metadata struct `{base_addr, size}`.
+- **Metadata** access: `m(metadat foo)`.
      ```
     uint64_t temp = m(size, foo);   // byte size as R value
 
@@ -177,11 +177,10 @@ on de-allocation, size (not base addr) is `NULL`-ed so double frees are redundan
         a) alloca, as it isn't block scoped, is also supported by this syntax
         b) any preceding cast e.g. (char *) etc for the allocator is not only
             not required, but will also produce comptime pre-processor error
-        c) realloc and mremap result in the update of the existing metadata,
-            whereas other allocators result in the creation of new metadata.
-        d) a custom re-allocator needs to get registered with memstruct before
-            using with memstruct. presently, the following are registered:
-            realloc, mremap.
+        c) realloc and mremap result in the update of the existing metadata
+        d) whereas memstruct is allocator and de-allocator agnostic, custom
+            re-allocators must be user implemented as:
+            mstrct_realloc(...) and mstrct_mremap(...) to suit dev intent.
 
     // MEMSTRUCT declaration, simple (static range = 1)
     M(type, foo, ):          // OR, M(type, foo, , 1) 

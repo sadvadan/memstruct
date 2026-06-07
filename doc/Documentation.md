@@ -21,7 +21,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Features and design
 
-- Bare minimum safety checks; additionally: opt-out, hardening, MCU and flags.
+- Bare minimum safety checks; additionally: opt-out, hardening, and MCU flags.
 
 - Supports on-heap, on-stack, and custom allocators & de-allocators.
 

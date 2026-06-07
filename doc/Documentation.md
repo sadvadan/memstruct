@@ -33,7 +33,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Configuration
 
-- In source, optionally include `#define NAMSTRCT`, `#define NAMSTRCT` or `#define NAMSTRCT`to disable spatial, heap-temporal or stack/static-temporal checks respectively. local disable like so: `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
+- In source, optionally include `#define NAMSTRCT`, `#define NBMSTRCT` or `#define NCMSTRCT`to disable spatial, heap-temporal or stack/static-temporal checks respectively. local disable like so: `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
 
 - Include `#define MSTRCT_SOFT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
 ```

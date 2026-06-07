@@ -27,9 +27,9 @@ This document explains how to configure and use the memstruct.h library.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support. works across TUs.
 
-- Imposed discipline: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics.
+- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. aliased dereferences too are usable only through memstruct.
 
-- Thread safety: library is thread-safe but user must protect writes e.g. de/re-allocations **while** multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
+- Thread safety: the library is thread-safe but user must protect writes e.g. de/re-allocations **while** multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
 
 ## Configuration
 
@@ -39,7 +39,7 @@ This document explains how to configure and use the memstruct.h library.
 ```
     (default)     : print detailed err (with line_no of memsruct genesis site), continue with default "the arr start value"
     MSTRCT_SOFT   : print detailed err (with line_no of error_site), continue with default "the arr start value"
-    MSTRCT_HARD   : print detailed err (no line_no; retreive from post-analysis), segfault at the error site
+    MSTRCT_HARD   : print detailed err (line_no=0, retreivable from post-analysis), segfault at the error site
 ```
 - Include MCU flag: `#define MSTRCT_16` for 8 & 16 bit, `#define MSTRCT_32` for 32 bit. use `#define MSTRCT_64` (locally if needed) to force foo.i to be of size 64-bit.
 
@@ -249,7 +249,7 @@ on de-allocation, size (not base addr) is `NULL`-ed so double frees are redundan
         sizeof(foo.con[0]): 1 if ptr is *const type & total memory size is fixed, 0 if not
         sizeof(foo.lin[0]): line number where foo was declared
         oob[0]: holds geometry of static indexes
-        dim[0]: holds geometry of - static indexes [index], and dynamic index []
+        dim[0]: holds geometry of - static indexes [index] and dynamic index []
 
     // GET current index
     foo.i 
@@ -326,7 +326,7 @@ Search existing issues before opening a new one.
 
 3. When reporting bugs, include commands, versions, and a minimal example.
 
-4. Vibe coding: good luck with that.
+4. Vibe coding: good luck.
 
 5. License:
 By contributing, you agree your code will be distributed under the project’s license (see  [LICENSE](../LICENSE)).

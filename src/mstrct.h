@@ -144,9 +144,10 @@
 #define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NAMSTRCT)
 #define MSTRCT_CHK2                       MSTRCT_ARG_COUNT(NBMSTRCT)
 #define MSTRCT_CHK3                       MSTRCT_ARG_COUNT(NCMSTRCT)
-#define MSTRCT_LINE(name)                 MSTRCT_CAT2(MSTRCT_LINE_, MSTRCT_ARG_COUNT(MSTRCT_SOFT))(name)
-#define MSTRCT_LINE_0(name)               __LINE__
-#define MSTRCT_LINE_1(name)               ((mstrct_uint32)sizeof(name.lin[0]))
+#define MSTRCT_LINE(name)                 MSTRCT_CAT3(MSTRCT_L, MSTRCT_ARG_COUNT(MSTRCT_SOFT), MSTRCT_ARG_COUNT(MSTRCT_HARD))(name)
+#define MSTRCT_L01(name)                  __LINE__
+#define MSTRCT_L11(name)                  ((mstrct_uint32)sizeof(name.lin[0]))
+#define MSTRCT_L10(name)                  0
 
 #define MSTRCT_ARG_COUNT(...)             MSTRCT_MACR16(10 __VA_OPT__(,) ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #define MSTRCT_MACR16(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,NAME,...) NAME

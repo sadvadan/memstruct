@@ -28,6 +28,7 @@ int main(void) {
     printf("soft mode - OOB prints line no of err site.\n");
     int x = m(arr,15);    // OOB
     M(free, arr);
+    printf("continued after OOB. x = %d\n", x);
   #endif
 
     // === Level 2: Hard (exit with status code) ===

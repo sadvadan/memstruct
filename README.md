@@ -58,7 +58,7 @@ C + memstruct = performance + memory safety
 
     foo.i--;                      // array index decrement
 
-    foo.i == 0;                   // set array index
+    foo.i = 0;                   // set array index
      ```
 - **De**-allocate memstruct: double de-allocation is idempotent (gets elided!).
 

@@ -78,7 +78,7 @@ This document explains how to configure and use the memstruct.h library.
 
     to make use of initializer list in static and on-stack arrays, first declare a memstruct with fixed dimensions e.g. `M(int*, foo,,4)` then `M(auto, foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list entering the prior static dimension in memstruct. 
 
-- **Memory sharing:** `foo.id` (a uint32_t sized metadata ID) is simply passed around in the memstruct conforming functions (within or across TUs). legacy C APIs, on the other hand, may accept memstruct supplied base_addr & size as `m(base foo)` / `m(size foo)` directly. 
+- **Memory sharing:** `foo.id` (a uint32_t sized metadata ID) is simply passed around in the memstruct conforming functions (within or across TUs). legacy C APIs, on the other hand, may accept memstruct supplied base_addr & size as `m(base foo)` & `m(size foo)` directly. 
 ```
     bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type alias
 
@@ -98,7 +98,7 @@ This document explains how to configure and use the memstruct.h library.
      ```
 - **Raw access (w/o checks) of data:** 
 
-    `(&m(foo,0))[i]` is an example of raw access of data. this is deliberate, also inefficient, and easily found out (see Troubleshooting section). raw access for legitimate reasons is, as discussed efore, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
+    `(&m(foo,0))[i]` is an example of raw access of data: this is contrived, inefficient, and also easily found (see Troubleshooting section). raw access for legitimate reasons is, as discussed before, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
 
     memstruct supports safe aliasing in its internals while forcing strict aliasing (level=2) diagnostics on user code. in this way, complete flexibilty of C is retained but accessed only through memstruct API.
 
@@ -119,7 +119,7 @@ This document explains how to configure and use the memstruct.h library.
 
     // valid as struct field and other nested types
     ```
-- **Allocate / re-allocate:** memory to a memstruct `M(storage, foo, single_index)`.
+- **Allocate / re-allocate:** memory to a memstruct `M(storage, foo, single_index)`. sanity checks (e.g. `if (ptr == NULL)`) are done internally, and need not be repeated by user.
     ```
     /* memstruct supports custom allocators (should return base ptr) */
 
@@ -147,7 +147,7 @@ This document explains how to configure and use the memstruct.h library.
 
     int64_t temp = m(span foo);     // index span
      ```
-- **De**-allocate: double de-allocs are redundant (later elided by compiler). custom de-allocators supported.
+- **De**-allocate: double de-allocs are redundant (later elided by compiler). custom de-allocators supported. de-allocation failure check is done internally, and need not be repeated by user.
      ```
     M(free, foo);                   // on-heap memory
 
@@ -249,8 +249,10 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
         int32_t/int64_t i;
         uint32_t id;
         type typ[0];
-        struct {char a[0/1];}  con[0];
-        char (*dim[0])[][index];
+        struct {char a[0/1];}   con[0];
+        struct {char a[line]; } lin[0];
+        struct {char a index; } oob[0];
+        struct {char a[]index;} dim[0];
     } foo;
 
     // field description:
@@ -283,7 +285,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
     this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening level to HARD (`#define MSTRCT_HARD`) to cause segfault at the site after error print. 
 
-    in the default level, line number of the erring memstruct's declaration site (not that of erring site) is printed. to print the line number of the erring site set level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number but since it segfaults at the error site, the ine number can be recovered in post-analysis. HARD generates the least binary footprint, followed by the default level and then SOFT that's meant mostly for devlopment phase.
+    in the default level, the line number of the declaration site of the erring memstruct (not the erring site itself) is printed. to print the line number of the erring site set level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number but since it segfaults at the error site, the ine number can be recovered in post-analysis. HARD generates the least binary footprint (for the unhappy path), followed by the default level and then SOFT which is well suited for devlopment phase. the default level is the sweet spot, and caters to fail-safe design (no crashes).
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
@@ -303,7 +305,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
     a) large code bases can be furthered with memstruct, or b) greenfield projects with memstruct can work with legacy code.
 
-    there is no contradiction: memory safety is like the fabric of space-time: in empirically proven safe C code, the programmer held the fabric together; going forward, memstruct does it on behalf of the programmer.
+    there is no contradiction: memory safety is like the fabric of space-time: in empirically proven safe C code, the programmer held the fabric together; going forward, memstruct does it on the behalf of programmer.
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 
@@ -311,7 +313,9 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
 - When is the LTS release?
 
-    one may use the latest memstruct.h (always passes the test suite!) directly. LTS will soon follow, pending sufficient test coverage. note: as memstruct is being developed while also being actively used in a project, LTS for the project itself is guaranteed.
+    one may use the latest memstruct.h (always passes the test suite!) directly. LTS will soon follow, pending sufficient test coverage.
+
+    NOTE: as memstruct is being developed while also simultaneously used in an ongoing project, LTS for memstruct project itself is guaranteed.
 
 - I found what seems to be a bug/deficiency in memstruct
 

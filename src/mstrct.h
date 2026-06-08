@@ -333,22 +333,24 @@ MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PAREN
 #define MSTRCT_PUT_0(store, name, range) store char MSTRCT_CLEAN(__LINE__, store)  \
 MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)] \
 __attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL(range)) ;   \
+\
 if (mstrct_ptr == (char *)2) {   \
-  name.id = MSTRCT_ALLOC(__LINE__);   \
+  *(__attribute__((__may_alias__)) mstrct_int64 *)&(name) = 0; __asm__ __volatile__ (" " : "+r"(*(char *)&(name.i))::);   \
+  name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)MSTRCT_CAT2(mstrct_arr_, __LINE__); \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name));   \
-  mstrct_ptr = (char *)1; *(int *)&(name.i) = 0; \
   if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)MSTRCT_CAT2(mstrct_arr_, __LINE__) = name.id;}  \
 }
 
 #define MSTRCT_PUT_1(store, name, range) store char MSTRCT_CLEAN(__LINE__, store)  \
 MSTRCT_CAT2(mstrct_arr_,__LINE__) [(range) * (mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)] \
 __attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, 0) ;   \
+\
 if (mstrct_ptr == (char *)2) {   \
-  name.id = MSTRCT_ALLOC(__LINE__);   \
+  *(__attribute__((__may_alias__)) mstrct_int64 *)&(name) = 0; __asm__ __volatile__ (" " : "+r"(*(char *)&(name.i))::);   \
+  name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)MSTRCT_CAT2(mstrct_arr_, __LINE__); \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
-  mstrct_ptr = (char *)1; *(int *)&(name.i) = 0;  \
   if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)MSTRCT_CAT2(mstrct_clean_, __LINE__) = name.id;}  \
 }                                                        
 
@@ -367,14 +369,15 @@ if (mstrct_ptr == (char *)2) {   \
 #define MSTRCT_LET4(rememory, name, range) do {   \
   mstrct_ptr = (char *)(rememory);  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)mstrct_ptr; \
-  *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
-  mstrct_leak_0(0, __LINE__); __asm__ __volatile__ (" " : "+r" (name.id) : : ); *(int *)&(name.i) = 0; \
+  *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));  \
+  mstrct_leak_0(0, __LINE__); __asm__ __volatile__ (" " : "+r" (name.id) : : );  \
 } while(0)
 
 #define MSTRCT_LET3(memory, name, range) do {   \
-  mstrct_ptr = (char *)(memory); name.id = MSTRCT_ALLOC(__LINE__); *(int *)&(name.i) = 0;  \
+  *(__attribute__((__may_alias__)) mstrct_int64 *)&(name) = 0; __asm__ __volatile__ (" " : "+r"(*(char *)&(name.i))::);   \
+  mstrct_ptr = (char *)(memory); name.id = MSTRCT_ALLOC(__LINE__);   \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)mstrct_ptr; \
-  *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
+  *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));  \
   MSTRCT_CAT2(mstrct_leak_, MSTRCT_CHK2)(name.id, __LINE__); /* leak check */  \
 } while(0)
 

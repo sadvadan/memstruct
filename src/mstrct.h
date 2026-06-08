@@ -69,16 +69,16 @@
 #define MSTRCT_CAT2(a,b)                  MSTRCT_DEF2(a,b)
 #define MSTRCT_CAT3(a,b,c)                MSTRCT_CAT2(a, MSTRCT_CAT2(b,c))
 
-#define MSTRCT_IDX1(i)                      [i]
-#define MSTRCT_IDX2(i,j)                    [i][j]
-#define MSTRCT_IDX3(i,j,k)                  [i][j][k]
-#define MSTRCT_IDX4(i,j,k,l)                [i][j][k][l]
-#define MSTRCT_IDX5(i,j,k,l,m)              [i][j][k][l][m]
-#define MSTRCT_IDX6(i,j,k,l,m,n)            [i][j][k][l][m][n]
-#define MSTRCT_IDX7(i,j,k,l,m,n,o)          [i][j][k][l][m][n][o]
-#define MSTRCT_IDX8(i,j,k,l,m,n,o,p)        [i][j][k][l][m][n][o][p]
-#define MSTRCT_IDX9(i,j,k,l,m,n,o,p,q)      [i][j][k][l][m][n][o][p][q]
-#define MSTRCT_IDX10(i,j,k,l,m,n,o,p,q,r)   [i][j][k][l][m][n][o][p][q][r]
+#define MSTRCT_IDX1(i)                    [i]
+#define MSTRCT_IDX2(i,j)                  [i][j]
+#define MSTRCT_IDX3(i,j,k)                [i][j][k]
+#define MSTRCT_IDX4(i,j,k,l)              [i][j][k][l]
+#define MSTRCT_IDX5(i,j,k,l,m)            [i][j][k][l][m]
+#define MSTRCT_IDX6(i,j,k,l,m,n)          [i][j][k][l][m][n]
+#define MSTRCT_IDX7(i,j,k,l,m,n,o)        [i][j][k][l][m][n][o]
+#define MSTRCT_IDX8(i,j,k,l,m,n,o,p)      [i][j][k][l][m][n][o][p]
+#define MSTRCT_IDX9(i,j,k,l,m,n,o,p,q)    [i][j][k][l][m][n][o][p][q]
+#define MSTRCT_IDX10(i,j,k,l,m,n,o,p,q,r) [i][j][k][l][m][n][o][p][q][r]
 
 #define MSTRCT_$14(foo,i,...)             MSTRCT_ASSERT(MSTRCT_TOO_MANY_ARGS)
 #define MSTRCT_$13(foo,i,...)             MSTRCT_ASSERT(MSTRCT_TOO_MANY_ARGS)

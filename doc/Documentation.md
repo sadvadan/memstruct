@@ -315,6 +315,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
     one may use the latest memstruct.h (always passes the test suite!) directly. LTS will soon follow, pending sufficient test coverage.
 
+
     NOTE: as memstruct is being developed while also simultaneously used in an ongoing project, LTS for memstruct project itself is guaranteed.
 
 - I found what seems to be a bug/deficiency in memstruct

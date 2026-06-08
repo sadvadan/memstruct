@@ -15,7 +15,7 @@ int main(void) {
 }
 
 /* out
- * foo[7][1][2], with checks: 5
+ * foo[7][1][2][1], with checks: 5
 */
 
 

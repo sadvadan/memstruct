@@ -46,6 +46,7 @@
  *  MSTRCT_ALLOC(...)    MCU metadata allocator macro
  *  mstrct_realloc(...)    custom re-allocator func 1
  *  mstrct_mremap(...)     custom re-allocator func 2
+ *  on_exit(...)     custom leak registering function
  *
  * literals *****************************************
  *

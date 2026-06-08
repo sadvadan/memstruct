@@ -237,8 +237,7 @@ mstrct_size(mstrct_uint32 offset) {
   /* typ[0] */ typeof(type) typ[0] __attribute__((packed)); \
   /* con[0] */ struct {char a[((MSTRCT_CON(type)) ? ((__builtin_constant_p(sizeof(char index))) ? 1 : 0) : 0)];} con[0];   \
   /* lin[0] */ struct {char a[line];} lin[0];   \
-  /* oob[0] */ struct {char a index [1];} oob[0];   \
-  /* dim[0] */ struct {char a[]index;} dim[0];   \
+  /* dim[0] */ struct {char a[] index [1];} dim[0];   \
 }
 
 #define MSTRCT_CON(type) __builtin_types_compatible_p(typeof(type) const *, type *)
@@ -302,8 +301,7 @@ mstrct_check(mstrct_uint32 id, mstrct_uint64 type_size, mstrct_int32 line, mstrc
 // utility
 #define MSTRCT_TSIZ(name) sizeof(*((typeof(name.typ[0]))0))
 #define MSTRCT_DSIZ(name) sizeof(*(name.dim[0].a))
-#define MSTRCT_FLAT(name, index, idx) \
-  ((void)(&(*(typeof(name.oob[0].a) *)0) idx [0]), (mstrct_int64)(&(*(typeof(name.dim[0].a) *)0) index idx) + name.i)
+#define MSTRCT_FLAT(name, index, idx) ((mstrct_int64)(&(*(typeof(name.dim[0].a) *)0) index idx [0]) + name.i)
 
 // get
 #define MSTRCT_GET1(name) ((mstrct_int64)mstrct_limit(MSTRCT_TSIZ(name), name.id))

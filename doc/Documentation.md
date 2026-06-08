@@ -253,8 +253,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
         type typ[0];
         struct {char a[0/1];}   con[0];
         struct {char a[line]; } lin[0];
-        struct {char a index; } oob[0];
-        struct {char a[]index;} dim[0];
+        struct {char a[]index[1];} dim[0];
     } foo;
 
     // field description:
@@ -263,7 +262,6 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
         typeof(foo.typ[0]): pointer type
         sizeof(foo.con[0]): 1 if ptr is *const type & total memory size is fixed, 0 if not
         sizeof(foo.lin[0]): line number where foo was declared
-        oob[0]: holds geometry of static indexes
         dim[0]: holds geometry of - static indexes [index] and dynamic index []
 
     // GET current index

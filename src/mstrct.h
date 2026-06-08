@@ -43,7 +43,7 @@
  * language extension APIs **************************
  *
  *  MSTRCT_PRINT(...)                 MCU print macro
- *  MSTRCT_MMAP(...)     MCU metadata allocator macro
+ *  MSTRCT_ALLOC(...)    MCU metadata allocator macro
  *  mstrct_realloc(...)    custom re-allocator func 1
  *  mstrct_mremap(...)     custom re-allocator func 2
  *

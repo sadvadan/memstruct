@@ -17,13 +17,13 @@ This document explains how to configure and use the memstruct.h library.
 
 - **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system. the error reporting system supplements this with optimizations from the compiler, leading to -- fully compile-time, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are part of OOB check and incur no extra overhead.
 
-- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a custom heap arena.
+- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
 
 ## Features and design
 
 - Bare minimum safety checks; additionally: opt-out, hardening, and MCU flags.
 
-- Supports on-heap, on-stack, and custom allocators & de-allocators.
+- Supports custom allocators & de-allocators.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support. works across TUs.
 
@@ -33,7 +33,12 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Configuration
 
-- In source, optionally include `#define NAMSTRCT`, `#define NBMSTRCT` or `#define NCMSTRCT`to disable spatial, heap-temporal or stack/static-temporal checks respectively. disable locally like so: `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
+- In source, optionally include `#define FLAG` to disable spatial, heap-temporal or stack/static-temporal checks. disable locally like so: `#define FLAG` `unsafe code here` `#undef FLAG`. the flags are:
+```
+    NAMSTRCT      disable spatial safety
+    NBMSTRCT      disable heap temporal safety
+    NCMSTRCT      disable stack temporal safety
+```
 
 - Include `#define MSTRCT_SOFT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
 ```
@@ -41,13 +46,19 @@ This document explains how to configure and use the memstruct.h library.
     MSTRCT_SOFT   : print detailed err (with line_no of error_site), continue with default "the arr start value"
     MSTRCT_HARD   : print detailed err (line_no=0, retreivable from post-analysis), segfault at the error site
 ```
-- Include MCU flag: `#define MSTRCT_16` for 8 & 16 bit, `#define MSTRCT_32` for 32 bit. use `#define MSTRCT_64` (locally if needed) to force foo.i to be of size 64-bit.
 
-- metadata arena has pre-allocated virtual memory of 1GiB, exceeding which (rare as it is) memstruct issues an error and an instruction to place `#define MSTRCT_SIZE [new_arena_size_in_bytes]` before `#include mstrct.h`. as before, alternatively use `-DMSTRCT_SIZE=size` optionally in the compilation flag.
+- Include MCU flag: `#define MSTRCT_16` for 8 & 16 bit, `#define MSTRCT_32` for 32 bit. use `#define MSTRCT_64` (locally if needed) to force foo.i to be of size 64-bit.
+```
+    MSTRCT_16     MCU: 16 or 8 bit
+    MSTRCT_32     MCU: 32 bit
+    MSTRCT_64     make foo.i uint64_t
+```
+
+- metadata arena has pre-allocated virtual memory of 1GiB, exceeding which (rare as it is) memstruct issues an error and an instruction to place `#define MSTRCT_SIZE [new_arena_size_in_bytes]` before `#include mstrct.h`.
 
 - Include `mstrct.h`.
 
-- Alternatively, instead of directives in source, flags `-DFLAG_NAME` directly in compilation.
+- Alternatively, instead of directives in the source, place the needed flags `-DFLAG` directly in compilation.
 
 ## Usage
 
@@ -57,19 +68,19 @@ This document explains how to configure and use the memstruct.h library.
 
     b) the dynamic part `foo[ i ][ ][ ]..` where the single index i is dynamically decided during memory allocation to foo.
 
-    therefore, when a memstruct is declared as `M(type,foo,,j,k..)` the empty 3rd argument (you get comptime error if it isn't empty) is to signify that the dynamic index i is to be determined during allocation later as `M(allocator,foo,i)`.
+    therefore, when a memstruct is declared as `M(type,foo,,j,k..)` the empty 3rd argument (you get compile time error if it isn't empty) is to signify that the dynamic index i is to be determined during allocation later as `M(allocator,foo,i)`.
 
-    for most purposes, the array is a simple dynamic array so declare memstruct as `M(type,foo,,1)` or `M(type,foo,)`, then allocate as `M(allocator, foo, i)`, and access as `m(foo,i)`.
+    for most purposes, the array is a simple dynamic array (either declared or accessed dynamic) so declare memstruct as `M(type,foo,,1)` or `M(type,foo,)`, then allocate as `M(allocator, foo, i)`, and access as `m(foo,i)`.
 
-    if you only need a constant sized array then declare memstruct as `M(type,foo,,J,K...)`, then allocate as `M(allocator,foo,1)` and later access as `m(foo,0,j,k..)` or `m(foo,,j,k..)`.
+    if you only need a constant sized array then declare memstruct as `M(type,foo,,J,K...)`, then allocate as `M(allocator,foo,1)` and later access as `m(foo,0,j,k..)` or `m(foo,,j,k..)` (see API reference).
 
     of course if you are using gcc, even indexes j,k, etc are allowed to be dynamic. but subscribing to the dynamic vs static framework lets your code remain portable between clang and gcc. also note that comptime OOB warning for the static component is generated by the compiler itself at the behest of memstruct.
 
-    to make use of initializer list in static and on-stack arrays, first declare a memstruct with fixed dimensions e.g. `M(int*, foo,,4)` then `M(auto, foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list entering the static dimension in memstruct. 
+    to make use of initializer list in static and on-stack arrays, first declare a memstruct with fixed dimensions e.g. `M(int*, foo,,4)` then `M(auto, foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list entering the prior static dimension in memstruct. 
 
-- **Memory sharing:** `foo.id` (a uint32_t sized metadata ID) is simply passed around in memstruct conforming functions (within or across TUs). legacy C APIs, on the other hand, may accept base_addr & size as `m(base foo)` / `m(size foo)` directly. 
+- **Memory sharing:** `foo.id` (a uint32_t sized metadata ID) is simply passed around in the memstruct conforming functions (within or across TUs). legacy C APIs, on the other hand, may accept memstruct supplied base_addr & size as `m(base foo)` / `m(size foo)` directly. 
 ```
-    bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type "view"
+    bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type alias
 
     callee_function(int id, other_args); // callee is given foo.id to access memory and metadata
 ```
@@ -87,9 +98,9 @@ This document explains how to configure and use the memstruct.h library.
      ```
 - **Raw access (w/o checks) of data:** 
 
-    `(&m(foo,0))[i]` is an example of raw access of data. this is deliberate, also inefficient, and easily found out (see Troubleshooting section). raw access for legitimate reasons is, as discussed: `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
+    `(&m(foo,0))[i]` is an example of raw access of data. this is deliberate, also inefficient, and easily found out (see Troubleshooting section). raw access for legitimate reasons is, as discussed efore, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
 
-    memstruct supports safe aliasing in its internals while forcing strict aliasing (level=2) on user code. in this way, complete flexibilty of C is retained but accessed only through memstruct API.
+    memstruct supports safe aliasing in its internals while forcing strict aliasing (level=2) diagnostics on user code. in this way, complete flexibilty of C is retained but accessed only through memstruct API.
 
 - **Pointer arithmetic:**
 
@@ -118,9 +129,9 @@ This document explains how to configure and use the memstruct.h library.
 
     M(mremap(m(base bar), 48, 44, MREMAP_MAYMOVE), bar, 11); // re-allocate
 
-    M(auto,foo,10);                 // allocate type[10][ on-stack segment
+    M(auto,foo,10);                 // allocate type[10][ on-stack
 
-    M(static,foo,10);               // allocate type[10][ on-static segment
+    M(static,foo,10);               // allocate type[10][ on-static
 
     M(auto,foo,(1,));               // allocate, initialize 1st elem as 1
 
@@ -142,9 +153,9 @@ This document explains how to configure and use the memstruct.h library.
 
     M(munmap, foo);                 // mmapped memory
  
-on de-allocation, size (not base addr) is `NULL`-ed so double frees are redundant. user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the de-allocators, as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
+during de-allocation, size (not base addr) is `NULL`-ed so that double frees become redundant. NOTE: user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the de-allocators, as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
-- **Loop optimization**: at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for later checks. to strictly force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(span foo); i++)` where `m(span foo)` = index_span_size, and expression `i < m(span foo)` is the strictest OOB check (resulting in elision of within-the-loop checks). further, `m(span foo)` is evaluated only once as it calls a `const` attribute function. 
+- **Loop optimization**: in general, at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for later checks. to strictly force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(span foo); i++)` where `m(span foo)` = index_span_size, and expression `i < m(span foo)` is the strictest OOB check (resulting in elision of within-the-loop checks). further, `m(span foo)` is evaluated only once as it calls a `const` attribute function. 
 
 ## API reference
 
@@ -223,10 +234,11 @@ on de-allocation, size (not base addr) is `NULL`-ed so double frees are redundan
     m(foo, ,j,k,...): 
         foo = memstruct name
         j, k,... = compile-time known indexes
-    note: this optimized path fallbacks to m(foo,0,j,k..) if -
-        a) any indexes are dynamic, or
-        b) type isn't *const
-        c) m(foo, ) is same as m(foo, , 0) i.e. the 1st element in any array
+    note: 
+        a) this optimized path fallbacks to m(foo,0,j,k..) if -
+            a.1) any indexes are dynamic, or
+            a.2) type isn't *const
+        b) m(foo, ) is same as m(foo, , 0) i.e. the 1st element in any array
 
 ```
 
@@ -269,7 +281,9 @@ on de-allocation, size (not base addr) is `NULL`-ed so double frees are redundan
 
 - Memstruct is catching all the bugs but the program isn't panicking
 
-    this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening level to HARD (`#define MSTRCT_HARD`) to cause segfault at the site after error print.
+    this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening level to HARD (`#define MSTRCT_HARD`) to cause segfault at the site after error print. 
+
+    in the default level, line number of the erring memstruct's declaration site (not that of erring site) is printed. to print the line number of the erring site set level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number but since it segfaults at the error site, the ine number can be recovered in post-analysis. HARD generates the least binary footprint, followed by the default level and then SOFT that's meant mostly for devlopment phase.
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
@@ -277,13 +291,19 @@ on de-allocation, size (not base addr) is `NULL`-ed so double frees are redundan
 
 - How to quickly know if unsafe dereferences like `(&m(foo,0))[i]` have been used in a file that otherwise conforms to the library?
 
-    search `[` or `]` in your editor to quickly find out. complete safety can thus be **easily enforced** at project level. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and nearly eliminate (strict aliasing outside memstruct API) the dereferencing `*` symbol.
+    search `[` or `]` in your editor to quickly find out. complete safety can thus be **easily enforced** at project level. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and minimizes the usage (through strict aliasing outside memstruct API) of the dereferencing `*` symbol.
 
-- Under which scenarios safety can be by-passed (via flag e.g.`-DNAMSTRCT` or `#define NAMSTRCT`)?
+- Under which scenarios safety can be by-passed (via flags)?
     
-    a) (possible) edge cases where raw accesses are gainfully faster. b) (low level) arena allocations that suppress temporal safety. c) (design) temporal safety suppression to let OS reclaim the memory. d) (flag e.g. `-DNAMSTRCT`) program wide safety supression in production release (rare, too).
+    a) (possible) edge cases where raw accesses are gainfully faster. b) (low level) arena allocations that suppress temporal safety. c) (design) temporal safety suppression to let OS reclaim the memory. d) (compile flag) program wide safety supression in production release (rare, too).
 
-    NOTE: when interfacing with legacy `C` code, base_addr & byte_size can be shared as `m(base foo)` & `m(size foo)` safely; empirically proven safety of legacy C code is acknowledged. however, if one were authoring a `C` library today, one may want to use `foo.id` at the API and memstruct on the inside, instead of relying on empirical safety that may take decades to realize!
+- Can memstruct work together with legacy code?    
+
+    when interfacing with legacy `C` code, base_addr & byte_size can be shared as `m(base foo)` & `m(size foo)` safely; empirically proven safety of legacy C code is acknowledged. however, if one were authoring a `C` library today, one may want to use `foo.id` at the API and memstruct on the inside, instead of relying on empirical safety that may take decades to realize!
+
+    a) large code bases can be furthered with memstruct, or b) greenfield projects with memstruct can work with legacy code.
+
+    there is no contradiction: memory safety is like the fabric of space-time: in empirically proven safe C code, the programmer held the fabric together; going forward, memstruct does it on behalf of the programmer.
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 

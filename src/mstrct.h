@@ -368,7 +368,7 @@ if (mstrct_ptr == (char *)2) {   \
   mstrct_ptr = (char *)(rememory);  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)mstrct_ptr; \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
-  mstrct_leak_0(0, __LINE__); __asm__ __volatile__ (" " : : : "memory"); *(int *)&(name.i) = 0; \
+  mstrct_leak_0(0, __LINE__); __asm__ __volatile__ (" " : "+r" (name.id) : : ); *(int *)&(name.i) = 0; \
 } while(0)
 
 #define MSTRCT_LET3(memory, name, range) do {   \

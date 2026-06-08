@@ -139,13 +139,13 @@ This document explains how to configure and use the memstruct.h library.
 
     /* initiaizer list is only for auto / static arrays having static-only indexes */
     ```
-- **Metadata** access: `m(metadat foo)`.
+- **Metadata** access: `m(metadata foo)`.
      ```
     uint64_t temp = m(size, foo);   // byte size as R value
 
     char *temp = m(base foo);       // base addr as R value
 
-    int64_t temp = m(span foo);     // index span
+    int64_t temp = m(span foo);     // index span as R value
      ```
 - **De**-allocate: double de-allocs are redundant (later elided by compiler). custom de-allocators supported. de-allocation failure check is done internally, and need not be repeated by user.
      ```
@@ -156,6 +156,8 @@ This document explains how to configure and use the memstruct.h library.
 during de-allocation, size (not base addr) is `NULL`-ed so that double frees become redundant. NOTE: user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the de-allocators, as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
 - **Loop optimization**: in general, at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for later checks. to strictly force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(span foo); i++)` where `m(span foo)` = index_span_size, and expression `i < m(span foo)` is the strictest OOB check (resulting in elision of within-the-loop checks). further, `m(span foo)` is evaluated only once as it calls a `const` attribute function. 
+
+- **MCU implementation**: a) use `MSTRCT_16` or `MSTRCT_32` flags for 8/16 or 32 bit CPUs, respectively. b) define `MSTRCT_PRINT()` and `MSTRCT_MMAP()` macros in your code to replace OS versions `printf()` and `mmap()` respectively. c) if needed define functions `mstrct_realloc()` and `mstrct_mremap()` as re-allocators. d) refer `mstrct.h` to match API signatures of these macros and functions. e) there is no equivalent of heap temporal safety via `on_exit()` OS implementation. but a sweep of metadata section for non-zeroed size can catch a leak. f) undefine and redefine `MSTRCT_SIZE` to serve as reference block size for metadata.
 
 ## API reference
 
@@ -285,7 +287,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
     this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening level to HARD (`#define MSTRCT_HARD`) to cause segfault at the site after error print. 
 
-    in the default level, the line number of the declaration site of the erring memstruct (not the erring site itself) is printed. to print the line number of the erring site set level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number but since it segfaults at the error site, the ine number can be recovered in post-analysis. HARD generates the least binary footprint (for the unhappy path), followed by the default level and then SOFT which is well suited for devlopment phase. the default level is the sweet spot, and caters to fail-safe design (no crashes).
+    in the default level, the line number of the declaration site of the erring memstruct (not the erring site itself) is printed. to print the line number of the erring site set level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number but since it segfaults at the error site, the line number can be recovered in post-analysis. HARD generates the least binary footprint (for the unhappy path), followed by the default level and then SOFT which is well suited for devlopment phase. the default level is the sweet spot, and caters to fail-safe design (no crashes).
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
@@ -293,7 +295,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
 - How to quickly know if unsafe dereferences like `(&m(foo,0))[i]` have been used in a file that otherwise conforms to the library?
 
-    search `[` or `]` in your editor to quickly find out. complete safety can thus be **easily enforced** at project level. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and minimizes the usage (through strict aliasing outside memstruct API) of the dereferencing `*` symbol.
+    search `[` or `]` in your editor to quickly find out. complete safety can thus be **easily enforced** at project level. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and minimize the usage (through strict aliasing outside memstruct API) of the dereferencing `*` symbol.
 
 - Under which scenarios safety can be by-passed (via flags)?
     

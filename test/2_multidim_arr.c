@@ -4,12 +4,12 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int *const,foo,,2,3); // declare type foo[][2][3]
-  M(malloc(240),foo,10); // map foo -> foo[10][2][3] on heap
+  M(int *const,foo,,2,3,2); // declare type foo[][2][3]
+  M(malloc(480),foo,10); // map foo -> foo[10][2][3] on heap
   
-  m(foo,7,1,2) = 5; // define foo[7][1][2], with checks
+  m(foo,7,1,2,1) = 5; // define foo[7][1][2], with checks
 
-  printf("foo[7][1][2], with checks: %d\n", m(foo,7,1,2)); // fetch (with checks)
+  printf("foo[7][1][2][1], with checks: %d\n", m(foo,7,1,2,1)); // fetch (with checks)
   M(free, foo);
   return 0;
 }

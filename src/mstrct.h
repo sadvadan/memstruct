@@ -8,7 +8,6 @@
  *
  *  A lightweight & fast single header library with a
  *  m-macro API for memory safety in calling program.
- *
  *  Leverages compile-runtime methods & also hoisting
  *  to check OOB/UAF/NULL-deref/double-free and leaks
  *
@@ -167,7 +166,6 @@
 #define _MSTRCT_auto  ~,1
 #define _MSTRCT___thread
 #define _MSTRCT_static
-
 #define __MSTRCT__span
 #define __MSTRCT__base
 #define __MSTRCT__size
@@ -190,49 +188,39 @@ typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
   typedef unsigned long mstrct_uint32; typedef signed long mstrct_int32;
 #endif
 
-static __thread char *mstrct_ptr  = (char *)1;
-static __thread char mstrct_errno = 0;
+static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0;
 
-__attribute__((weak)) void* mstrct_start;
-__attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
+__attribute__((weak)) void* mstrct_start; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
 
 typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint32 _s; /*high*/};};} mstrct_pack;
 
 #if !defined(MSTRCT_16) && !defined(MSTRCT_32) /* arena allocation for metadata (mstrct) */
-static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {
-  mstrct_uint64 increment = 2;
+  static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {mstrct_uint64 increment = 2;
 
-  if (__builtin_expect(mstrct_start == NULL, 0)) { // cold path taken only once at start
-    void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); //PROT_READ | PROT_WRITE,MAP_ANONYMOUS | MAP_SHARED | MAP_NORESERVE
-    if (space == ((void *)-1)) {return (mstrct_uint64)-1;}
-    mstrct_start = space;
-    mstrct_offset = 2; // avoid metadata id=0 spot
+    if (__builtin_expect(mstrct_start == NULL, 0)) { // cold path taken only once at start
+      void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); //PROT_READ | PROT_WRITE,MAP_ANONYMOUS | MAP_SHARED | MAP_NORESERVE
+      if (space == ((void *)-1)) {return (mstrct_uint64)-1;}
+      mstrct_start = space; mstrct_offset = 2; // avoid metadata offset=0 spot
+    }
+
+    increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment becomes the old val of mstrct_offset
+
+    if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) { // BOUNDS CHECK
+      MSTRCT_PRINT("M_%s/%s/%d\n", "OVF", __BASE_FILE__, line); return (mstrct_uint64)-1;
+    }
+
+    return increment;
   }
-
-  increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment becomes the old val of mstrct_offset
-
-  if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) { // BOUNDS CHECK
-    MSTRCT_PRINT("M_%s/%s/%d\n", "OVF", __BASE_FILE__, line);
-    return (mstrct_uint64)-1;
-  }
-
-  return increment;
-}
 #endif
 
 __attribute__((const, __may_alias__)) static inline void*
-mstrct_base(mstrct_uint32 offset) {
-  return *(void **)((mstrct_uint64 *)mstrct_start + offset);
-}
+mstrct_base(mstrct_uint32 offset) {return *(void **)((mstrct_uint64 *)mstrct_start + offset);}
 
 static inline char*
-mstrct_base_addr(mstrct_uint32 offset) {
-  return *(char **)((mstrct_uint64 *)mstrct_start + offset);
-}
+mstrct_base_addr(mstrct_uint32 offset) {return *(char **)((mstrct_uint64 *)mstrct_start + offset);}
+
 __attribute__((const)) static inline mstrct_uint64
-mstrct_size(mstrct_uint32 offset) {
-  return *((mstrct_uint64 *)mstrct_start + offset + 1);
-}
+mstrct_size(mstrct_uint32 offset) {return *((mstrct_uint64 *)mstrct_start + offset + 1);}
 
 // memstruct; see doc
 #define MSTRCT_T(type, index, line) struct {  \
@@ -292,9 +280,7 @@ mstrct_bounds_error(mstrct_int32 _d, mstrct_int32 line) {
 }
 
 __attribute__((const)) static inline mstrct_uint64
-mstrct_limit(mstrct_uint64 unit_size, mstrct_uint32 _d) {
-  return mstrct_size(_d) / unit_size;
-}
+mstrct_limit(mstrct_uint64 unit_size, mstrct_uint32 _d) {return mstrct_size(_d) / unit_size;}
 
 __attribute__((hot)) static inline mstrct_int64
 mstrct_check(mstrct_uint32 id, mstrct_uint64 type_size, mstrct_int32 line, mstrct_int64 index) {
@@ -415,7 +401,7 @@ mstrct_leak_1(mstrct_uint32 id, mstrct_int32 line) {char a;
   if (((char *)&a - mstrct_ptr) > 0) /* ignore alloca */ {
     mstrct_pack temp; temp._d = id; temp._s = (mstrct_uint32)line;
     on_exit(mstrct_leak, temp.ptr);
-  } else {mstrct_error("ALLOC_FAIL", 5, line);}
+  }
   mstrct_ptr = (char *)1;
 }
 

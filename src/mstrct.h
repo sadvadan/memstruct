@@ -190,7 +190,6 @@ typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
   typedef unsigned long mstrct_uint32; typedef signed long mstrct_int32;
 #endif
 
-extern char  **environ;
 static __thread char *mstrct_ptr  = (char *)1;
 static __thread char mstrct_errno = 0;
 
@@ -413,7 +412,7 @@ mstrct_dealloc_1(void *fun, mstrct_uint32 id, mstrct_uint32 line) {
 static inline void 
 mstrct_leak_1(mstrct_uint32 id, mstrct_int32 line) {char a;
   if (mstrct_ptr == NULL) {mstrct_error("ALLOC_FAIL", 5, line);}
-  if ((mstrct_int64)((char *)&a - mstrct_ptr) > 0 || (mstrct_ptr - (char *)environ) > 0) /* not on regular stack */ {
+  if (((char *)&a - mstrct_ptr) > 0) /* ignore alloca */ {
     mstrct_pack temp; temp._d = id; temp._s = (mstrct_uint32)line;
     on_exit(mstrct_leak, temp.ptr);
   } else {mstrct_error("ALLOC_FAIL", 5, line);}

@@ -33,7 +33,7 @@ int main(void) {
 
     // === Level 2: Hard (exit with status code) ===
   #if defined(MSTRCT_HARD)
-    printf("hard mode - segfault at OOB site; line no of memstruct genesis.\n");
+    printf("hard mode - segfault at OOB site; line no = 0.\n");
     int x = m(arr,15);    // OOB
     printf("This line should NOT be reached in HARD mode: x = %d\n", x);
     M(free, arr); // this is not reached
@@ -41,4 +41,20 @@ int main(void) {
 
   return 0;
 }
+/*out (one by one case)
 
+default mode: OOB prints line no of memstruct genesis.
+M_OOB/7_hardening.c/10
+Continued after OOB: x = 47 (expected : base value)
+M_UAF/7_hardening.c/10
+default behavior: Continued after UAF
+
+soft mode - OOB prints line no of err site.
+M_OOB/7_hardening.c/29
+continued after OOB. x = 47
+
+hard mode - segfault at OOB site; line no of memstruct genesis.
+M_UAF/7_hardening.c/0
+Segmentation fault         (core dumped) ./out
+
+*/

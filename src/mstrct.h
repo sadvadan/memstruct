@@ -145,10 +145,14 @@
 #define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NAMSTRCT)
 #define MSTRCT_CHK2                       MSTRCT_ARG_COUNT(NBMSTRCT)
 #define MSTRCT_CHK3                       MSTRCT_ARG_COUNT(NCMSTRCT)
-#define MSTRCT_LINE(name)                 MSTRCT_CAT3(MSTRCT_L, MSTRCT_ARG_COUNT(MSTRCT_SOFT), MSTRCT_ARG_COUNT(MSTRCT_HARD))(name)
+
+#define MSTRCT_LINE(name)                 MSTRCT_CAT3(MSTRCT_L,MSTRCT_ARG_COUNT(MSTRCT_SOFT),MSTRCT_ARG_COUNT(MSTRCT_HARD))(name)
 #define MSTRCT_L01(name)                  __LINE__
 #define MSTRCT_L11(name)                  ((mstrct_uint32)sizeof(name.lin[0]))
 #define MSTRCT_L10(name)                  0
+#define MSTRCT_ID(id)                     MSTRCT_CAT2(MSTRCT_ID_, MSTRCT_ARG_COUNT(MSTRCT_HARD))(id)
+#define MSTRCT_ID_0(id)                   0
+#define MSTRCT_ID_1(id)                   (id)
 
 #define MSTRCT_ARG_COUNT(...)             MSTRCT_MACR16(10 __VA_OPT__(,) ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #define MSTRCT_MACR16(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,NAME,...) NAME
@@ -203,7 +207,7 @@ static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {
     void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); //PROT_READ | PROT_WRITE,MAP_ANONYMOUS | MAP_SHARED | MAP_NORESERVE
     if (space == ((void *)-1)) {return (mstrct_uint64)-1;}
     mstrct_start = space;
-    mstrct_offset = 0;
+    mstrct_offset = 2; // avoid metadata id=0 spot
   }
 
   increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment becomes the old val of mstrct_offset
@@ -296,7 +300,7 @@ mstrct_limit(mstrct_uint64 unit_size, mstrct_uint32 _d) {
 __attribute__((hot)) static inline mstrct_int64
 mstrct_check(mstrct_uint32 id, mstrct_uint64 type_size, mstrct_int32 line, mstrct_int64 index) {
   if (mstrct_limit(type_size, id) > (mstrct_uint64)index) {return index;}
-  else {return mstrct_bounds_error(id, line);}
+  else {return mstrct_bounds_error(MSTRCT_ID(id), line);}
 }
 
 // utility

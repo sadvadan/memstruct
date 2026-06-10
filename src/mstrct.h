@@ -53,7 +53,6 @@
  *
  **/
 
-#pragma GCC diagnostic warning "-Wstrict-aliasing=2"
 #pragma GCC diagnostic warning "-Warray-bounds"
 
 #ifndef MSTRCT_H
@@ -213,7 +212,7 @@ typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint3
   }
 #endif
 
-__attribute__((const, __may_alias__)) static inline void*
+__attribute__((const)) static inline void*
 mstrct_base(mstrct_uint32 offset) {return *(void **)((mstrct_uint64 *)mstrct_start + offset);}
 
 static inline char*
@@ -324,8 +323,7 @@ MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_uint64)sizeof(*(name.typ[0])) * MSTR
 __attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL(range)) ;   \
 \
 if (mstrct_ptr == (char *)2) {   \
-  *(__attribute__((__may_alias__)) mstrct_int64 *)&(name) = 0; __asm__ __volatile__ (" " : "+r"(*(char *)&(name.i))::);   \
-  name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
+  *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)MSTRCT_CAT2(mstrct_arr_, __LINE__); \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name));   \
   if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)MSTRCT_CAT2(mstrct_arr_, __LINE__) = name.id;}  \
@@ -336,8 +334,7 @@ MSTRCT_CAT2(mstrct_arr_,__LINE__) [(range) * (mstrct_uint64)sizeof(*(name.typ[0]
 __attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, 0) ;   \
 \
 if (mstrct_ptr == (char *)2) {   \
-  *(__attribute__((__may_alias__)) mstrct_int64 *)&(name) = 0; __asm__ __volatile__ (" " : "+r"(*(char *)&(name.i))::);   \
-  name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
+  *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)MSTRCT_CAT2(mstrct_arr_, __LINE__); \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
   if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)MSTRCT_CAT2(mstrct_clean_, __LINE__) = name.id;}  \
@@ -363,8 +360,7 @@ if (mstrct_ptr == (char *)2) {   \
 } while(0)
 
 #define MSTRCT_LET3(memory, name, range) do {   \
-  *(__attribute__((__may_alias__)) mstrct_int64 *)&(name) = 0; __asm__ __volatile__ (" " : "+r"(*(char *)&(name.i))::);   \
-  mstrct_ptr = (char *)(memory); name.id = MSTRCT_ALLOC(__LINE__);   \
+  *(mstrct_int64 *)(volatile void *)&(name) = 0; mstrct_ptr = (char *)(memory); name.id = MSTRCT_ALLOC(__LINE__);   \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)mstrct_ptr; \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));  \
   MSTRCT_CAT2(mstrct_leak_, MSTRCT_CHK2)(name.id, __LINE__); /* leak check */  \

@@ -297,15 +297,15 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
 - Under which scenarios safety can be by-passed (via flags)?
     
-    a) (possible) edge cases where raw accesses are gainfully faster. b) (low level) arena allocations that suppress temporal safety. c) (design) temporal safety suppression to let OS reclaim the memory. d) (compile flag) program wide safety supression in production release (rare, too).
+    a) (rare; profile first) edge cases where raw accesses, as compared to spatially safe accesses, are gainfully faster. b) (low level) large number of sub-allocations that must suppress temporal safety to avoid individual de-allocs. c) (design) temporal safety suppression to let OS reclaim the memory. d) (compile flag) program wide safety supression in production release (rare, too).
 
 - Can memstruct work together with legacy code?    
 
-    when interfacing with legacy `C` code, base_addr & byte_size can be shared as `m(base foo)` & `m(size foo)` safely; empirically proven safety of legacy C code is acknowledged. however, if one were authoring a `C` library today, one may want to use `foo.id` at the API and memstruct on the inside, instead of relying on empirical safety that may take decades to realize!
+    yes. when interfacing with legacy `C` code, base_addr & byte_size can be shared as `m(base foo)` & `m(size foo)` safely; empirically proven safety of legacy C code is acknowledged. however, if one were authoring a `C` library today, one may want to use `foo.id` at the API and memstruct on the inside, instead of relying on empirical safety that may take decades to realize!
 
     a) large code bases can be furthered with memstruct, or b) greenfield projects with memstruct can work with legacy code.
 
-    there is no contradiction: memory safety is like the fabric of space-time: in empirically proven safe C code, the programmer held the fabric together; going forward, memstruct does it on the behalf of programmer.
+    there is no contradiction: memory safety is like the *fabric* of space-time: in empirically proven safe C code, the programmer held the fabric together; going forward, memstruct does it on the behalf of programmer.
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 

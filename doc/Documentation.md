@@ -311,7 +311,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
     e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NBMSTRCT` and `#undef NBMSTRCT` (see test #9). tradeoff: no temporal safety (UAF) for individual sub-arrays.
 
-    **NOTE**: safety suppression is deliberate and best left to user descretion, but e.g. in the arena example it is advisable to make a custom sub-array dummy de-allocator to avoid unnecessary unsafe sections. remember, allocators and de-allocators are drop-in in memstruct.
+    **NOTE**: safety suppression is deliberate and best left to user discretion, but e.g. in the arena example it is advisable to make a custom sub-array dummy de-allocator to avoid unnecessary unsafe sections. remember, allocators and de-allocators are drop-in in memstruct.
 
 - When is the LTS release?
 

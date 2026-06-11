@@ -27,7 +27,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support. works across TUs.
 
-- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. aliased dereferences too are usable only through memstruct.
+- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. aliased dereferences of memstructs through raw ptrs too are restricted.
 
 - Thread safety: the library is thread-safe but user must protect writes e.g. de/re-allocations **while** multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
 
@@ -99,8 +99,6 @@ This document explains how to configure and use the memstruct.h library.
 - **Raw access (w/o checks) of data:** 
 
     `(&m(foo,0))[i]` is an example of raw access of data: this is contrived, inefficient, and also easily found (see Troubleshooting section). raw access for legitimate reasons is, as discussed before, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
-
-    memstruct supports safe aliasing in its internals while forcing strict aliasing (level=2) diagnostics on user code. in this way, complete flexibilty of C is retained but accessed only through memstruct API.
 
 - **Pointer arithmetic:**
 
@@ -293,7 +291,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
 - How to quickly know if unsafe dereferences like `(&m(foo,0))[i]` have been used in a file that otherwise conforms to the library?
 
-    search `[` or `]` in your editor to quickly find out. complete safety can thus be **easily enforced** at project level. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and minimize the usage (through strict aliasing outside memstruct API) of the dereferencing `*` symbol.
+    search `[` or `]` in your editor to quickly find out. complete safety can thus be **easily enforced** at project level. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and restrict the usage of dereferencing (`*` symbol) memstruct held memories through aliased raw ptrs (see test #12).
 
 - Under which scenarios safety can be by-passed (via flags)?
     

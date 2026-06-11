@@ -54,6 +54,7 @@
  **/
 
 #pragma GCC diagnostic warning "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Walloc-size"
 
 #ifndef MSTRCT_H
 #define MSTRCT_H
@@ -215,8 +216,10 @@ typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint3
 __attribute__((const)) static inline void*
 mstrct_base(mstrct_uint32 offset) {return *(void **)((mstrct_uint64 *)mstrct_start + offset);}
 
-static inline char*
-mstrct_base_addr(mstrct_uint32 offset) {return *(char **)((mstrct_uint64 *)mstrct_start + offset);}
+__attribute__((alloc_size(1), noinline, unused)) static char*
+mstrct_base_addr(__attribute__((unused)) char siz, mstrct_uint32 offset) {
+  return *(char **)((mstrct_uint64 *)mstrct_start + offset);
+}
 
 __attribute__((const)) static inline mstrct_uint64
 mstrct_size(mstrct_uint32 offset) {return *((mstrct_uint64 *)mstrct_start + offset + 1);}
@@ -294,7 +297,7 @@ mstrct_check(mstrct_uint32 id, mstrct_uint64 type_size, mstrct_int32 line, mstrc
 
 // get
 #define MSTRCT_GET1(name) ((mstrct_int64)mstrct_limit(MSTRCT_TSIZ(name), name.id))
-#define MSTRCT_GET2(name) (mstrct_base_addr(name.id))
+#define MSTRCT_GET2(name) (mstrct_base_addr(1, name.id))
 #define MSTRCT_GET3(name) (mstrct_size(name.id))
 
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK1)(name, i, index)
@@ -321,7 +324,6 @@ MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PAREN
 #define MSTRCT_PUT_0(store, name, range) store char MSTRCT_CLEAN(__LINE__, store)  \
 MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)] \
 __attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL(range)) ;   \
-\
 if (mstrct_ptr == (char *)2) {   \
   *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)MSTRCT_CAT2(mstrct_arr_, __LINE__); \
@@ -332,7 +334,6 @@ if (mstrct_ptr == (char *)2) {   \
 #define MSTRCT_PUT_1(store, name, range) store char MSTRCT_CLEAN(__LINE__, store)  \
 MSTRCT_CAT2(mstrct_arr_,__LINE__) [(range) * (mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)] \
 __attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, 0) ;   \
-\
 if (mstrct_ptr == (char *)2) {   \
   *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)MSTRCT_CAT2(mstrct_arr_, __LINE__); \

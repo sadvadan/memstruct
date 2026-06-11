@@ -54,7 +54,6 @@
  **/
 
 #pragma GCC diagnostic warning "-Warray-bounds"
-#pragma GCC diagnostic ignored "-Walloc-size"
 
 #ifndef MSTRCT_H
 #define MSTRCT_H
@@ -216,7 +215,7 @@ typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint3
 __attribute__((const)) static inline void*
 mstrct_base(mstrct_uint32 offset) {return *(void **)((mstrct_uint64 *)mstrct_start + offset);}
 
-__attribute__((alloc_size(1), noinline, unused)) static char*
+__attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base_addr(__attribute__((unused)) char siz, mstrct_uint32 offset) {
   return *(char **)((mstrct_uint64 *)mstrct_start + offset);
 }

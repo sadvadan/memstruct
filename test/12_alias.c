@@ -15,9 +15,9 @@ int main(void) {
   return 0;
 }
 
-/*out (compile time warning)
+/*out (compile time warning at >O1)
 warning:
-array subscript ‘int[0]’ is partly outside array bounds of ‘unsigned char[1]’ [-Warray-bounds=]
+array subscript ‘int[0]’ is partly outside array bounds of ‘unsigned char[0]’ [-Warray-bounds=]
 12 |   printf("aliased dereference: %d\n", *(int *)m(base var)); // fetch 1st int thru aliased ptr
    |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */

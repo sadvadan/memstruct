@@ -212,7 +212,7 @@ typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint3
   }
 #endif
 
-__attribute__((const)) static inline void*
+__attribute__((may_alias, const)) static inline void*
 mstrct_base(mstrct_uint32 offset) {return *(void **)((mstrct_uint64 *)mstrct_start + offset);}
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*

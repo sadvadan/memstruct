@@ -280,7 +280,7 @@ mstrct_bounds_error(mstrct_int32 _d, mstrct_int32 line) {
   return 0;
 }
 
-__attribute__((const)) static inline mstrct_uint64
+__attribute__((noinline, unused, const)) static mstrct_uint64
 mstrct_limit(mstrct_uint64 unit_size, mstrct_uint32 _d) {return mstrct_size(_d) / unit_size;}
 
 __attribute__((hot)) static inline mstrct_int64

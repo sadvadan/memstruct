@@ -1,4 +1,5 @@
-// check how aliasing a memstruct memory & dereferencing afterwards is illegal
+// check how aliasing a memstruct memory + then
+// dereferencing afterwards with side-effects is illegal!
 
 #include <stdio.h>
 #include "../src/mstrct.h"
@@ -9,7 +10,7 @@ int main(void) {
   m(var,5) = 10; // define var[5][0]
 
   printf("ptr_base_addr: %p\n", m(base var)); // fetch base addr
-  printf("aliased dereference: %d\n", *(int *)m(base var)); // fetch 1st int thru aliased ptr
+  printf("aliased dereference: %d\n", *(int *)m(base var)); // fetch 1st int thru aliased ptr; printf=side-effect
 
   M(free, var);
   return 0;

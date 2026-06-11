@@ -297,7 +297,7 @@ mstrct_check(mstrct_uint32 id, mstrct_uint64 type_size, mstrct_int32 line, mstrc
 
 // get
 #define MSTRCT_GET1(name) ((mstrct_int64)mstrct_limit(MSTRCT_TSIZ(name), name.id))
-#define MSTRCT_GET2(name) (mstrct_base_addr(1, name.id))
+#define MSTRCT_GET2(name) (mstrct_base_addr(0, name.id))
 #define MSTRCT_GET3(name) (mstrct_size(name.id))
 
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK1)(name, i, index)

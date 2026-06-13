@@ -193,20 +193,21 @@ static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno
 
 typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint32 _s; /*high*/};};} mstrct_pack;
 
-#if !defined(MSTRCT_16) && !defined(MSTRCT_32) /* arena allocation for metadata (mstrct) */
+#if !defined(MSTRCT_16) && !defined(MSTRCT_32) /* arena allocator for metadata */
   static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {mstrct_uint64 increment = 2;
 
-    if (__builtin_expect(mstrct_global == NULL, 0)) { // cold path taken only once at start
+    if (__builtin_expect(mstrct_global == NULL, 0)) {
       void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); //PROT_READ|PROT_WRITE,MAP_ANONYMOUS|MAP_SHARED|MAP_NORESERVE
       if (space == ((void *)-1)) {return (mstrct_uint64)-1;}
-      mstrct_global = space; mstrct_start = space; mstrct_offset = 2; // avoid metadata offset=0 spot
-    }
-    increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment becomes the old val of mstrct_offset
+      mstrct_global = space; mstrct_start = space; mstrct_offset = 2; // avoid offset=0 spot
+    } increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment = old mstrct_offset
 
-    if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) { // BOUNDS CHECK
-      MSTRCT_PRINT("M_%s/%s/%d\n", "OVF", __BASE_FILE__, line); return (mstrct_uint64)-1;
-    }
-    return increment;
+    if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) { // bounds
+      MSTRCT_PRINT("M_%s/%s/%d\n", "OVF", __BASE_FILE__, line);
+      if (MSTRCT_ARG_COUNT(MSTRCT_HARD) == 0) {
+        asm volatile (" " : "+r" (*mstrct_ptr) : :); *mstrct_ptr = 0; __builtin_unreachable();
+      } else {mstrct_errno = 5;} return 2;
+    } return increment;
   }
 #endif
 

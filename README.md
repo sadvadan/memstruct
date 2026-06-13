@@ -51,6 +51,8 @@ C + memstruct = performance + memory safety
     m(base foo)                   // base addr
 
     m(span foo)                   // index span
+
+    m(id foo)                     // foo ID
      ```
 - **index** arithmetic:
      ```

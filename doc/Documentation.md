@@ -27,9 +27,9 @@ This document explains how to configure and use the memstruct.h library.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
 
-- Works across TUs: in single threads, memstruct doesn't need LTO to synchronize its metadata. memories are shared with an int `m(id foo)` across TUs and only foo related metadata cache is updated in the caller. this synchronizes metadata without sacrificing cache based optimizations.
-
 - Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. aliased dereferences of memstructs through raw ptrs too are restricted (see test #12).
+
+- Works across TUs: in single threads, memstruct doesn't need LTO to synchronize its metadata. memories are shared with an int `m(id foo)` across TUs and only foo related metadata cache is updated in the caller. this synchronizes metadata without sacrificing cache based optimizations.
 
 - Thread safety: the library is thread-safe but user must protect writes e.g. de/re-allocations **while** multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
 
@@ -80,11 +80,11 @@ This document explains how to configure and use the memstruct.h library.
 
     to make use of initializer list in static and on-stack arrays, first declare a memstruct with fixed dimensions e.g. `M(int*, foo,,4)` then `M(auto, foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list entering the prior static dimension in memstruct. 
 
-- **Memory sharing:** `foo.id` (a uint32_t sized metadata ID) is simply passed around in the memstruct conforming functions (within or across TUs). legacy C APIs, on the other hand, may accept memstruct supplied base_addr & size as `m(base foo)` & `m(size foo)` directly. 
+- **Memory sharing:** `m(id foo)` / `foo.id` (a uint32_t sized metadata ID) is simply passed around in the memstruct conforming functions (within or across TUs). legacy C APIs, on the other hand, may accept memstruct supplied base_addr & size as `m(base foo)` & `m(size foo)` directly. 
 ```
     bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type alias
 
-    callee_function(int id, other_args); // callee is given foo.id to access memory and metadata
+    callee_function(m(id foo), other_args); // callee is given foo.id safely to access memory and metadata
 ```
 - **Safe access of data:** 
 
@@ -146,6 +146,8 @@ This document explains how to configure and use the memstruct.h library.
     char *temp = m(base foo);       // base addr as R value
 
     int64_t temp = m(span foo);     // index span as R value
+
+    uint32_t temp = m(id foo);      // memory ID as R value
      ```
 - **De**-allocate: double de-allocs are redundant (later elided by compiler). custom de-allocators supported. de-allocation failure check is done internally, and need not be repeated by user.
      ```

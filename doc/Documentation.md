@@ -27,7 +27,9 @@ This document explains how to configure and use the memstruct.h library.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support. works across TUs.
 
-- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. aliased dereferences of memstructs through raw ptrs too are restricted.
+- Works across TUs: in single threads, memstruct doesn't need LTO to synchronize its metadata. memories are shared with an int `m(id foo)` across TUs and only foo related metadata cache is updated in the caller. this synchronizes metadata without sacrificing cache based optimizations.
+
+- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. aliased dereferences of memstructs through raw ptrs too are restricted (see test #12).
 
 - Thread safety: the library is thread-safe but user must protect writes e.g. de/re-allocations **while** multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
 
@@ -291,7 +293,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
 - How to quickly know if unsafe dereferences like `(&m(foo,0))[i]` have been used in a file that otherwise conforms to the library?
 
-    search `[` or `]` in your editor to quickly find out. complete safety can thus be **easily enforced** at project level. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and restrict the usage of dereferencing (`*` symbol) memstruct held memories through aliased raw ptrs (see test #12).
+    the above expression results in compile-time error in memstruct. memstruct-returned addresses carry dummy alloc_size compile-time metadata to deny raw usage. still, search `[` or `]` in your editor to quickly find out. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and restrict the usage of dereferencing (`*` symbol) memstruct held memories through aliased raw ptrs (see test #12).
 
 - Under which scenarios safety can be by-passed (via flags)?
     
@@ -299,7 +301,13 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
 - Can memstruct work together with legacy code?    
 
-    yes. when interfacing with legacy `C` code, base_addr & byte_size can be shared as `m(base foo)` & `m(size foo)` safely; empirically proven safety of legacy C code is acknowledged. however, if one were authoring a `C` library today, one may want to use `foo.id` at the API and memstruct on the inside, instead of relying on empirical safety that may take decades to realize!
+    while the criterion regarding which legacy codes are allowed to work with memstruct is very liberal, it is still very precise:
+
+    "any legacy or 3rd party code that is not an allocator / de-allocator / re-allocator but still modifies the size or base address of a shared memory -- **is considered unsafe**."
+
+    with the above criterion accounted for, empirically proven safety of legacy C code is acknowledged by memstruct and no re-writes are necessary (simply share `m(base foo)` & `m(size foo)`). however, if one were authoring a `C` library today, one may want to use `m(id foo)` to safely share memory while also intending to modify its base address and/or size.
+
+    in summary:
 
     a) large code bases can be furthered with memstruct, or b) greenfield projects with memstruct can work with legacy code.
 

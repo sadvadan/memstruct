@@ -7,7 +7,7 @@ TARGET = out
 # 1_malloc.c 2_multidim_arr.c 3_UAF.c 4_ptr_arith.c 5_metadata.c
 # 6_reassign.c 7_hardening.c 8_multithread.c 9_arena.c 10_mmap.c
 # 11_realloc.c 12_alias.c
-SRCS = 12_alias.c # change this to your test file name, goto test folder, run make
+SRCS = 5_metadata.c # change this to your test file name, goto test folder, run make
 DEPS = ../src/mstrct.h
 
 # default rule

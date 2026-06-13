@@ -113,12 +113,13 @@
 
 #define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT_, arg)) /* 2=reallocation, 1=store, 0=no_store */
 #define MSTRCT_AUTO(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(_MSTRCT_, arg)) /* 1=auto, 0=not_auto */
-#define MSTRCT_META(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT__, arg)) /* 3=size, 2=base, 1=span, 0=no_key */
+#define MSTRCT_META(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT__, arg)) /* 1=id, 2=span, 3=base, 4=size */
 
 #define MSTRCT_M10(arg)                   MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
-#define MSTRCT_M11(span_foo)              MSTRCT_GET1(MSTRCT_LET1(span_foo))
-#define MSTRCT_M12(base_foo)              MSTRCT_GET2(MSTRCT_LET1(base_foo))
-#define MSTRCT_M13(size_foo)              MSTRCT_GET3(MSTRCT_LET1(size_foo))
+#define MSTRCT_M11(span_id)               MSTRCT_GET1(MSTRCT_LET1(span_id))
+#define MSTRCT_M12(span_foo)              MSTRCT_GET2(MSTRCT_LET1(span_foo))
+#define MSTRCT_M13(base_foo)              MSTRCT_GET3(MSTRCT_LET1(base_foo))
+#define MSTRCT_M14(size_foo)              MSTRCT_GET4(MSTRCT_LET1(size_foo))
 #define MSTRCT_LET1(arg)                  MSTRCT_CAT2(__MSTRCT__, arg)
 
 #define MSTRCT_M20(foo, i)                MSTRCT_LET0(foo)
@@ -131,8 +132,8 @@
 #define MSTRCT_M320(rememory, foo, empty) MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 #define MSTRCT_M321(rememory, foo, idx)   MSTRCT_LET4(rememory, foo, idx)
 
-#define MSTRCT_ARG5(_1, _2, _3, _4, _5,...)  _5
-#define MSTRCT_HAS_COMMA(...)             MSTRCT_ARG5(__VA_ARGS__, 3, 2, 1, 0)
+#define MSTRCT_ARG6(_1, _2, _3, _4, _5, _6, ...)  _6
+#define MSTRCT_HAS_COMMA(...)             MSTRCT_ARG6(__VA_ARGS__, 4, 3, 2, 1, 0)
 
 // API
 #define m(...)                            MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
@@ -164,12 +165,14 @@
 #define _MSTRCT_auto  ~,1
 #define _MSTRCT___thread
 #define _MSTRCT_static
+#define __MSTRCT__id
 #define __MSTRCT__span
 #define __MSTRCT__base
 #define __MSTRCT__size
-#define MSTRCT__span ~,1
-#define MSTRCT__base ~,~,2
-#define MSTRCT__size ~,~,~,3
+#define MSTRCT__id ~,1
+#define MSTRCT__span ~,~,2
+#define MSTRCT__base ~,~,~,3
+#define MSTRCT__size ~,~,~,~,4
 
 #if !defined(MSTRCT_16)
   typedef unsigned int mstrct_uint32; typedef signed int mstrct_int32;
@@ -185,18 +188,18 @@
 #endif
 
 typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
-static __thread char * mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0;
-__attribute__((weak)) void * restrict mstrct_start; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
+__attribute__((weak)) void *restrict mstrct_global; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
+static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0; static __thread void *restrict mstrct_start;
 
 typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint32 _s; /*high*/};};} mstrct_pack;
 
 #if !defined(MSTRCT_16) && !defined(MSTRCT_32) /* arena allocation for metadata (mstrct) */
   static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {mstrct_uint64 increment = 2;
 
-    if (__builtin_expect(mstrct_start == NULL, 0)) { // cold path taken only once at start
+    if (__builtin_expect(mstrct_global == NULL, 0)) { // cold path taken only once at start
       void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); //PROT_READ|PROT_WRITE,MAP_ANONYMOUS|MAP_SHARED|MAP_NORESERVE
       if (space == ((void *)-1)) {return (mstrct_uint64)-1;}
-      mstrct_start = space; mstrct_offset = 2; // avoid metadata offset=0 spot
+      mstrct_global = space; mstrct_start = space; mstrct_offset = 2; // avoid metadata offset=0 spot
     }
 
     increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment becomes the old val of mstrct_offset
@@ -291,9 +294,10 @@ mstrct_check(mstrct_uint32 id, mstrct_uint32 type_size, mstrct_int32 line, mstrc
 #define MSTRCT_FLAT(name, index, idx) ((mstrct_int64)(&(*(typeof(name.dim[0].a) *)0) index idx [0]) + name.i)
 
 // get
-#define MSTRCT_GET1(name) (mstrct_span(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))
-#define MSTRCT_GET2(name) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))
-#define MSTRCT_GET3(name) (mstrct_size(name.id, mstrct_reset(name.id)))
+#define MSTRCT_GET1(name) ({asm volatile (" " : "+m" (*((mstrct_uint64 *)mstrct_start + (name.id) + 1)) : :); name.id;})
+#define MSTRCT_GET2(name) (mstrct_span(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))
+#define MSTRCT_GET3(name) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))
+#define MSTRCT_GET4(name) (mstrct_size(name.id, mstrct_reset(name.id)))
 
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK1)(name, i, index)
 

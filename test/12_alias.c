@@ -9,16 +9,16 @@ int main(void) {
   M(malloc(48),var,12); // var[12][1]
   //m(var,5) = 10; // define var[5][0]
 
-  // uncomment below: compile-time err as OOB memory is modified
+  // uncomment below: compile-time err as raw memory is modified
   // (&m(var,0))[5] = 9; printf("printf to make use of modified memory: %d\n", m(var,5));
 
-  // uncomment below: compile-time err as OOB memory is modified
+  // uncomment below: compile-time err as raw memory is modified
   // *(&m(var,2) + 5) = 9; printf("printf to make use of modified memory: %d\n", m(var,5));
 
-  // below: no comptime err as OOB memory isn't modified (only read)
+  // below: no comptime err as raw memory isn't modified (only read)
   // int ser = (&m(var,0))[5]; printf("printf to make use of read memory: %d\n", ser);
 
-  // below: should have warning but doesn't (needs improvement)
+  // below: should have warning (raw memory is modified) but doesn't (needs improvement)
   // int *tem = (&m(var,2) + 5); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
 
   M(free, var);

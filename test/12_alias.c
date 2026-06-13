@@ -1,5 +1,5 @@
-// demonstrate how aliasing a memstruct memory through a
-// raw ptr and then modifying an OOB memory is illegal!
+// demonstrate (>O1) how aliasing a memstruct memory through
+// a raw ptr and then modifying an OOB memory is illegal!
 
 #include <stdio.h>
 #include "../src/mstrct.h"
@@ -18,7 +18,7 @@ int main(void) {
   // below: no comptime err as OOB memory isn't modified (only read)
   // int ser = (&m(var,0))[5]; printf("printf to make use of read memory: %d\n", ser);
 
-  // below: should have warning but doesn't
+  // below: should have warning but doesn't (needs improvement)
   // int *tem = (&m(var,2) + 5); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
 
   M(free, var);

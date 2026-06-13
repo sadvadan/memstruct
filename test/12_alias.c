@@ -1,5 +1,5 @@
 // demonstrate (>O1) how aliasing a memstruct memory through
-// a raw ptr and then modifying an OOB memory is illegal!
+// a raw ptr and using that to modify a memory is illegal!
 
 #include <stdio.h>
 #include "../src/mstrct.h"

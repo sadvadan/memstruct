@@ -25,7 +25,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Supports custom allocators & de-allocators.
 
-- Single‑header; no separate `.c` file needed. no external dependencies. MCU support. works across TUs.
+- Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
 
 - Works across TUs: in single threads, memstruct doesn't need LTO to synchronize its metadata. memories are shared with an int `m(id foo)` across TUs and only foo related metadata cache is updated in the caller. this synchronizes metadata without sacrificing cache based optimizations.
 

@@ -1,5 +1,8 @@
-// demonstrate (>O1) how aliasing a memstruct memory through
-// a raw ptr and using that to modify a memory is illegal!
+// demonstrate (>O1) how aliasing a memstruct memory
+// and using that to modify a memory is illegal!
+// helps user to avoid writing non-idiomatically
+// warnings are not limited to illustrated types,
+// but any punned, immediate, dereferences.
 
 #include <stdio.h>
 #include "../src/mstrct.h"
@@ -15,10 +18,7 @@ int main(void) {
   // uncomment below: compile-time err as raw memory is modified
   // *(&m(var,2) + 5) = 9; printf("printf to make use of modified memory: %d\n", m(var,5));
 
-  // below: no comptime err as raw memory isn't modified (only read)
-  // int ser = (&m(var,0))[5]; printf("printf to make use of read memory: %d\n", ser);
-
-  // below: should have warning (raw memory is modified) but doesn't (needs improvement)
+  // below: not immediate but ideally should have warning (raw memory is modified)
   // int *tem = (&m(var,2) + 5); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
 
   M(free, var);

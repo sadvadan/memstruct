@@ -23,11 +23,11 @@ This document explains how to configure and use the memstruct.h library.
 
 - Bare minimum safety checks; additionally: opt-out, hardening, and MCU flags.
 
-- Supports custom allocators & de-allocators.
+- Supports custom allocators & de-allocators. drop-in.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
 
-- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. aliased dereferences of memstructs through raw ptrs too are restricted (see test #12).
+- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. non-idiomatic usage (punning memstruct) is flagged at compile-time (see, test #12).
 
 - Works across TUs: in single threads, memstruct doesn't need LTO to synchronize its metadata. re/de-allocatable memories are shared with an int `m(id foo)` across TUs and only foo related metadata cache is updated in the caller. this synchronizes metadata without sacrificing cache based optimizations.
 
@@ -80,7 +80,7 @@ This document explains how to configure and use the memstruct.h library.
 
     to make use of initializer list in static and on-stack arrays, first declare a memstruct with fixed dimensions e.g. `M(int*, foo,,4)` then `M(auto, foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list entering the prior static dimension in memstruct. 
 
-- **Memory sharing:** `m(id foo)` / `foo.id` (a uint32_t sized metadata ID) is simply passed around in the memstruct conforming functions (within or across TUs). legacy C APIs, on the other hand, may accept memstruct supplied base_addr & size as `m(base foo)` & `m(size foo)` directly. 
+- **Memory sharing:** a uint32_t sized metadata ID - `m(id foo)` (globally) / `foo.id` (locally) - is simply passed around. one may also share base_addr & size as `m(base foo)` & `m(size foo)` directly.
 ```
     bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type alias
 
@@ -100,7 +100,7 @@ This document explains how to configure and use the memstruct.h library.
      ```
 - **Raw access (w/o checks) of data:** 
 
-    `(&m(foo,0))[i]` is an example of raw access of data: this is contrived, inefficient, and also easily found (see Troubleshooting section). raw access for legitimate reasons is, as discussed before, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
+    `(&m(foo,0))[i]` is an example of raw access of data: such puns are warned at compile-time. raw access for legitimate reasons is, as discussed before, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
 
 - **Pointer arithmetic:**
 
@@ -154,7 +154,7 @@ This document explains how to configure and use the memstruct.h library.
     M(free, foo);                   // on-heap memory
 
     M(munmap, foo);                 // mmapped memory
- 
+     ```
 during de-allocation, size (not base addr) is `NULL`-ed so that double frees become redundant. NOTE: user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the de-allocators, as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
 - **Loop optimization**: in general, at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for later checks. to strictly force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(span foo); i++)` where `m(span foo)` = index_span_size, and expression `i < m(span foo)` is the strictest OOB check (resulting in elision of within-the-loop checks). further, `m(span foo)` is evaluated only once as it calls a `const` attribute function. 
@@ -291,11 +291,13 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
-    the most convenient method is to expand the macro locally in your code editor itself. currently, clangd LSP works well at it. or, more conventionally, pre-compile with -E flag into expanded source.
+    the most convenient method is to expand the macro locally in your code editor itself. currently, clangd LSP works fine. or, more conventionally, pre-compile with -E flag into expanded source.
 
 - How to quickly know if unsafe dereferences like `(&m(foo,0))[i]` have been used in a file that otherwise conforms to the library?
 
-    the above expression results in compile-time error in memstruct. memstruct-returned addresses carry dummy alloc_size compile-time metadata to deny raw usage. still, search `[` or `]` in your editor to quickly find out. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and restrict the usage of dereferencing (`*` symbol) memstruct held memories through aliased raw ptrs (see test #12).
+    non-idiomatic immediate usage such as above results in compile-time error (ref test#12): memstruct-returned addresses carry dummy alloc_size compile-time metadata to deny raw dereferences. still, search `[` or `]` in your editor to quickly find if `[]`-idiom is used.
+
+    in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and restrict the usage of dereferencing (`*` symbol).
 
 - Under which scenarios safety can be by-passed (via flags)?
     
@@ -307,7 +309,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
     "any legacy or 3rd party code that is not an allocator / de-allocator / re-allocator but still modifies the size or base address of a shared memory -- **is considered unsafe**."
 
-    with the above criterion accounted for, empirically proven safety of legacy C code is acknowledged by memstruct and no re-writes are necessary (simply share `m(base foo)` & `m(size foo)`). however, if one were authoring a `C` library today, one may want to use `m(id foo)` to safely share memory while also intending to modify its base address and/or size.
+    with the above criterion accounted for, empirically proven safety of legacy C code is acknowledged and no re-writes are necessary (simply share `m(base foo)` & `m(size foo)`). however, if one were authoring a `C` library today, one may use `m(id foo)` to safely share memory while intending to modify base address and size.
 
     in summary:
 

@@ -201,13 +201,11 @@ typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint3
       if (space == ((void *)-1)) {return (mstrct_uint64)-1;}
       mstrct_global = space; mstrct_start = space; mstrct_offset = 2; // avoid metadata offset=0 spot
     }
-
     increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment becomes the old val of mstrct_offset
 
     if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) { // BOUNDS CHECK
       MSTRCT_PRINT("M_%s/%s/%d\n", "OVF", __BASE_FILE__, line); return (mstrct_uint64)-1;
     }
-
     return increment;
   }
 #endif
@@ -248,10 +246,7 @@ mstrct_set(void *ptr) {
 }
 
 __attribute__((noreturn)) static inline void
-mstrct_sigsegv(void) {
-  asm volatile (" " : "+r" (*mstrct_ptr) : :);
-  *mstrct_ptr = 0; __builtin_unreachable();
-}
+mstrct_sigsegv(void) {asm volatile (" " : "+r" (*mstrct_ptr) : :); *mstrct_ptr = 0; __builtin_unreachable();}
 
 __attribute__((cold)) static inline void
 mstrct_error(const char *ops, const char err_no, const mstrct_int32 line) {
@@ -302,7 +297,8 @@ mstrct_check(mstrct_uint32 id, mstrct_uint32 type_size, mstrct_int32 line, mstrc
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK1)(name, i, index)
 
 #define MSTRCT_GET_10(name, i, index)  \
-(asm volatile (" ": "+r" (index): :), *((typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) + MSTRCT_FLAT(name, [i], index)))
+(*({asm volatile (" ": "+r" (index): :); (typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))   \
++ MSTRCT_FLAT(name, [i], index);}))
 
 #define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) +   \
 mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [i], index))))
@@ -310,8 +306,8 @@ mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [i
 #define MSTRCT_GET_00(name, i, index) MSTRCT_GET_10(name, [0], index)
 
 #define MSTRCT_GET_01(name, i, index) (*((sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))) ?   \
-(asm volatile (" ": "+r" (index): :), (typeof(name.typ[0])) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) +  \
-MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) + \
+({asm volatile (" ": "+r" (index): :); (typeof(name.typ[0])) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) +  \
+MSTRCT_FLAT(name, [0] index);}) : ((typeof(name.typ[0])) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) + \
 mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [0], index)))))
 
 // static/on-stack array initializer list handler                                                         
@@ -348,8 +344,7 @@ if (mstrct_ptr == (char *)2) {   \
 #define MSTRCT_CLEAN_11(line) MSTRCT_CAT2(mstrct_clean_, line)[4] __attribute__((cleanup(mstrct_set), aligned(4), unused)),
 #define MSTRCT_CLEAN_01(line)
 
-#define MSTRCT_LET(typ, name, empty, index)   \
-  MSTRCT_CAT2(MSTRCT_LET_, MSTRCT_ARG_COUNT(empty))(typ, name, index)
+#define MSTRCT_LET(typ, name, empty, index) MSTRCT_CAT2(MSTRCT_LET_, MSTRCT_ARG_COUNT(empty))(typ, name, index)
 #define MSTRCT_LET_0(typ, name, index) MSTRCT_T(typ, index, __LINE__) name
 #define MSTRCT_LET_1(typ, name, index) MSTRCT_ASSERT(NON_EMPTY_THIRD_ARG)
 
@@ -376,8 +371,7 @@ if (mstrct_ptr == (char *)2) {   \
 } while(0)
 
 // prototypes for free() & munmap()                                                                                   
-typedef void (*mstrct_free_proto)(void *);
-typedef mstrct_int32 (*mstrct_munmap_proto)(void *, mstrct_uint64);
+typedef void (*mstrct_free_proto)(void *); typedef mstrct_int32 (*mstrct_munmap_proto)(void *, mstrct_uint64);
 
 static inline void
 mstrct_dealloc_0(void *fun, mstrct_uint32 id) {
@@ -395,8 +389,7 @@ static inline void
 mstrct_leak_1(mstrct_uint32 id, mstrct_int32 line) {char a;
   if (mstrct_ptr == NULL) {mstrct_error("ALLOC_FAIL", 5, line);}
   if (((char *)&a - mstrct_ptr) > 0) /* ignore alloca */ {
-    mstrct_pack temp; temp._d = id; temp._s = (mstrct_uint32)line;
-    on_exit(mstrct_leak, temp.ptr);
+    mstrct_pack temp; temp._d = id; temp._s = (mstrct_uint32)line; on_exit(mstrct_leak, temp.ptr);
   }
   mstrct_ptr = (char *)1;
 }

@@ -54,6 +54,7 @@
  **/
 
 #pragma GCC diagnostic warning "-Warray-bounds"
+//#pragma GCC diagnostic ignored "-Wstringop-overflow"
 
 #ifndef MSTRCT_H
 #define MSTRCT_H
@@ -172,8 +173,6 @@
 #define MSTRCT__base ~,~,2
 #define MSTRCT__size ~,~,~,3
 
-typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
-
 #if !defined(MSTRCT_16)
   typedef unsigned int mstrct_uint32; typedef signed int mstrct_int32;
   #if !defined(MSTRCT_16) && !defined(MSTRCT_32) 
@@ -187,9 +186,9 @@ typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
   typedef unsigned long mstrct_uint32; typedef signed long mstrct_int32;
 #endif
 
-static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0;
-
-__attribute__((weak)) void* mstrct_start; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
+typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
+static __thread char * mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0;
+__attribute__((weak)) void * restrict mstrct_start; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
 
 typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint32 _s; /*high*/};};} mstrct_pack;
 
@@ -197,7 +196,7 @@ typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint3
   static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {mstrct_uint64 increment = 2;
 
     if (__builtin_expect(mstrct_start == NULL, 0)) { // cold path taken only once at start
-      void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); //PROT_READ | PROT_WRITE,MAP_ANONYMOUS | MAP_SHARED | MAP_NORESERVE
+      void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); //PROT_READ|PROT_WRITE,MAP_ANONYMOUS|MAP_SHARED|MAP_NORESERVE
       if (space == ((void *)-1)) {return (mstrct_uint64)-1;}
       mstrct_start = space; mstrct_offset = 2; // avoid metadata offset=0 spot
     }
@@ -212,16 +211,20 @@ typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint3
   }
 #endif
 
-__attribute__((may_alias, noinline, unused, const)) static void*
-mstrct_base(mstrct_uint32 offset) {return *(void **)((mstrct_uint64 *)mstrct_start + offset);}
-
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
-mstrct_base_addr(__attribute__((unused)) char siz, mstrct_uint32 offset) {
-  return *(char **)((mstrct_uint64 *)mstrct_start + offset);
+mstrct_base(mstrct_uint32 siz, mstrct_uint32 offset, char var) {
+  char *a = *(char **)((mstrct_uint64 *)mstrct_start + offset);
+  asm volatile (" " : "+r" (a) : "r" (siz), "r" (var) :); return a;
 }
 
 __attribute__((noinline, unused, const)) static mstrct_uint64
-mstrct_size(mstrct_uint32 offset) {return *((mstrct_uint64 *)mstrct_start + offset + 1);}
+mstrct_size(mstrct_uint32 offset, char var) {(void)var; return *((mstrct_uint64 *)mstrct_start + offset + 1);}
+
+__attribute__((noinline, unused, const)) static mstrct_int64
+mstrct_span(mstrct_uint32 siz, mstrct_uint32 offset, char var) {return (mstrct_int64)mstrct_size(offset, var) / siz;}
+
+__attribute__((always_inline)) static inline char
+mstrct_reset(mstrct_uint32 offset) {return (char)(*((mstrct_uint64 *)mstrct_start + offset + 1));}
 
 // memstruct; see doc
 #define MSTRCT_T(type, index, line) struct {  \
@@ -237,15 +240,15 @@ mstrct_size(mstrct_uint32 offset) {return *((mstrct_uint64 *)mstrct_start + offs
 #define MSTRCT_TYP_0(type) typeof((MSTRCT_CON(type))? (mstrct_int64 const)0 : (mstrct_int64)0)
 #define MSTRCT_TYP_1(type) typeof((MSTRCT_CON(type))? (mstrct_int32 const)0 : (mstrct_int32)0)
 
-static inline void
-mstrct_set(mstrct_uint32 *ptr) {
-  __asm__ __volatile__ (" " : "+r"  (*ptr) : : );
-  *((mstrct_uint64 *)mstrct_start + *ptr + 1) = 0;
+__attribute__((always_inline)) static inline void
+mstrct_set(void *ptr) {
+  asm volatile (" " : "+m" (*((mstrct_uint64 *)mstrct_start + *(mstrct_uint32 *)ptr + 1)) : :);
+  *((mstrct_uint64 *)mstrct_start + *(mstrct_uint32 *)ptr + 1) = 0;
 }
 
 __attribute__((noreturn)) static inline void
 mstrct_sigsegv(void) {
-  __asm__ __volatile__ (" " : "+r" (*mstrct_ptr) : :);
+  asm volatile (" " : "+r" (*mstrct_ptr) : :);
   *mstrct_ptr = 0; __builtin_unreachable();
 }
 
@@ -265,52 +268,49 @@ void MSTRCT_NON_EMPTY_THIRD_ARG(void);
 
 static inline void
 mstrct_leak(__attribute__((unused)) int status, void *ptr) {
-  if (mstrct_size((mstrct_uint32)(mstrct_uint64)ptr) != 0) {
+  if (mstrct_size((mstrct_uint32)(mstrct_uint64)ptr, 119) != 0) {
     MSTRCT_PRINT("M_%s/%s/%d\n", "LEAK", __BASE_FILE__, (int)(((mstrct_uint64)ptr) >> 32));
   }
 }
 
-static inline void
-mstrct_cleanup(void *ptr) {mstrct_set((mstrct_uint32 *)ptr);}
-
 __attribute__((cold)) static inline mstrct_int64
 mstrct_bounds_error(mstrct_int32 _d, mstrct_int32 line) {
-  if (mstrct_size(_d) == 0) {mstrct_error("UAF", 1, line);}
+  if (mstrct_size(_d, 113) == 0) {mstrct_error("UAF", 1, line);}
   else {mstrct_error("OOB", 2, line);};
   return 0;
 }
 
-__attribute__((noinline, unused, const)) static mstrct_uint64
-mstrct_limit(mstrct_uint64 unit_size, mstrct_uint32 _d) {return mstrct_size(_d) / unit_size;}
-
 __attribute__((hot)) static inline mstrct_int64
-mstrct_check(mstrct_uint32 id, mstrct_uint64 type_size, mstrct_int32 line, mstrct_int64 index) {
-  if (mstrct_limit(type_size, id) > (mstrct_uint64)index) {return index;}
-  else {return mstrct_bounds_error(MSTRCT_ID(id), line);}
+mstrct_check(mstrct_uint32 id, mstrct_uint32 type_size, mstrct_int32 line, mstrct_int64 index) {
+  if ((mstrct_uint64)mstrct_span(type_size, id, mstrct_reset(id)) > (mstrct_uint64)index) {
+    asm volatile (" ": "+r" (index): :); return index;
+  } else {return mstrct_bounds_error(MSTRCT_ID(id), line);}
 }
 
 // utility
-#define MSTRCT_TSIZ(name) sizeof(*((typeof(name.typ[0]))0))
+#define MSTRCT_TSIZ(name) ((mstrct_uint32)sizeof(*((typeof(name.typ[0]))0)))
 #define MSTRCT_DSIZ(name) sizeof(*(name.dim[0].a))
 #define MSTRCT_FLAT(name, index, idx) ((mstrct_int64)(&(*(typeof(name.dim[0].a) *)0) index idx [0]) + name.i)
 
 // get
-#define MSTRCT_GET1(name) ((mstrct_int64)mstrct_limit(MSTRCT_TSIZ(name), name.id))
-#define MSTRCT_GET2(name) (mstrct_base_addr(0, name.id))
-#define MSTRCT_GET3(name) (mstrct_size(name.id))
+#define MSTRCT_GET1(name) (mstrct_span(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))
+#define MSTRCT_GET2(name) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))
+#define MSTRCT_GET3(name) (mstrct_size(name.id, mstrct_reset(name.id)))
 
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK1)(name, i, index)
 
-#define MSTRCT_GET_10(name, i, index) (*((typeof(name.typ[0]))(mstrct_base(name.id)) + MSTRCT_FLAT(name, [i], index)))
+#define MSTRCT_GET_10(name, i, index)  \
+(asm volatile (" ": "+r" (index): :), *((typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) + MSTRCT_FLAT(name, [i], index)))
 
-#define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0]))(mstrct_base(name.id)) +   \
-  mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [i], index))))
+#define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) +   \
+mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [i], index))))
 
 #define MSTRCT_GET_00(name, i, index) MSTRCT_GET_10(name, [0], index)
 
 #define MSTRCT_GET_01(name, i, index) (*((sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))) ?   \
-  ((typeof(name.typ[0]))(mstrct_base(name.id)) + MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) \
-  (mstrct_base(name.id)) + mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [0], index)))))
+(asm volatile (" ": "+r" (index): :), (typeof(name.typ[0])) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) +  \
+MSTRCT_FLAT(name, [0] index)) : ((typeof(name.typ[0])) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) + \
+mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [0], index)))))
 
 // static/on-stack array initializer list handler                                                         
 #define MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES(a,b,...) /* deliberate fail for single input (a) */
@@ -343,7 +343,7 @@ if (mstrct_ptr == (char *)2) {   \
 #define MSTRCT_CLEAN(line, store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))(line)
 #define MSTRCT_CLEAN_00(line)
 #define MSTRCT_CLEAN_10(line)
-#define MSTRCT_CLEAN_11(line) MSTRCT_CAT2(mstrct_clean_, line)[4] __attribute__((cleanup(mstrct_cleanup), aligned(4), unused)),
+#define MSTRCT_CLEAN_11(line) MSTRCT_CAT2(mstrct_clean_, line)[4] __attribute__((cleanup(mstrct_set), aligned(4), unused)),
 #define MSTRCT_CLEAN_01(line)
 
 #define MSTRCT_LET(typ, name, empty, index)   \
@@ -356,7 +356,7 @@ if (mstrct_ptr == (char *)2) {   \
   mstrct_ptr = (char *)(rememory);  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)mstrct_ptr; \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));  \
-  mstrct_leak_0(0, __LINE__); __asm__ __volatile__ (" " : "+r" (name.id) : : );  \
+  mstrct_leak_0(0, __LINE__); asm volatile (" " : "+r" (name.id) : : );  \
 } while(0)
 
 #define MSTRCT_LET3(memory, name, range) do {   \
@@ -379,15 +379,13 @@ typedef mstrct_int32 (*mstrct_munmap_proto)(void *, mstrct_uint64);
 
 static inline void
 mstrct_dealloc_0(void *fun, mstrct_uint32 id) {
-  if (mstrct_size(id) != 0) {
-    ((mstrct_free_proto)fun)(mstrct_base(id));
-  }
+  if (mstrct_size(id, 111) != 0) {((mstrct_free_proto)fun)(mstrct_base(0, id, 111));}
 }
 
 static inline void
 mstrct_dealloc_1(void *fun, mstrct_uint32 id, mstrct_uint32 line) {
-  if (mstrct_size(id) != 0) {
-    if (((mstrct_munmap_proto)fun)(mstrct_base(id), mstrct_size(id)) == -1) {mstrct_error("DEALLOC_FAIL", 6, line);}
+  if (mstrct_size(id, 117) != 0) {
+    if (((mstrct_munmap_proto)fun)(mstrct_base(0, id, 111), mstrct_size(id, 111)) == -1) {mstrct_error("DEALLOC_FAIL", 6, line);}
   }
 }
 

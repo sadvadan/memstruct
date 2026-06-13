@@ -1,5 +1,5 @@
-// check how aliasing a memstruct memory + then
-// dereferencing afterwards with side-effects is illegal!
+// demonstrate how aliasing a memstruct memory through a
+// raw ptr and then modifying an OOB memory is illegal!
 
 #include <stdio.h>
 #include "../src/mstrct.h"
@@ -7,18 +7,27 @@
 int main(void) {
   M(int * ,var,); // var[][1]
   M(malloc(48),var,12); // var[12][1]
-  m(var,5) = 10; // define var[5][0]
+  //m(var,5) = 10; // define var[5][0]
 
-  printf("ptr_base_addr: %p\n", m(base var)); // fetch base addr
-  printf("aliased dereference: %d\n", *(int *)m(base var)); // fetch 1st int thru aliased ptr; printf=side-effect
+  // uncomment below: compile-time err as OOB memory is modified
+  // (&m(var,0))[5] = 9; printf("printf to make use of modified memory: %d\n", m(var,5));
+
+  // uncomment below: compile-time err as OOB memory is modified
+  // *(&m(var,2) + 5) = 9; printf("printf to make use of modified memory: %d\n", m(var,5));
+
+  // below: no comptime err as OOB memory isn't modified (only read)
+  // int ser = (&m(var,0))[5]; printf("printf to make use of read memory: %d\n", ser);
+
+  // below: should have warning but doesn't
+  // int *tem = (&m(var,2) + 5); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
 
   M(free, var);
+  printf("test_12 complete.\n");
   return 0;
 }
 
-/*out (compile time warning at >O1)
-warning:
-array subscript ‘int[0]’ is partly outside array bounds of ‘unsigned char[0]’ [-Warray-bounds=]
-12 |   printf("aliased dereference: %d\n", *(int *)m(base var)); // fetch 1st int thru aliased ptr
-   |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/*out (typical compile-time warning at >O1):
+warning: writing 4 bytes into a region of size 0 [-Wstringop-overflow=]
+      |   *(&m(var,0) + 5) = 9; printf("printf to make use of modified memory: %d", m(var,5));
+      |   ~~~~~~~~~~~~~~~~~^~~
 */

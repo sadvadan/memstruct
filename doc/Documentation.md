@@ -309,7 +309,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
     while the criterion regarding which legacy codes are allowed to work with memstruct is very liberal, it is still very precise:
 
-    "any legacy or 3rd party code that is not an allocator / de-allocator / re-allocator but still modifies the size or base address of a shared memory -- **is considered unsafe**."
+    "any legacy or 3rd party code that is not an allocator / de-allocator / re-allocator but still modifies the size or base address of a *shared* memory -- **is considered unsafe**."
 
     with the above criterion accounted for, empirically proven safety of legacy C code is acknowledged and no re-writes are necessary (simply share `m(base foo)` & `m(size foo)`). however, if one were authoring a `C` library today, one may use `m(id foo)` to safely share memory while intending to modify base address and size.
 

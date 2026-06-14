@@ -188,7 +188,7 @@
 #endif
 
 typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
-__attribute__((weak)) void *restrict mstrct_global; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
+__attribute__((weak)) void * mstrct_global; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
 static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0; static __thread void *restrict mstrct_start;
 
 typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint32 _s; /*high*/};};} mstrct_pack;
@@ -398,7 +398,6 @@ mstrct_leak_0(__attribute__((unused)) mstrct_uint32 id, __attribute__((unused)) 
     return increment;
   }
 #endif
-
 
 
 #endif

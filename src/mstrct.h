@@ -193,28 +193,6 @@ static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno
 
 typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint32 _s; /*high*/};};} mstrct_pack;
 
-#if !defined(MSTRCT_16) && !defined(MSTRCT_32) /* arena allocator for metadata */
-  static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {
-    mstrct_uint64 increment = 2;
-
-    if (__builtin_expect(mstrct_global == NULL, 0)) {
-      void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); // PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_SHARED|MAP_NORESERVE
-      if (space == ((void *)-1)) {
-         MSTRCT_PRINT("M_%s/%s/%d\n", "ALLOC_FAIL", __BASE_FILE__, line);
-         asm volatile (" " : "+r" (*mstrct_ptr) : :); *mstrct_ptr = 0; __builtin_unreachable();
-      }
-      mstrct_global = space; mstrct_start = space; mstrct_offset = 2; // avoid offset=0
-    } increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment = old mstrct_offset
-
-    if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) { // bounds
-      MSTRCT_PRINT("M_%s/%s/%d\n", "OVF", __BASE_FILE__, line);
-      if (MSTRCT_ARG_COUNT(MSTRCT_HARD) == 0) {
-        asm volatile (" " : "+r" (*mstrct_ptr) : :); *mstrct_ptr = 0; __builtin_unreachable();
-      } else {mstrct_errno = 5;} return 2;
-    } return increment;
-  }
-#endif
-
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_uint32 siz, mstrct_uint32 offset, char var) {
   char *a = *(char **)((mstrct_uint64 *)mstrct_start + offset);
@@ -404,5 +382,23 @@ mstrct_leak_0(__attribute__((unused)) mstrct_uint32 id, __attribute__((unused)) 
   if (mstrct_ptr == NULL || mstrct_ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 5, line);}
   mstrct_ptr = (char *)1;
 }
+
+#if !defined(MSTRCT_16) && !defined(MSTRCT_32)
+  static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {
+    mstrct_uint64 increment = 2;
+
+    if (__builtin_expect(mstrct_global == NULL, 0)) {
+      void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); // PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_SHARED|MAP_NORESERVE
+      if (space == ((void *)-1)) {mstrct_error("ALLOC_FAIL", 5, line); mstrct_sigsegv();}
+      mstrct_global = space; mstrct_start = space; mstrct_offset = 2; // avoid offset=0
+    }
+
+    increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment = old mstrct_offset
+    if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) {mstrct_error("OVF", 5, line); return 2;} // OOB
+    return increment;
+  }
+#endif
+
+
 
 #endif

@@ -132,9 +132,6 @@
 #define MSTRCT_M320(rememory, foo, empty) MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 #define MSTRCT_M321(rememory, foo, idx)   MSTRCT_LET4(rememory, foo, idx)
 
-#define MSTRCT_ARG6(_1, _2, _3, _4, _5, _6, ...)  _6
-#define MSTRCT_HAS_COMMA(...)             MSTRCT_ARG6(__VA_ARGS__, 4, 3, 2, 1, 0)
-
 // API
 #define m(...)                            MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 #define M(...)                            MSTRCT_CAT2(MSTRCT_$$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
@@ -153,6 +150,8 @@
 #define MSTRCT_ID_1(id)                   (id)
 
 #define MSTRCT_ARG_COUNT(...)             MSTRCT_MACR16(10 __VA_OPT__(,) ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+#define MSTRCT_HAS_COMMA(...)             MSTRCT_ARG6(__VA_ARGS__, 4, 3, 2, 1, 0)
+#define MSTRCT_ARG6(_1, _2, _3, _4, _5, _6, ...)  _6
 #define MSTRCT_MACR16(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,NAME,...) NAME
 
 #define MSTRCT_auto ~,1
@@ -174,6 +173,10 @@
 #define MSTRCT__base ~,~,~,3
 #define MSTRCT__size ~,~,~,~,4
 
+#ifndef __clang__
+#pragma  GCC diagnostic ignored "-Wstringop-overflow" /*_/\_*/
+#endif
+
 #if !defined(MSTRCT_16)
   typedef unsigned int mstrct_uint32; typedef signed int mstrct_int32;
   #if !defined(MSTRCT_16) && !defined(MSTRCT_32) 
@@ -188,15 +191,14 @@
 #endif
 
 typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
-__attribute__((weak)) void * mstrct_global; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
-static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0; static __thread void *restrict mstrct_start;
-
 typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint32 _s; /*high*/};};} mstrct_pack;
+
+__attribute__((weak)) void * mstrct_global; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
+static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0; static void *restrict mstrct_start;
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_uint32 siz, mstrct_uint32 offset, char var) {
-  char *a = *(char **)((mstrct_uint64 *)mstrct_start + offset);
-  asm volatile (" " : "+r" (a) : "r" (siz), "r" (var) :); return a;
+  (void)siz; (void)var; return *(char **)((mstrct_uint64 *)mstrct_start + offset);
 }
 
 __attribute__((noinline, unused, const)) static mstrct_uint64
@@ -261,15 +263,17 @@ mstrct_bounds_error(mstrct_int32 _d, mstrct_int32 line) {
 
 __attribute__((hot)) static inline mstrct_int64
 mstrct_check(mstrct_uint32 id, mstrct_uint32 type_size, mstrct_int32 line, mstrct_int64 index) {
-  if ((mstrct_uint64)mstrct_span(type_size, id, mstrct_reset(id)) > (mstrct_uint64)index) {
-    asm volatile (" ": "+r" (index): :); return index;
-  } else {return mstrct_bounds_error(MSTRCT_ID(id), line);}
+  if ((mstrct_uint64)mstrct_span(type_size, id, mstrct_reset(id)) > (mstrct_uint64)index) {return index;}
+  else {return mstrct_bounds_error(MSTRCT_ID(id), line);}
 }
 
 // utility
 #define MSTRCT_TSIZ(name) ((mstrct_uint32)sizeof(*((typeof(name.typ[0]))0)))
 #define MSTRCT_DSIZ(name) sizeof(*(name.dim[0].a))
 #define MSTRCT_FLAT(name, index, idx) ((mstrct_int64)(&(*(typeof(name.dim[0].a) *)0) index idx [0]) + name.i)
+
+#define MSTRCT_PRAG0 _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
+#define MSTRCT_PRAG1 _Pragma("GCC diagnostic warning \"-Warray-bounds\"")
 
 // get
 #define MSTRCT_GET1(name) ({asm volatile (" " : "+m" (*((mstrct_uint64 *)mstrct_start + (name.id) + 1)) : :); name.id;})
@@ -280,18 +284,16 @@ mstrct_check(mstrct_uint32 id, mstrct_uint32 type_size, mstrct_int32 line, mstrc
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK1)(name, i, index)
 
 #define MSTRCT_GET_10(name, i, index)  \
-(*({asm volatile (" ": "+r" (index): :); (typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))   \
-+ MSTRCT_FLAT(name, [i], index);}))
+({(typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))); MSTRCT_PRAG0})  \
+[({MSTRCT_FLAT(name, [i], index); MSTRCT_PRAG1})]
 
-#define MSTRCT_GET_11(name, i, index) (*((typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) +   \
-mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [i], index))))
+#define MSTRCT_GET_11(name, i, index) ({(typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)));   \
+MSTRCT_PRAG0}) [({mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [i], index)); MSTRCT_PRAG1})]
 
-#define MSTRCT_GET_00(name, i, index) MSTRCT_GET_10(name, [0], index)
+#define MSTRCT_GET_00(name, i, index) MSTRCT_GET_10(name, 0, index)
 
-#define MSTRCT_GET_01(name, i, index) (*((sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))) ?   \
-({asm volatile (" ": "+r" (index): :); (typeof(name.typ[0])) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) +  \
-MSTRCT_FLAT(name, [0] index);}) : ((typeof(name.typ[0])) (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))) + \
-mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [0], index)))))
+#define MSTRCT_GET_01(name, i, index) (__builtin_choose_expr(  \
+(sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))), MSTRCT_GET_10(name, 0, index), MSTRCT_GET_11(name, 0, index)))
 
 // static/on-stack array initializer list handler                                                         
 #define MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES(a,b,...) /* deliberate fail for single input (a) */

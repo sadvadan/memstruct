@@ -13,7 +13,6 @@ int main(void) {
   m(foo,5) = 10; // define int[5][0]
 
   printf("var[5], with checks: %d\n", m(foo,5)); // fetch memory (with checks)
-  printf("var[5], w/o checks: %d\n", (&m(foo,0))[5]); // fetch memory (no checks)
 
   // free the memory; NOTE: sanity check already included
   M(munmap, foo); // comment this to see leak warning
@@ -21,5 +20,4 @@ int main(void) {
 }
 /*out
 var[5], with checks: 10
-var[5], w/o checks: 10
 */

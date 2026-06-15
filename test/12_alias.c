@@ -8,18 +8,18 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int * ,var,); // var[][1]
-  M(malloc(48),var,12); // var[12][1]
-  //m(var,5) = 10; // define var[5][0]
+  M(int * ,var,);
+  M(malloc(48),var,12);
+  m(var,5) = 10;
 
-  // uncomment below: compile-time err as raw memory is modified
+  // uncomment below: compile-time err!
   // (&m(var,0))[5] = 9; printf("printf to make use of modified memory: %d\n", m(var,5));
 
-  // uncomment below: compile-time err as raw memory is modified
+  // uncomment below: compile-time err!
   // *(&m(var,2) + 5) = 9; printf("printf to make use of modified memory: %d\n", m(var,5));
 
-  // below: not immediate but ideally should have warning (raw memory is modified)
-  // int *tem = (&m(var,2) + 5); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
+  // uncomment below: compile-time err!
+  int *tem = (&m(var,2) + 5); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
 
   M(free, var);
   printf("test_12 complete.\n");
@@ -27,7 +27,7 @@ int main(void) {
 }
 
 /*out (typical compile-time warning at >O1):
-warning: writing 4 bytes into a region of size 0 [-Wstringop-overflow=]
-      |   *(&m(var,0) + 5) = 9; printf("printf to make use of modified memory: %d", m(var,5));
-      |   ~~~~~~~~~~~~~~~~~^~~
+warning: array subscript [5, 7] is outside array bounds of ‘char[4]’ [-Warray-bounds=]
+      |   int *tem = (&m(var,2) + 5); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
+      |                               ^~~~
 */

@@ -1,8 +1,7 @@
-// demonstrate (>O1) how aliasing a memstruct memory
-// and using that to modify a memory is illegal!
-// helps user to avoid writing non-idiomatically
-// warnings are not limited to illustrated types,
-// but any punned, immediate, dereferences.
+// at >O1 memstruct warns at compile time if
+// memstruct syntax is used non-idiomatically,
+// or if puns and aliased dereferences to
+// memstruct held memories are made.
 
 #include <stdio.h>
 #include "../src/mstrct.h"

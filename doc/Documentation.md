@@ -21,15 +21,15 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Features and design
 
-- Bare minimum safety checks; additionally: opt-out, hardening, and MCU flags.
+- Bare **minimum** safety checks; additionally: opt-out, hardening, and MCU flags.
 
-- Supports custom allocators & de-allocators. drop-in.
+- Supports custom allocators & de-allocators. **drop-in**.
 
-- Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
+- Single‑header; no separate `.c` file needed. no external dependencies. **MCU support**.
 
-- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. non-idiomatic usage (punning memstruct) is flagged at compile-time.
+- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. non-idiomatic usage, punning, and accessing memstruct held memories through raw pointers get **flagged** at compile-time.
 
-- Works across TUs: in single threads, memstruct doesn't need LTO to synchronize its metadata. re/de-allocatable memories are shared with an int `m(id foo)` across TUs and only foo related metadata cache is updated in the caller. this synchronizes metadata without sacrificing cache based optimizations.
+- Works across TUs: in single threads, memstruct **doesn't** need LTO to synchronize its metadata. re/de-allocatable memories are shared with an int `m(id foo)` across TUs and only foo related metadata cache is updated in the caller. this synchronizes metadata without sacrificing cache based optimizations.
 
 - Thread safety: the library is thread-safe but user must protect writes e.g. de/re-allocations **while** multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
 
@@ -102,7 +102,9 @@ This document explains how to configure and use the memstruct.h library.
      ```
 - **Raw access (w/o checks) of data:** 
 
-    `(&m(foo,0))[i]` is an example of raw access of data: such puns are warned at compile-time. raw access for legitimate reasons is, as discussed before, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
+    `(&m(foo,0))[i]` is an example of attempted raw access of data: such puns are warned at compile-time. memstruct-returned addresses carry dummy alloc_size compile-time metadata to deny raw memory access.
+
+    raw access for legitimate reasons is, as discussed before, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
 
 - **Pointer arithmetic:**
 
@@ -295,11 +297,9 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
     
     the most convenient method is to expand the macro locally in your code editor itself. currently, clangd LSP works fine. or, more conventionally, pre-compile with -E flag into expanded source.
 
-- How to quickly know if unsafe dereferences like `(&m(foo,0))[i]` have been used in a file that otherwise conforms to the library?
+- Memstruct is good at denying raw accesses to its own memories. but how to know (quickly) if raw type of memory accesses have been used for memories independent of memstruct, in a project?
 
-    non-idiomatic immediate usage such as above results in compile-time error (ref test#12): memstruct-returned addresses carry dummy alloc_size compile-time metadata to deny raw dereferences. still, search `[` or `]` in your editor to quickly find if `[]`-idiom is used.
-
-    in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]` and restrict the usage of dereferencing (`*` symbol).
+    search `[` or `]` in your editor to quickly find if `[]`-idiom is used. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]`, and therefore in a memstruct conforming file no `[]` should be found.
 
 - Under which scenarios safety can be by-passed (via flags)?
     

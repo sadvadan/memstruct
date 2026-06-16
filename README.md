@@ -9,7 +9,7 @@ C + memstruct = performance + memory safety
 - **Memory safety**- targets pointers to cover UAF, NULL deref, OOB, leaks, & double free.
 - **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed.
 - **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
-- **Robustness**   - type checked C code underneath (your code editor itself flags bad memstruct grammar).
+- **Robustness**   - either compile-time or linter flags for bad grammar, puns, and illegal raw dereferences.
 - **Target**       - gcc, clang: -std=gnu99 &ONWS, 8-64 bit CPUs. batteries included: opt-out, hardening, & MCU flags.
 
 ## Quick Start

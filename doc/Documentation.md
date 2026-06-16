@@ -29,7 +29,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. non-idiomatic usage, punning, and accessing memstruct held memories through raw pointers get *flagged* at compile-time.
 
-- Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee. or, share base address `m(base foo)` & size `m(size foo)`. it's carefree - memstruct *doesn't* need LTO to synchronize this. also, memstruct ensures that only the relevant metadata cache is updated at the call-site, and retains cache optimizations.
+- Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee. or, share base address `m(base foo)` & size `m(size foo)`. it's carefree - memstruct *doesn't* need LTO to synchronize this. also, memstruct ensures that only the relevant metadata cache is updated at the call-site, so that cache optimizations remain.
 
 - Thread safety: the library is thread-safe but user must protect writes e.g. de/re-allocations *while* multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
 

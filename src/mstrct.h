@@ -111,9 +111,9 @@
 #define MSTRCT_$$1(foo)                   MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 #define MSTRCT_$$0()                      MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 
-#define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT_, arg)) /* 2=reallocation, 1=store, 0=no_store */
-#define MSTRCT_AUTO(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(_MSTRCT_, arg)) /* 1=auto, 0=not_auto */
-#define MSTRCT_META(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT__, arg)) /* 1=id, 2=span, 3=base, 4=size */
+#define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT_, arg)) /* 3=alloca, 2=realloc, 1=store, 0=none */
+#define MSTRCT_AUTO(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(_MSTRCT_, arg)) /* 1=auto, 0=none */
+#define MSTRCT_META(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT__, arg)) /* 1=id, 2=span, 3=base, 4=size, 0=none */
 
 #define MSTRCT_M10(arg)                   MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 #define MSTRCT_M11(span_id)               MSTRCT_GET1(MSTRCT_LET1(span_id))
@@ -125,12 +125,14 @@
 #define MSTRCT_M20(foo, i)                MSTRCT_LET0(foo)
 #define MSTRCT_M21(foo, i)                MSTRCT_GET(foo, i, [0])
 
-#define MSTRCT_M301(memory, foo, idx)     MSTRCT_LET3(memory, foo, idx)
+#define MSTRCT_M301(memory, foo, idx)     MSTRCT_LET3(memory, foo, idx, 1)
 #define MSTRCT_M311(store, foo, idx)      MSTRCT_PUT(store, foo, idx)
 #define MSTRCT_M300(typ, foo, empty)      MSTRCT_LET(typ, foo, empty, [1])
 #define MSTRCT_M310(store, foo, empty)    MSTRCT_PUT(store,foo, 1)
 #define MSTRCT_M320(rememory, foo, empty) MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
 #define MSTRCT_M321(rememory, foo, idx)   MSTRCT_LET4(rememory, foo, idx)
+#define MSTRCT_M330(alloca, foo, empty)   MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
+#define MSTRCT_M331(alloca, foo, idx)     MSTRCT_LET3(alloca, foo, idx, 0)
 
 // API
 #define m(...)                            MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
@@ -152,13 +154,15 @@
 #define MSTRCT_ARG_COUNT(...)             MSTRCT_MACR16(10 __VA_OPT__(,) ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #define MSTRCT_HAS_COMMA(...)             MSTRCT_ARG6(__VA_ARGS__, 4, 3, 2, 1, 0)
 #define MSTRCT_ARG6(_1, _2, _3, _4, _5, _6, ...)  _6
-#define MSTRCT_MACR16(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,NAME,...) NAME
+#define MSTRCT_MACR16(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, NAME,...) NAME
 
 #define MSTRCT_auto ~,1
 #define MSTRCT_static ~,1
 #define MSTRCT___thread ~,1
 #define MSTRCT_realloc ~,~,2
+#define MSTRCT_alloca ~,~,~,3
 #define MSTRCT_mstrct_realloc ~,~,2
+#define MSTRCT___builtin_alloca ~,~,~,3
 #define MSTRCT_mstrct_mremap ~,~,2
 #define MSTRCT_mremap ~,~,2
 #define _MSTRCT_auto  ~,1
@@ -338,14 +342,14 @@ if (mstrct_ptr == (char *)2) {   \
   mstrct_ptr = (char *)(rememory);  \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)mstrct_ptr; \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));  \
-  mstrct_leak_0(0, __LINE__); asm volatile (" " : "+m" (*((mstrct_uint64 *)mstrct_start + (name.id) + 1)) : :);   \
+  mstrct_leak_0(0, __LINE__, 0); asm volatile (" " : "+m" (*((mstrct_uint64 *)mstrct_start + (name.id) + 1)) : :);   \
 } while(0)
 
-#define MSTRCT_LET3(memory, name, range) do {   \
+#define MSTRCT_LET3(memory, name, range, key) do {   \
   *(mstrct_int64 *)(volatile void *)&(name) = 0; mstrct_ptr = (char *)(memory); name.id = MSTRCT_ALLOC(__LINE__);   \
   *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)mstrct_ptr; \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));  \
-  MSTRCT_CAT2(mstrct_leak_, MSTRCT_CHK2)(name.id, __LINE__); /* leak check */  \
+  MSTRCT_CAT2(mstrct_leak_, MSTRCT_CHK2)(name.id, __LINE__, key); /* register leak check */  \
 } while(0)
 
 #define MSTRCT_LET2(de_store, name) do {   \
@@ -371,18 +375,16 @@ mstrct_dealloc_1(void *fun, mstrct_uint32 id, mstrct_uint32 line) {
 }
 
 static inline void 
-mstrct_leak_1(mstrct_uint32 id, mstrct_int32 line) {char a;
+mstrct_leak_1(mstrct_uint32 id, mstrct_int32 line, char key) {
   if (mstrct_ptr == NULL) {mstrct_error("ALLOC_FAIL", 5, line);}
-  if (((char *)&a - mstrct_ptr) > 0) /* ignore alloca */ {
-    mstrct_pack temp; temp._d = id; temp._s = (mstrct_uint32)line; on_exit(mstrct_leak, temp.ptr);
-  }
+  if (key) {mstrct_pack temp; temp._d = id; temp._s = (mstrct_uint32)line; on_exit(mstrct_leak, temp.ptr);}
   mstrct_ptr = (char *)1;
 }
 
 static inline void
-mstrct_leak_0(__attribute__((unused)) mstrct_uint32 id, __attribute__((unused)) mstrct_int32 line) {
+mstrct_leak_0(mstrct_uint32 id, mstrct_int32 line, char key) {
   if (mstrct_ptr == NULL || mstrct_ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 5, line);}
-  mstrct_ptr = (char *)1;
+  (void)id; (void)line; (void)key; mstrct_ptr = (char *)1;
 }
 
 #if !defined(MSTRCT_16) && !defined(MSTRCT_32)

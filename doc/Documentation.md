@@ -170,11 +170,23 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 - `M()`/`m()` **macro:**
 ```
 
+    // DE-ALLOCATION
+    M(de_allocator, foo):
+        foo = memstruct name
+        de_allocator = name of the de-allocator, e.g. free, munmap, etc.
+    note:
+        a) any custom de-allocator matching the API of either free(...) or munmap(...) is supported
+        b) allocator-de_allocator mismatch is handles by OS, not memstruct
+        c) the operation is idempotent: multiple de-allocations are redundant.
+        d) the macro performs sanity check; user doesn't need to do it. 
+
     // ALLOCATION/ RE-ALLOCATION of block-or-static-scoped array over dynamic range i 
     M(storage, foo, i):
         foo = memstruct name
         i = dynamic range of the array (static indexes are optionally declared in memstruct) 
         storage (keyword) = static / __thread static / auto
+    note:
+        a) the macro performs sanity check; user doesn't need to do it. 
 
     // ALLOCATION/ RE-ALLOCATION of fixed size block-or-static-scoped array with initializers
     M(storage, foo, (a,...)):
@@ -186,6 +198,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
             there is no dynamic index (i.e. is zero).
         b) initializer (a) gives compile time error, to avoid mistaking as dynamic range i.
             use (a,) instead if only the first element is to be initialized (with value a).
+        c) the macro performs sanity check; user doesn't need to do it. 
 
     // ALLOCATION/ RE-ALLOCATION of not-block-nor-static-scoped array over dynamic range i 
     M(allocator, foo, i):
@@ -200,6 +213,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
         d) whereas memstruct is allocator and de-allocator agnostic, custom
             re-allocators must be user implemented as:
             mstrct_realloc(...) and mstrct_mremap(...) to suit dev intent.
+        e) the macro performs sanity check; user doesn't need to do it. 
 
     // MEMSTRUCT declaration, simple (static range = 1)
     M(type, foo, ):          // OR, M(type, foo, , 1) 

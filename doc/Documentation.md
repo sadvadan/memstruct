@@ -176,7 +176,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
         de_allocator = name of the de-allocator, e.g. free, munmap, etc.
     note:
         a) any custom de-allocator matching the API of either free(...) or munmap(...) is supported
-        b) allocator-de_allocator mismatch is handles by OS, not memstruct
+        b) allocator-de_allocator mismatch is handled by OS, not memstruct
         c) the operation is idempotent: multiple de-allocations are redundant.
         d) the macro performs sanity check; user doesn't need to do it. 
 

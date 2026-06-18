@@ -311,7 +311,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
     
     the most convenient method is to expand the macro locally in your code editor itself. currently, clangd LSP works fine. or, more conventionally, pre-compile with -E flag into expanded source.
 
-- Memstruct is good at denying raw accesses to its own memories. but how to know (quickly) if raw type of memory accesses have been used for memories independent of memstruct, in a project?
+- Memstruct is good at denying raw accesses to its own memories. but how to know (quickly) if raw accesses have been used for memories unrelated to memstruct in a project?
 
     search `[` or `]` in your editor to quickly find if `[]`-idiom is used. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]`, and therefore in a memstruct conforming file no `[]` should be found.
 

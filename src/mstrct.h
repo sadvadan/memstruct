@@ -304,34 +304,34 @@ MSTRCT_PRAG0}) [({mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MS
 #define MSTRCT_UNWRAP(a,b,...) {(a,b) __VA_OPT__(,) ##__VA_ARGS__}
 #define MSTRCT_FULL(...) __VA_ARGS__
 #define MSTRCT_PUT(store, name, range) \
-MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES range))(store, name, range)
+MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES range))(store, name, range, __COUNTER__)
 
 // put
-#define MSTRCT_PUT_0(store, name, range)  \
+#define MSTRCT_PUT_0(store, name, range, counter)  \
 store struct {char id[4]; typeof(*(name.typ[0])) arr[(mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)];}   \
-MSTRCT_CAT2(mstrct_arr_,__LINE__) MSTRCT_CLEAN(__LINE__, store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL range)};  \
+MSTRCT_CAT2(mstrct_arr_, counter) MSTRCT_CLEAN(store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL range)};  \
 if (mstrct_ptr == (char *)2) {   \
   *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
-  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)(MSTRCT_CAT2(mstrct_arr_, __LINE__).arr); \
+  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)(MSTRCT_CAT2(mstrct_arr_, counter).arr); \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name));   \
-  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)(MSTRCT_CAT2(mstrct_arr_, __LINE__).id) = name.id;}  \
+  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)(MSTRCT_CAT2(mstrct_arr_, counter).id) = name.id;}  \
 }
 
-#define MSTRCT_PUT_1(store, name, range)  \
+#define MSTRCT_PUT_1(store, name, range, counter)  \
 store struct {char id[4]; typeof(*(name.typ[0])) arr[(range) * (mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)];}   \
-MSTRCT_CAT2(mstrct_arr_,__LINE__) MSTRCT_CLEAN(__LINE__, store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, 0)};  \
+MSTRCT_CAT2(mstrct_arr_, counter) MSTRCT_CLEAN(store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, 0)};  \
 if (mstrct_ptr == (char *)2) {   \
   *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
-  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)(MSTRCT_CAT2(mstrct_arr_, __LINE__).arr); \
+  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)(MSTRCT_CAT2(mstrct_arr_, counter).arr); \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
-  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)(MSTRCT_CAT2(mstrct_arr_, __LINE__).id) = name.id;}  \
+  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)(MSTRCT_CAT2(mstrct_arr_, counter).id) = name.id;}  \
 }                                                        
 
-#define MSTRCT_CLEAN(line, store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))(line)
-#define MSTRCT_CLEAN_00(line)
-#define MSTRCT_CLEAN_10(line)
-#define MSTRCT_CLEAN_11(line) __attribute__((cleanup(mstrct_set), unused))
-#define MSTRCT_CLEAN_01(line)
+#define MSTRCT_CLEAN(store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))
+#define MSTRCT_CLEAN_00
+#define MSTRCT_CLEAN_10
+#define MSTRCT_CLEAN_11 __attribute__((cleanup(mstrct_set), unused))
+#define MSTRCT_CLEAN_01
 
 #define MSTRCT_LET(typ, name, empty, index) MSTRCT_CAT2(MSTRCT_LET_, MSTRCT_ARG_COUNT(empty))(typ, name, index)
 #define MSTRCT_LET_0(typ, name, index) MSTRCT_T(typ, index, __LINE__) name

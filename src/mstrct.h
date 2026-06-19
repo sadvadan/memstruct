@@ -138,7 +138,7 @@
 #define m(...)                            MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 #define M(...)                            MSTRCT_CAT2(MSTRCT_$$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
-#define MSTRCT_SIZE                       (1ULL * 1024 * 1024 * 1024) // 1 GiB
+#define MSTRCT_SIZE                       (4ULL * 1024 * 1024 * 1024) // 4 GiB
 #define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NAMSTRCT)
 #define MSTRCT_CHK2                       MSTRCT_ARG_COUNT(NBMSTRCT)
 #define MSTRCT_CHK3                       MSTRCT_ARG_COUNT(NCMSTRCT)
@@ -197,7 +197,7 @@
 typedef unsigned long long mstrct_uint64; typedef signed long long mstrct_int64;
 typedef struct {union {void *ptr; struct {mstrct_uint32 _d; /*low*/ mstrct_uint32 _s; /*high*/};};} mstrct_pack;
 
-__attribute__((weak)) void * mstrct_global; __attribute__((weak)) volatile mstrct_uint64 mstrct_offset;
+__attribute__((weak)) void * mstrct_global; __attribute__((weak)) volatile mstrct_uint32 mstrct_offset;
 static __thread char *mstrct_ptr  = (char *)1; static __thread char mstrct_errno = 0; static void *restrict mstrct_start;
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
@@ -311,20 +311,16 @@ MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PAREN
 store struct {char id[4]; typeof(*(name.typ[0])) arr[(mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)];}   \
 MSTRCT_CAT2(mstrct_arr_, counter) MSTRCT_CLEAN(store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL range)};  \
 if (mstrct_ptr == (char *)2) {   \
-  *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
-  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)(MSTRCT_CAT2(mstrct_arr_, counter).arr); \
-  *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name));   \
-  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)(MSTRCT_CAT2(mstrct_arr_, counter).id) = name.id;}  \
+  mstrct_put(__LINE__, (MSTRCT_CAT2(mstrct_arr_, counter).arr), &(name), &(name.id),   \
+  ((mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)), (MSTRCT_CHK3 && MSTRCT_AUTO(store))); \
 }
 
 #define MSTRCT_PUT_1(store, name, range, counter)  \
 store struct {char id[4]; typeof(*(name.typ[0])) arr[(range) * (mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)];}   \
 MSTRCT_CAT2(mstrct_arr_, counter) MSTRCT_CLEAN(store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, 0)};  \
 if (mstrct_ptr == (char *)2) {   \
-  *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
-  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)(MSTRCT_CAT2(mstrct_arr_, counter).arr); \
-  *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
-  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)(MSTRCT_CAT2(mstrct_arr_, counter).id) = name.id;}  \
+  mstrct_put(__LINE__, (MSTRCT_CAT2(mstrct_arr_, counter).arr), &(name), &(name.id),   \
+  ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name)), (MSTRCT_CHK3 && MSTRCT_AUTO(store))); \
 }                                                        
 
 #define MSTRCT_CLEAN(store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))
@@ -388,8 +384,8 @@ mstrct_leak_0(mstrct_uint32 id, mstrct_int32 line, char key) {
 }
 
 #if !defined(MSTRCT_16) && !defined(MSTRCT_32)
-  static inline mstrct_uint64 mstrct_alloc(const mstrct_int32 line) {
-    mstrct_uint64 increment = 2;
+  static inline mstrct_uint32 mstrct_alloc(const mstrct_int32 line) {
+    mstrct_uint32 increment = 2;
 
     if (__builtin_expect(mstrct_global == NULL, 0)) {
       void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); // PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_SHARED|MAP_NORESERVE
@@ -402,6 +398,16 @@ mstrct_leak_0(mstrct_uint32 id, mstrct_int32 line, char key) {
     return increment;
   }
 #endif
+
+static inline void
+mstrct_put(mstrct_int32 line, void *arr, void *name, mstrct_uint32 *id, mstrct_uint64 size, char key) {
+  *(mstrct_int64 *)(volatile void *)(name) = 0; // force name.i=0
+  *id = MSTRCT_ALLOC(line);
+  *(void **)((mstrct_uint64 *)mstrct_start + *id) = arr;
+  *((mstrct_uint64 *)mstrct_start + *id + 1) = size;
+  if (key) {*(mstrct_uint32 *)((char *)arr - 4) = *id;}
+  mstrct_ptr = (char *)1;
+}
 
 
 #endif

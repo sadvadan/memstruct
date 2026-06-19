@@ -1,7 +1,7 @@
 // custom arena allocator using memstruct safety guarantee
 // note how heap temporal safety is disabled for sub-array
 // allocations. [a better pattern could be to define a dummy
-// dis-allocator for sub-array (near 0-overhead + safety)].
+// de-allocator for sub-array (near 0-overhead + safety)].
 
 #include <stdio.h>
 #include <stdlib.h>

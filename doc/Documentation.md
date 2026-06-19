@@ -55,9 +55,6 @@ This document explains how to configure and use the memstruct.h library.
     MSTRCT_32     MCU: 32 bit
     MSTRCT_64     make foo.i uint64_t
 ```
-
-- metadata arena has pre-allocated virtual memory of 1GiB, exceeding which (rare as it is) memstruct issues an error and an instruction to place `#define MSTRCT_SIZE [new_arena_size_in_bytes]` before `#include mstrct.h`.
-
 - Include `mstrct.h`.
 
 - Alternatively, instead of directives in the source, place the needed flags `-DFLAG` directly in compilation.

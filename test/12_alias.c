@@ -32,6 +32,6 @@ int main(void) {
 
 /*out (typical compile-time warning at >O1; here, for case 3):
 warning: array subscript [6, 8] is outside array bounds of ‘char[4]’ [-Warray-bounds=]
-      |   int *tem = (&m(var,2) + 5); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
+      |   int *tem = (&m(var,2) + 6); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
       |                               ^~~~
 */

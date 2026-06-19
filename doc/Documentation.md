@@ -36,25 +36,25 @@ This document explains how to configure and use the memstruct.h library.
 ## Configuration
 
 - In source, optionally include `#define FLAG` to disable spatial, heap-temporal or stack-temporal checks. disable locally like so: `#define FLAG` `unsafe code here` `#undef FLAG`. the flags are:
-```
+    ```
     NAMSTRCT      disable spatial safety
     NBMSTRCT      disable heap temporal safety
     NCMSTRCT      disable stack temporal safety
-```
+    ```
 
 - Include `#define MSTRCT_SOFT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
-```
+    ```
     [ default ]   : print detailed err (with line_no of memsruct genesis site), continue with default "the arr start value", handle mstrct_errno.
     MSTRCT_SOFT   : print detailed err (with line_no of error_site), continue with default "the arr start value", handle mstrct_errno.
     MSTRCT_HARD   : print err (line_no=0, retreivable from post-analysis), segfault at the error site, prints "UAF" irrespective of error.
-```
+    ```
 
 - Include MCU flag: `#define MSTRCT_16` for 8 & 16 bit, `#define MSTRCT_32` for 32 bit. use `#define MSTRCT_64` (locally if needed) to force foo.i to be of size 64-bit.
-```
+    ```
     MSTRCT_16     MCU: 16 or 8 bit
     MSTRCT_32     MCU: 32 bit
     MSTRCT_64     make foo.i uint64_t
-```
+    ```
 - Include `mstrct.h`.
 
 - Alternatively, instead of directives in the source, place the needed flags `-DFLAG` directly in compilation.

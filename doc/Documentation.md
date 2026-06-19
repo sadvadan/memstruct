@@ -296,7 +296,7 @@ during de-allocation, size (not base addr) is `NULL`-ed so that double frees bec
 
 - I disabled checks with e.g. `#define NAMSTRCT` but the metadata is still getting stored in the heap arena
 
-    this is a feature: a) custom arena is `qword`-aligned & cache friendly to speedup fetches; b) `foo.id`, used in hassle-free memory sharing, refers metadata in the arena; and, c) freeing a memory needs the base address (often also size) for safe de-allocation. moreover, on 64-bit CPUs the heap arena segment is allocated actual memory pages only on need basis (`MAP_NORESERVE` mmap flag).
+    this is a feature: a) custom arena is `qword`-aligned & cache friendly to speedup fetches; b) `foo.id`, used in hassle-free memory sharing, refers metadata in the arena; and, c) freeing a memory needs the base address (often also size) for safe de-allocation. moreover, on 64-bit CPUs the heap arena segment (virtual size = 32 GB) is allocated actual memory pages only on need basis (via `MAP_NORESERVE` mmap flag).
 
 - Memstruct is catching all the bugs but the program isn't panicking
 

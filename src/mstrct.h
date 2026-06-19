@@ -310,18 +310,14 @@ MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PAREN
 #define MSTRCT_PUT_0(store, name, range, counter)  \
 store struct {char id[4]; typeof(*(name.typ[0])) arr[(mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)];}   \
 MSTRCT_CAT2(mstrct_arr_, counter) MSTRCT_CLEAN(store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL range)};  \
-if (mstrct_ptr == (char *)2) {   \
-  mstrct_put(__LINE__, (MSTRCT_CAT2(mstrct_arr_, counter).arr), &(name), &(name.id),   \
-  ((mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)), (MSTRCT_CHK3 && MSTRCT_AUTO(store))); \
-}
+if (mstrct_ptr == (char *)2) {mstrct_put(__LINE__, (MSTRCT_CAT2(mstrct_arr_, counter).arr), &(name), &(name.id),   \
+((mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)), (MSTRCT_CHK3 && MSTRCT_AUTO(store)));}
 
 #define MSTRCT_PUT_1(store, name, range, counter)  \
 store struct {char id[4]; typeof(*(name.typ[0])) arr[(range) * (mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)];}   \
 MSTRCT_CAT2(mstrct_arr_, counter) MSTRCT_CLEAN(store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, 0)};  \
-if (mstrct_ptr == (char *)2) {   \
-  mstrct_put(__LINE__, (MSTRCT_CAT2(mstrct_arr_, counter).arr), &(name), &(name.id),   \
-  ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name)), (MSTRCT_CHK3 && MSTRCT_AUTO(store))); \
-}                                                        
+if (mstrct_ptr == (char *)2) {mstrct_put(__LINE__, (MSTRCT_CAT2(mstrct_arr_, counter).arr), &(name), &(name.id),   \
+((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name)), (MSTRCT_CHK3 && MSTRCT_AUTO(store)));}
 
 #define MSTRCT_CLEAN(store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))
 #define MSTRCT_CLEAN_00

@@ -165,7 +165,7 @@ This document explains how to configure and use the memstruct.h library.
 ## API reference
 
 - `M()`/`m()` **macro:**
-```
+    ```
 
     // DE-ALLOCATION
     M(de_allocator, foo):
@@ -259,10 +259,10 @@ This document explains how to configure and use the memstruct.h library.
             a.2) type isn't *const
         b) m(foo, ) is same as m(foo, , 0) i.e. the 1st element in any array
 
-```
+    ```
 
 - **memstruct:**
-```
+    ```
     // memstruct layout
     struct {
         int32_t/int64_t/const i;
@@ -290,7 +290,7 @@ This document explains how to configure and use the memstruct.h library.
     foo.id
         foo = memstruct name
         id = field in foo containiing metadata uint32_t ID
-```
+    ```
 
 ##  Troubleshooting
 

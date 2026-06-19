@@ -138,7 +138,7 @@
 #define m(...)                            MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 #define M(...)                            MSTRCT_CAT2(MSTRCT_$$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
-#define MSTRCT_SIZE                       (32ULL * 1024 * 1024 * 1024 - 16) // 32 GiB
+#define MSTRCT_SIZE                       (32ULL * 1024 * 1024 * 1024 - 16) // 32 GiB (virtual)
 #define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NAMSTRCT)
 #define MSTRCT_CHK2                       MSTRCT_ARG_COUNT(NBMSTRCT)
 #define MSTRCT_CHK3                       MSTRCT_ARG_COUNT(NCMSTRCT)

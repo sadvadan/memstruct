@@ -288,8 +288,7 @@ mstrct_check(mstrct_uint32 id, mstrct_uint32 type_size, mstrct_int32 line, mstrc
 #define MSTRCT_GET(name, i, index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK1)(name, i, index)
 
 #define MSTRCT_GET_10(name, i, index)  \
-({(typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id))); MSTRCT_PRAG0})  \
-[({MSTRCT_FLAT(name, [i], index); MSTRCT_PRAG1})]
+((typeof(name.typ[0]))(mstrct_base(__UINT32_MAX__, name.id, mstrct_reset(name.id)))) [MSTRCT_FLAT(name, [i], index)]
 
 #define MSTRCT_GET_11(name, i, index) ({(typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)));   \
 MSTRCT_PRAG0}) [({mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [i], index)); MSTRCT_PRAG1})]
@@ -299,38 +298,39 @@ MSTRCT_PRAG0}) [({mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MS
 #define MSTRCT_GET_01(name, i, index) (__builtin_choose_expr(  \
 (sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))), MSTRCT_GET_10(name, 0, index), MSTRCT_GET_11(name, 0, index)))
 
-// static/on-stack array initializer list handler                                                         
+// static/on-stack array initializer list handler
 #define MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES(a,b,...) /* deliberate fail for single input (a) */
-#define MSTRCT_PAR(a,b,...) {(a, b) __VA_OPT__(,) ##__VA_ARGS__}
+#define MSTRCT_PAR(a,b,...) MSTRCT_UNWRAP(a,b __VA_OPT__(,) ##__VA_ARGS__)
+#define MSTRCT_UNWRAP(a,b,...) {(a,b) __VA_OPT__(,) ##__VA_ARGS__}
 #define MSTRCT_FULL(...) __VA_ARGS__
 #define MSTRCT_PUT(store, name, range) \
 MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES range))(store, name, range)
 
 // put
-#define MSTRCT_PUT_0(store, name, range) store char MSTRCT_CLEAN(__LINE__, store)  \
-MSTRCT_CAT2(mstrct_arr_, __LINE__) [(mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)] \
-__attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL(range)) ;   \
+#define MSTRCT_PUT_0(store, name, range)  \
+store struct {char id[4]; typeof(*(name.typ[0])) arr[(mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)];}   \
+MSTRCT_CAT2(mstrct_arr_,__LINE__) MSTRCT_CLEAN(__LINE__, store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, MSTRCT_FULL range)};  \
 if (mstrct_ptr == (char *)2) {   \
   *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
-  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)MSTRCT_CAT2(mstrct_arr_, __LINE__); \
+  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)(MSTRCT_CAT2(mstrct_arr_, __LINE__).arr); \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name));   \
-  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)MSTRCT_CAT2(mstrct_arr_, __LINE__) = name.id;}  \
+  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)(MSTRCT_CAT2(mstrct_arr_, __LINE__).id) = name.id;}  \
 }
 
-#define MSTRCT_PUT_1(store, name, range) store char MSTRCT_CLEAN(__LINE__, store)  \
-MSTRCT_CAT2(mstrct_arr_,__LINE__) [(range) * (mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)] \
-__attribute__((aligned(__alignof__(*(name.typ[0]))), unused)) = MSTRCT_PAR(mstrct_ptr = (char *)2, 0) ;   \
+#define MSTRCT_PUT_1(store, name, range)  \
+store struct {char id[4]; typeof(*(name.typ[0])) arr[(range) * (mstrct_uint64)sizeof(*(name.typ[0])) * MSTRCT_DSIZ(name)];}   \
+MSTRCT_CAT2(mstrct_arr_,__LINE__) MSTRCT_CLEAN(__LINE__, store) = {{0}, MSTRCT_PAR(mstrct_ptr = (char *)2, 0)};  \
 if (mstrct_ptr == (char *)2) {   \
   *(mstrct_int64 *)(volatile void *)&(name) = 0; name.id = MSTRCT_ALLOC(__LINE__); mstrct_ptr = (char *)1;  \
-  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)MSTRCT_CAT2(mstrct_arr_, __LINE__); \
+  *(void **)((mstrct_uint64 *)mstrct_start + name.id) = (void *)(MSTRCT_CAT2(mstrct_arr_, __LINE__).arr); \
   *((mstrct_uint64 *)mstrct_start + name.id + 1) = ((mstrct_uint64)sizeof(*(name.typ[0])) * (range) * MSTRCT_DSIZ(name));   \
-  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)MSTRCT_CAT2(mstrct_clean_, __LINE__) = name.id;}  \
+  if (MSTRCT_CHK3 && MSTRCT_AUTO(store)) {*(mstrct_uint32 *)(MSTRCT_CAT2(mstrct_arr_, __LINE__).id) = name.id;}  \
 }                                                        
 
 #define MSTRCT_CLEAN(line, store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))(line)
 #define MSTRCT_CLEAN_00(line)
 #define MSTRCT_CLEAN_10(line)
-#define MSTRCT_CLEAN_11(line) MSTRCT_CAT2(mstrct_clean_, line)[4] __attribute__((cleanup(mstrct_set), aligned(4), unused)),
+#define MSTRCT_CLEAN_11(line) __attribute__((cleanup(mstrct_set), unused))
 #define MSTRCT_CLEAN_01(line)
 
 #define MSTRCT_LET(typ, name, empty, index) MSTRCT_CAT2(MSTRCT_LET_, MSTRCT_ARG_COUNT(empty))(typ, name, index)

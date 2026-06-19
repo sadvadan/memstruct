@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "../src/mstrct.h"
+//#define NAMSTRCT // uncomment to disable spatial safety
 
 int main(void) {
   M(int *const,foo,); // declare safe type int[][1]
@@ -11,7 +12,7 @@ int main(void) {
   m(foo,5) = 10; // define int[5][0]
 
   printf("size of a memstruct should be 8. check: %zu\n", sizeof(foo));
-  printf("var[5], with checks: %d\n", m(foo,5)); // fetch memory (with checks)
+  printf("var[5], with checks: %d\n", m(foo,5)); // fetch memory
   M(free, foo); // comment this to see leak warning
   return 0;
 }

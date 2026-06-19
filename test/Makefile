@@ -1,6 +1,6 @@
 # compiler and flags
 CC = gcc
-CFLAG = -O0 -g -Wall -Wextra
+CFLAG = -O2 -g -Wall -Wextra
 TARGET = out
 
 # source and header files

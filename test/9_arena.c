@@ -1,4 +1,7 @@
 // custom arena allocator using memstruct safety guarantee
+// note how heap temporal safety is disabled for sub-array
+// allocations. [a better pattern could be to define a dummy
+// dis-allocator for sub-array (near 0-overhead + safety)].
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,7 +70,7 @@ int main() {
   M(int *const, number,);
   #define NBMSTRCT                      // skip temporal safety 
   M(arena_alloc(&arena, sizeof(int)), number, 1);
-  #undef NMSTRCT
+  #undef NMBSTRCT
   m(number,0) = 42;
 
   // 3. Allocate an array of floats

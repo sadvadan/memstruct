@@ -15,23 +15,23 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system. the error reporting system supplements this with optimizations from the compiler, leading to -- fully compile-time, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are part of OOB check and incur no extra overhead.
+- **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system. the error reporting system supplements this with optimizations from the compiler, leading to -- fully compile-time, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are folded within OOB check and incur no extra overhead.
 
-- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
+- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata (base address + size) stored in a custom heap arena (default 1 GiB virtual, extensible upto 32 GiB). `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
 
 ## Features and design
 
 - Bare *minimum* safety checks; additionally: opt-out, hardening, and MCU flags.
 
-- Supports custom allocators & de-allocators. *drop-in*.
+- Supports custom allocators & de-allocators. drop-in.
 
-- Single‑header; no separate `.c` file needed. no external dependencies. *MCU support*.
+- Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
 
-- Safety net: non-idiomatic usage, punning, and accessing memstruct held memories through raw pointers get *flagged* at compile-time.
+- Safety net: non-idiomatic usage, punning, and aliasing memstruct via raw pointers - whenever statically proven -  get *warned* at compile-time.
 
-- Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee safely. or, share base address `m(base foo)` & size `m(size foo)`.
+- Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee safely. or, share base address `m(base foo)` & size `m(size foo)` (both R-values) with legacy code.
 
-- Thread safety: the library is thread-safe but user must protect writes e.g. de/re-allocations *while* multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
+- Thread safety: user must protect writes e.g. de/re-allocations *while* multithreading is ON. note this is the basics of of multi-threading, and not specific to memstruct.
 
 ## Configuration
 
@@ -79,9 +79,9 @@ This document explains how to configure and use the memstruct.h library.
     ```
     bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type alias
 
-    callee_function(m(id foo), other_args); // callee is given foo.id safely (foo metadata cache is refreshed) to access memory & metadata
+    callee_function(m(id foo), other_args); // callee is given foo.id safely to do whatever
 
-    callee_function(foo.id, other_args); // can use this also, if the callee doesn't need to change metadata (mostly they don't) e.g. by resizing or de-allocating the memory
+    callee_function(foo.id, other_args); // use this if the callee doesn't need to change metadata (mostly they don't) e.g. by resizing or de-allocating the memory. or for consistency, stick with the above
     ```
 - **Safe access of data:** 
 

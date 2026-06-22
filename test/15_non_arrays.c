@@ -8,7 +8,7 @@
 int main(void) {
   /* example-1: a single int */
   M(int *const, foo,);                    // declare singlet int[][1]
-  M(malloc(4), foo, 1);                   // map foo -> int[1][0] on-heap
+  M(malloc(4), foo, 1);                   // map foo -> int[1][1] on-heap
   m(foo) = 10;                            // define int[0][0]
   printf("size of a non-array memstruct foo should be 8. check: %zu\n", sizeof(foo));
   printf("value of foo = %d, addr of foo: %p\n\n", m(foo), m(base foo));  // fetch memory

@@ -6,10 +6,10 @@ C + memstruct = performance + memory safety
 ## Features
 
 - **Code size**    - memstruct is a 350 LoC single header-file library with no external dependencies.
-- **Memory safety**- covers UAF, NULL deref, OOB (multi-dim), memory leaks, double free *and* safe memory sharing.
+- **Memory safety**- covers UAF, NULL deref, OOB (multi-dim), leaks, double free & memory sharing, for both array & non-array types.
 - **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed.
 - **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
-- **Robustness**   - either compile-time or linter warnings for bad grammar, puns, and illegal raw dereferences.
+- **Robustness**   - either linter or compile-time warning for bad grammar, puns, and illegal raw dereferences.
 - **Target**       - gcc, clang | -std=gnu99 &ONWS | 8-64 bit CPUs. batteries included: opt-out, hardening, MCU flags, & more.
 
 ## Quick Start
@@ -19,7 +19,7 @@ C + memstruct = performance + memory safety
     `mstrct.h` in your file.
 - **Declare and allocate** a memstruct:
 
-    declaration prototype: `M(ptr_type, name,, static_indexes)`
+    declaration prototype: `M(ptr_type, name,, optional_static_indexes)`
 
     allocation prototype: `M(any_allocator, name, dynamic_index)`
     ```
@@ -31,7 +31,7 @@ C + memstruct = performance + memory safety
 
     M(int *,foo,) = {0};          // declare foo as int[][1] & assign foo.id=0 & foo.i=0
     ```
-- **Re-allocate** memory: same as allocation, `M(re-allocate, name, dynamic_index)`.
+- **Re-allocate** memory: same as allocation, `M(re_allocator, name, dynamic_index)`.
 - **Share** memory: simply pass around the int `foo.id`.
     ```
     bar.id = foo.id;              // bar now shares memory with foo 
@@ -53,6 +53,8 @@ C + memstruct = performance + memory safety
     m(span foo)                   // index span
 
     m(id foo)                     // foo ID
+
+    m(foo)                        // foo first element
      ```
 - **index** arithmetic:
      ```
@@ -60,7 +62,7 @@ C + memstruct = performance + memory safety
 
     foo.i--;                      // array index decrement
 
-    foo.i = 0;                   // set array index
+    foo.i = 0;                    // set array index
      ```
 - **De**-allocate memstruct: double de-allocation is idempotent (gets elided!).
 

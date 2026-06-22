@@ -27,9 +27,9 @@ This document explains how to configure and use the memstruct.h library.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. *MCU support*.
 
-- Safety net: a memstruct being a unique anonymous struct type, doesn't mix with other types or memstructs; it can't be naively de-referenced, or cast either, and is usable only through the `m`/`M` semantics. non-idiomatic usage, punning, and accessing memstruct held memories through raw pointers get *flagged* at compile-time.
+- Safety net: non-idiomatic usage, punning, and accessing memstruct held memories through raw pointers get *flagged* at compile-time.
 
-- Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee. or, share base address `m(base foo)` & size `m(size foo)`. it's carefree - memstruct *doesn't* need LTO to synchronize this. also, memstruct ensures that only the relevant metadata cache is updated at the call-site, so that cache optimizations remain.
+- Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee safely. or, share base address `m(base foo)` & size `m(size foo)`.
 
 - Thread safety: the library is thread-safe but user must protect writes e.g. de/re-allocations *while* multithreading is ON. note this is generic requirement of multi-threading itself, not specific to memstruct.
 
@@ -37,24 +37,20 @@ This document explains how to configure and use the memstruct.h library.
 
 - In source, optionally include `#define FLAG` to disable spatial, heap-temporal or stack-temporal checks. disable locally like so: `#define FLAG` `unsafe code here` `#undef FLAG`. the flags are:
     ```
-    NAMSTRCT      disable spatial safety
-    NBMSTRCT      disable heap temporal safety
-    NCMSTRCT      disable stack temporal safety
+    NMSTRCT      disable spatial safety
+    NMSTRCTH     disable heap temporal safety
+    NMSTRCTS     disable stack temporal safety
     ```
 
 - Include `#define MSTRCT_SOFT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
     ```
-    [ default ]   : print detailed err (with line_no of memsruct genesis site), continue with default "the arr start value", handle mstrct_errno.
-    MSTRCT_SOFT   : print detailed err (with line_no of error_site), continue with default "the arr start value", handle mstrct_errno.
-    MSTRCT_HARD   : print err (line_no=0, retreivable from post-analysis), segfault at the error site, prints "UAF" irrespective of error.
+    [ default ]   : print detailed err (with line_no of memsruct genesis site), continue with default "safe", handle mstrct_errno.
+    MSTRCT_SOFT   : print detailed err (with line_no of error_site), continue with default "safe", handle mstrct_errno.
+    MSTRCT_HARD   : print "BAD", segfault at the error site (get line_no from post-analysis).
     ```
 
-- Include MCU flag: `#define MSTRCT_16` for 8 & 16 bit, `#define MSTRCT_32` for 32 bit. use `#define MSTRCT_64` (locally if needed) to force foo.i to be of size 64-bit.
-    ```
-    MSTRCT_16     MCU: 16 or 8 bit
-    MSTRCT_32     MCU: 32 bit
-    MSTRCT_64     make foo.i uint64_t
-    ```
+- Include MCU flag: `#define MSTRCT_MCU` for MCU programming.
+
 - Include `mstrct.h`.
 
 - Alternatively, instead of directives in the source, place the needed flags `-DFLAG` directly in compilation.
@@ -101,7 +97,7 @@ This document explains how to configure and use the memstruct.h library.
 
     `(&m(foo,0))[i]` is an example of attempted raw access of data: such puns are warned at compile-time. memstruct-returned addresses carry dummy alloc_size compile-time metadata to deny raw memory access.
 
-    raw access for legitimate reasons is, as discussed before, `#define NAMSTRCT` `unsafe code here` `#undef NAMSTRCT`.
+    raw access for legitimate reasons is, as discussed before, e.g. `#define NMSTRCT` `unsafe code here` `#undef NMSTRCT` for disabling spatial safety locally.
 
 - **Pointer arithmetic:**
 
@@ -149,6 +145,8 @@ This document explains how to configure and use the memstruct.h library.
     int64_t temp = m(span foo);     // index span as R value
 
     uint32_t temp = m(id foo);      // memory ID as R value
+
+    foo_type temp = m(foo);         // same as m(foo, 0)
      ```
 - **De**-allocate: double de-allocs are redundant (later elided by compiler). custom de-allocators supported. de-allocation failure check is done internally, and need not be repeated by user.
      ```
@@ -156,11 +154,11 @@ This document explains how to configure and use the memstruct.h library.
 
     M(munmap, foo);                 // mmapped memory
      ```
-    during de-allocation, size (not base addr) is `NULL`-ed so that double frees become redundant. NOTE: user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the de-allocators, as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
+    during de-allocation, size is `NULL`-ed (and base addr changed to a safe zone) so that double frees become redundant. NOTE: user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the de-allocators, as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
 - **Loop optimization**: in general, at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for later checks. to strictly force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(span foo); i++)` where `m(span foo)` = index_span_size, and expression `i < m(span foo)` is the strictest OOB check (resulting in elision of within-the-loop checks). further, `m(span foo)` is evaluated only once as it calls a `const` attribute function. 
 
-- **MCU implementation**: a) use `MSTRCT_16` or `MSTRCT_32` flags for 8/16 or 32 bit CPUs, respectively. b) define `MSTRCT_PRINT()` and `MSTRCT_ALLOC()` macros in your code to replace `printf()` and `mstrct_alloc()`. c) if needed, define functions `mstrct_realloc()` and `mstrct_mremap()` as re-allocators. d) refer `mstrct.h` to match API of these macros and functions. e) allocators / de-allocators are drop in. f) custom design `on_exit()` for heap leak, or leave it as dummy and sweep the metadata section at end.
+- **MCU implementation**: a) define `MSTRCT_MCU`. b) define `MSTRCT_PRINT()` and `MSTRCT_ALLOC()` macros in your code to replace `printf()` and `mstrct_alloc()`. c) if needed, define functions `mstrct_realloc()` and `mstrct_mremap()` as re_allocators. d) refer `mstrct.h` to match API of these macros and functions. e) allocators / de-allocators are drop in. f) custom design `on_exit()` for heap leak, or leave it as dummy (sweep the metadata section at end?).
 
 ## API reference
 
@@ -219,6 +217,14 @@ This document explains how to configure and use the memstruct.h library.
     note:
         a) memstruct can be declared as field inside structs
         b) nested declarations, too; remember, memstruct is just a C struct
+
+    // MEMSTRUCT declaration, non-array type (static range = 0)
+    M(type, foo,, 0):
+        type = ptr type, e.g. const int * volatile, etc
+        foo = (new) memstruct name
+    note:
+        a) memstruct declared thus has 4 bytes size
+        b) access the type as m(foo); address as m(base foo)
     
     // MEMSTRUCT declaration for static range (j,k,...)
     M(type, foo, , j, k,...):
@@ -265,7 +271,7 @@ This document explains how to configure and use the memstruct.h library.
     ```
     // memstruct layout
     struct {
-        int32_t/int64_t/const i;
+        int32_t/int64_t/const/0_byte i;
         uint32_t id;
         type typ[0];
         struct {char a[0/1];}   con[0];
@@ -294,15 +300,15 @@ This document explains how to configure and use the memstruct.h library.
 
 ##  Troubleshooting
 
-- I disabled checks with e.g. `#define NAMSTRCT` but the metadata is still getting stored in the heap arena
+- I disabled checks with e.g. `#define NMSTRCT` but the metadata is still getting stored in the heap arena
 
-    this is a feature: a) custom arena is `qword`-aligned & cache friendly to speedup fetches; b) `foo.id`, used in hassle-free memory sharing, refers metadata in the arena; and, c) freeing a memory needs the base address (often also size) for safe de-allocation. moreover, on 64-bit CPUs the heap arena segment (virtual size = 32 GB) is allocated actual memory pages only on need basis (via `MAP_NORESERVE` mmap flag).
+    the metadata layer is the trade-off for performance and memory-safety that memstruct made in design. the memory layer is for spatioal safety, whereas temporal safety gets sparingly injected in the code. taken together, these make a program provably memory safe yet on par with C speed.
 
 - Memstruct is catching all the bugs but the program isn't panicking
 
-    this is definitely a feature at hardening level 0 (default): after generating the error message the program continues with default values (e.g. arr[0] in case of OOB fail). you may set the hardening level to HARD (`#define MSTRCT_HARD`) to cause segfault at the site after error print. 
+    this is a feature at hardening level 0 (default): after generating the error message the program continues with default "safe" values. you may set the hardening level to HARD (`#define MSTRCT_HARD`) to cause segfault at the site after error print. 
 
-    at the default level, the line number of the declaration site of the erring memstruct (not the erring site itself) is printed. to print the line number of the erring site set the level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number (and `UAF` irrespective of error) but since it segfaults at the error site, the line number can be recovered in post-analysis. HARD generates the least binary footprint (for the unhappy path), followed by the default level and then SOFT (which is well suited for development phase). the default level is the sweet spot, and caters to fail-safe design (no crashes, also a thread-safe err_no `mstrct_errno` to handle error if needed).
+    at the default level, the line number of the declaration site of the erring memstruct (not the erring site itself) is printed. to print the line number of the erring site set the level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number (and `BAD` irrespective of error) but since it segfaults at the error site, the line number can be recovered in post-analysis. HARD generates the least binary footprint (for the unhappy path), followed by the default level and then SOFT (which is well suited for development phase). the default level is the sweet spot, and caters to fail-safe design (no crashes, also a thread-safe err_no `mstrct_errno` to handle error if needed).
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
@@ -332,7 +338,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 
-    e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NBMSTRCT` and `#undef NBMSTRCT` (see test #9). tradeoff: no temporal safety (UAF) for individual sub-arrays.
+    e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NMSTRCTH` and `#undef NMSTRCTH` (see test #9). tradeoff: no temporal safety (UAF) for individual sub-arrays.
 
     **NOTE**: safety suppression is deliberate and best left to user discretion, but e.g. in the arena example it is advisable to make a custom sub-array dummy de-allocator to avoid unnecessary unsafe sections. remember, allocators and de-allocators are drop-in in memstruct.
 

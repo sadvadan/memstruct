@@ -17,7 +17,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system. the error reporting system supplements this with optimizations from the compiler, leading to -- fully compile-time, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are folded within OOB check and incur no extra overhead.
 
-- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata (base address + size) stored in a custom heap arena (default 1 GiB virtual, extensible upto 32 GiB). `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
+- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata (base address + size) stored in a custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
 
 ## Features and design
 

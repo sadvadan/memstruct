@@ -7,7 +7,7 @@ int main(void) {
   M(int * ,var,); // var[][1]
   M(malloc(48),var,12); // var[12][1]
   
-  M(int * volatile, foo,,12) = {0}; // declare foo[][12], seed id & i with 0.
+  M(int * volatile, foo,,12) = {0}; // declare foo[][12], initialize id & i as 0.
 
   foo.id = var.id; // share memory: foo -> foo[1][12]
 
@@ -22,5 +22,4 @@ int main(void) {
 
 /*out
 var[5], w/o checks: 10
-var[5], with checks: 10
 */

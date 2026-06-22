@@ -26,8 +26,8 @@ int main(void) {
 /* out
 foo[8], with checks: 10
 bar[0][1][2], with checks: 10
-M_UAF/3_UAF.c/6
-foo[8], with checks: 0 (note: "safe" garbage)
+M_BAD/3_UAF.c/6
+foo[8], with checks: 0 (default: "safe" garbage from reserved area)
 */
 
 

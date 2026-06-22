@@ -9,7 +9,7 @@
 #define NUM_THREADS 8
 #define ARRAY_SIZE  10000
 
-M(int *, shared,);                        // memstruct to hold (shared) memory
+M(int *, shared,);                              // memstruct to hold (shared) memory
 
 // simple mutex for write synchronization
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -19,12 +19,12 @@ void* thread_func(void *arg) {
   int tid = (int)((uintptr_t)pthread_self() % 1000);
 
   M(int *, view,) = {0};
-  view.id = (uint64_t)arg;                  // share memory
+  view.id = (uint32_t)(uint64_t)arg;            // share memory
 
   for (int i = 0; i < 1000; i++) {
     int idx = (tid + i * 13) % ARRAY_SIZE;
 
-    pthread_mutex_lock(&mutex);           // protect write!
+    pthread_mutex_lock(&mutex);                 // protect write!
     m(view, idx) = tid;
     pthread_mutex_unlock(&mutex);
   }
@@ -34,34 +34,33 @@ void* thread_func(void *arg) {
 }
 
 int main(void) {
-  pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
   printf("=== memstruct multithreading test ===\n");
 
   M(malloc(ARRAY_SIZE * sizeof(int)), shared, ARRAY_SIZE);
 
   // initialize
-  for (int i = 0; i < m(span shared); i++)    // m(span shared) = i_max = ARRAY_SIZE
+  for (int i = 0; i < m(span shared); i++)      // m(span shared) = i_max = ARRAY_SIZE = 10k
     m(shared, i) = 0;
 
   M(pthread_t *, threads,);
-  M(auto, threads, NUM_THREADS);          // allocate pthreads on stack
+  M(auto, threads, NUM_THREADS);                // allocate pthreads on stack
 
-  for (int i = 0; i < m(span threads); i++) { // m(span threads) = i_max = NUM_THREADS
-    pthread_create(&m(threads,i), NULL, thread_func, (void *)(uint64_t)shared.id);   // pass shared
+  for (int i = 0; i < m(span threads); i++) {   // m(span threads) = i_max = NUM_THREADS = 8
+    pthread_create(&m(threads,i), NULL, thread_func, (void *)(uint64_t)(shared.id));   // pass shared
   }
 
-  for (int i = 0; i < m(span threads); i++) { // m(span threads) = i_max = NUM_THREADS
+  for (int i = 0; i < m(span threads); i++) {   // m(span threads) = i_max = NUM_THREADS = 8
       pthread_join(m(threads,i), NULL);
   }
 
   int count = 0;
-  for (int i = 0; i < m(span shared); i++) { // m(span shared) = i_max = ARRAY_SIZE
+  for (int i = 0; i < m(span shared); i++) {    // m(span shared) = i_max = ARRAY_SIZE = 10k
       if (m(shared, i) != 0) count++;
   }
 
   printf("Test finished. Modified elements: %d / %d\n", count, ARRAY_SIZE);
-
+ 
   M(free, shared);
   pthread_mutex_destroy(&mutex);
   return 0;

@@ -19,7 +19,7 @@ int main(void) {
   // *(&m(var,2) + 5) = 9; printf("printf to make use of modified memory: %d\n", m(var,5));
 
   // case 3: uncomment below: compile-time err!
-  // int *tem = (&m(var,2) + 6); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
+  // int *item = (&m(var,2) + 6); *item = 13; printf("printf to make use of modified memory: %d\n", *item);
 
   // case 4: uncomment below (2 lines): no warning as index a is purely runtime => our static-only analyzer fails!
   int a = 7; asm volatile (" " : "+r" (a) : : ); // deliberately make 'a' runtime

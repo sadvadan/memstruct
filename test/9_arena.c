@@ -1,7 +1,8 @@
 // custom arena allocator using memstruct safety guarantee
 // note how heap temporal safety is disabled for sub-array
-// allocations. [a better pattern could be to define a dummy
-// de-allocator for sub-array (near 0-overhead + safety)].
+// allocations.
+// NOTE: a better pattern could be to define a dummy
+// de-allocator for sub-array (near 0-overhead + safety)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,16 +69,16 @@ int main() {
 
   // 2. Allocate an integer
   M(int *const, number,);
-  #define NBMSTRCT                      // skip temporal safety 
+  #define NMSTRCTH                      // skip temporal safety 
   M(arena_alloc(&arena, sizeof(int)), number, 1);
   #undef NMBSTRCT
   m(number,0) = 42;
 
   // 3. Allocate an array of floats
   M(float *const, prices,);
-  #define NBMSTRCT                      // skip temporal safety 
+  #define NMSTRCTH                      // skip temporal safety 
   M(arena_alloc(&arena, 5 * sizeof(float)), prices, 5);
-  #undef NBMSTRCT
+  #undef NMSTRCTH
  
   for (int i = 0; i < m(span prices); i++) { // i_max = m(prices,) = 5
     m(prices,i) = i * 10.5f;
@@ -85,9 +86,9 @@ int main() {
 
   // 4. Allocate a string
   M(char *const, greeting,);
-  #define NBMSTRCT                      // skip temporal safety 
+  #define NMSTRCTH                      // skip temporal safety 
   M(arena_alloc(&arena, 13 * sizeof(char)), greeting, 13);
-  #undef NBMSTRCT
+  #undef NMSTRCTH
 
   strncpy(m(base greeting), "Hello Arena!", m(size greeting));        // memory safe (unlike strcpy)!!
 

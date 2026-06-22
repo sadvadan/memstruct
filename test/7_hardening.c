@@ -2,8 +2,8 @@
 // one by one uncomment MSTRCT_SOFT and MSTRCT_HARD
 
 #include <stdio.h>
-//#define MSTRCT_SOFT
-//#define MSTRCT_HARD
+// #define MSTRCT_SOFT
+// #define MSTRCT_HARD
 #include "../src/mstrct.h"
 
 int main(void) {
@@ -46,7 +46,7 @@ int main(void) {
 default mode: OOB prints line no of memstruct genesis.
 M_OOB/7_hardening.c/10
 Continued after OOB: x = 47 (expected : base value)
-M_UAF/7_hardening.c/10
+M_BAD/7_hardening.c/10
 default behavior: Continued after UAF
 
 soft mode - OOB prints line no of err site.
@@ -54,7 +54,7 @@ M_OOB/7_hardening.c/29
 continued after OOB. x = 47
 
 hard mode - segfault at OOB site; line no of memstruct genesis.
-M_UAF/7_hardening.c/0
+M_BAD/7_hardening.c/0
 Segmentation fault         (core dumped) ./out
 
 */

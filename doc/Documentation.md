@@ -33,6 +33,8 @@ This document explains how to configure and use the memstruct.h library.
 
 - Thread safety: user must protect writes e.g. de/re-allocations *while* multithreading is ON. note this is the basics of of multi-threading, and not specific to memstruct.
 
+- Leaky program detection: in a healthy application, the total number of *unique* memstruct allocation stays bounded; **unbounded/steady** growth in the ID counter (printed every 1024 allocs) indicates memory unsafe design. flag `MSTRCT_SIZE` determines total virtual metadata size (default: 1 GiB, extensible upto: 32 GiB) hitting which evokes segfault and a `OVF` error message. 
+
 ## Configuration
 
 - In source, optionally include `#define FLAG` to disable spatial, heap-temporal or stack-temporal checks. disable locally like so: `#define FLAG` `unsafe code here` `#undef FLAG`. the flags are:

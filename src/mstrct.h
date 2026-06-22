@@ -401,7 +401,8 @@ mstrct_leak_0(mstrct_uint id, mstrct_int line, char key, void *ptr) {
     }
 
     increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment = old mstrct_offset
-    if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) {mstrct_error("OVF", 5, 0); return 0;} // OOB
+    if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) {mstrct_error("OVF", 5, 0); mstrct_sigsegv();} // OOB
+    if ((increment & 1023) == 0) {MSTRCT_PRINT("M_%s/%d/%llu\n", "ID_", increment, MSTRCT_SIZE / 8);} // ID diagnostic, periodic 
     return increment;
   }
 #endif

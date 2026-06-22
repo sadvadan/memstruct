@@ -304,7 +304,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - I disabled checks with e.g. `#define NMSTRCT` but the metadata is still getting stored in the heap arena
 
-    the metadata layer is the trade-off for performance and memory-safety that memstruct made in design. the memory layer is for spatial safety, whereas temporal safety gets sparingly injected in the code. taken together, these make a program provably memory safe yet on par with C speed.
+    the metadata layer is the trade-off against performance plus memory-safety that memstruct made in design. the memory layer is for spatial safety, whereas temporal safety gets sparingly injected in the code. taken together, these make a program provably memory safe yet on par with C speed.
 
 - Memstruct is catching all the bugs but the program isn't panicking
 

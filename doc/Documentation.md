@@ -27,7 +27,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
 
-- Safety net: non-idiomatic usage, punning, and aliasing memstruct via raw pointers - whenever statically proven -  get *warned* at compile-time.
+- Guard-rails: non-idiomatic usage, punning, and aliasing memstruct via raw pointers - whenever statically proven -  get *warned* at compile-time.
 
 - Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee safely. or, share base address `m(base foo)` & size `m(size foo)` (both R-values) with legacy code.
 

@@ -73,6 +73,8 @@ This document explains how to configure and use the memstruct.h library.
 
     to make use of initializer list in static and on-stack arrays, first declare a memstruct with fixed dimensions e.g. `M(int *const, foo,,4)` then `M(storage_keyword, foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list entering the prior fixed dimension in memstruct. 
 
+    for non-array types, optionally declare the memstruct as `M(ptr_type, foo,, 0)` to result in a lightweight memstruct, and access the type as `m(foo)` for values and `m(base foo)` for address.
+
 - **Memory sharing:** a uint32_t sized metadata ID - `m(id foo)` (globally) / `foo.id` (locally) - is simply passed around. one may also share base_addr & size as `m(base foo)` & `m(size foo)` directly.
     ```
     bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type alias

@@ -323,7 +323,7 @@ MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PAREN
 MSTRCT_CAT2(mstrct_arr_,counter)[MSTRCT_ASIZ(name,1)] __attribute__((aligned(MSTRCT_TSIZ(name)))) = MSTRCT_PAR(MSTRCT_FULL range);\
 mstrct_uint MSTRCT_CAT2(mstrct_clean_, counter)[MSTRCT_CLEANUP(store)] MSTRCT_CLEAN(store); \
 if (sizeof(MSTRCT_CAT2(mstrct_arr_, counter))) {   \
-  __builtin_memset(&name, 0, sizeof(name)); {store mstrct_uint temp; if (temp == 0) temp = MSTRCT_ALLOC; name.id = temp;}  \
+  __builtin_memset(&name, 0, sizeof(name)); store char temp = 0; if (temp == 0) {temp = 1; name.id = MSTRCT_ALLOC;}  \
   mstrct_put(MSTRCT_R1(counter), MSTRCT_R(counter), (name.id), MSTRCT_BSIZ(name,1), MSTRCT_CLEANUP(store));   \
 }
 
@@ -331,7 +331,7 @@ if (sizeof(MSTRCT_CAT2(mstrct_arr_, counter))) {   \
 MSTRCT_CAT2(mstrct_arr_, counter)[MSTRCT_ASIZ(name, range)] __attribute__((aligned(MSTRCT_TSIZ(name))));   \
 mstrct_uint MSTRCT_CAT2(mstrct_clean_, counter)[MSTRCT_CLEANUP(store)] MSTRCT_CLEAN(store); \
 if (sizeof(MSTRCT_CAT2(mstrct_arr_, counter))) {  \
-  __builtin_memset(&name, 0, sizeof(name)); {store mstrct_uint temp; if (temp == 0) temp = MSTRCT_ALLOC; name.id = temp;}  \
+  __builtin_memset(&name, 0, sizeof(name)); store char temp = 0; if (temp == 0) {temp = 1; name.id = MSTRCT_ALLOC;}  \
   mstrct_put(MSTRCT_R1(counter), MSTRCT_R(counter), (name.id), MSTRCT_BSIZ(name, range), MSTRCT_CLEANUP(store)); \
 }
 

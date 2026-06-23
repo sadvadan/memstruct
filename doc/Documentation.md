@@ -27,7 +27,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
 
-- Guard-rails: non-idiomatic usage, punning, and aliasing memstruct via raw pointers - whenever statically proven -  get *warned* at compile-time.
+- Guard-rails: non-idiomatic usage, punning, and aliasing memstruct via raw pointers - whenever statically proven - get *warned* at compile-time.
 
 - Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee safely. or, share base address `m(base foo)` & size `m(size foo)` (both R-values) with legacy code.
 
@@ -345,6 +345,10 @@ This document explains how to configure and use the memstruct.h library.
     e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NMSTRCTH` and `#undef NMSTRCTH` (see test #9). tradeoff: no temporal safety (UAF) for individual sub-arrays.
 
     **NOTE**: safety suppression is deliberate and best left to user discretion, but e.g. in the arena example it is advisable to make a custom sub-array dummy de-allocator to avoid unnecessary unsafe sections. remember, allocators and de-allocators are drop-in in memstruct.
+
+- Does memstruct resuse memory IDs or is it just monotonically increasing?
+    
+    memstruct reuses IDs for static memories; for heap and stack located memories, fresh IDs are issued. as discussed earlier, every 1024th ID is printed so that an ever increasing ID count tells upon unsafe program design.
 
 - When is the LTS release?
 

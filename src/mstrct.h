@@ -140,6 +140,7 @@
 #define m(...)                            MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 #define M(...)                            MSTRCT_CAT2(MSTRCT_$$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
+static struct {} mstrct_tid;
 #define MSTRCT_TID                        ((short)__builtin_choose_expr(sizeof(mstrct_tid), mstrct_tid, -1*(MSTRCT_TNO != 0)))
 
 #define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NMSTRCT)
@@ -194,7 +195,7 @@ __attribute__((weak)) mstrct_uint *mstrctbin[MSTRCT_TNO + 1]; static mstrct_uint
 __attribute__((weak)) mstrct_uint mstrctx[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = 2}, mstrcty[MSTRCT_TNO + 1] = {0};
 
 static volatile mstrct_uint *mstrct_x = &mstrctx[MSTRCT_TNO ? 1 : 0], *mstrct_y = &mstrcty[MSTRCT_TNO ? 1 : 0];
-static struct {} mstrct_tid; static char mstrct_errno = 0;
+static char mstrcterrno[MSTRCT_TNO + 1]; static char *mstrct_errno = &mstrcterrno[MSTRCT_TNO ? 1 : 0];
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_uint siz, mstrct_uint offset, char var, short tid) {
@@ -233,14 +234,14 @@ mstrct_reset(mstrct_uint offset, short tid) {return (char)(*((mstrct_fixed[tid])
 #define MSTRCT_TYP_11(type, index) typeof((MSTRCT_CON(type)) ? (mstrct_int const)0 : (mstrct_int)0)
 
 __attribute__((cold)) static inline void
-mstrct_error(const char *ops, const char err_no, const mstrct_int line) {
+mstrct_error(const char *ops, const char err_no, const mstrct_int line, short tid) {
   MSTRCT_PRINT(MSTRCT_PRINT_FMT, ops, __BASE_FILE__, line);
-  if (MSTRCT_ARG_COUNT(MSTRCT_HARD) == 0) {__builtin_trap();} else {mstrct_errno = err_no;}
+  if (MSTRCT_ARG_COUNT(MSTRCT_HARD) == 0) {__builtin_trap();} else {mstrct_errno[tid] = err_no;}
 }
 
 __attribute__((cold)) static inline mstrct_long
 mstrct_bounds_error(mstrct_int _d, mstrct_int line, short tid) {
-  if (mstrct_byte(_d, tid) == 0) {mstrct_error("BAD", 1, line);} else {mstrct_error("OOB", 2, line);}; return 0;
+  if (mstrct_byte(_d, tid) == 0) {mstrct_error("BAD", 1, line, tid);} else {mstrct_error("OOB", 2, line, tid);}; return 0;
 }
 
 __attribute__((hot)) static inline mstrct_long
@@ -350,7 +351,7 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR:
   *((mstrct_fixed[MSTRCT_TID]) + name._id + 1) = MSTRCT_BSIZ(name, range);   \
 } while(0)
 
-#define MSTRCT_LET_D5(name, n) ({if (n >= MSTRCT_TNO) {mstrct_error("META_OVF", 5, __LINE__);};  \
+#define MSTRCT_LET_D5(name, n) ({if (n >= MSTRCT_TNO) {mstrct_error("META_OVF", 5, __LINE__, MSTRCT_TID);};  \
 (mstrct_pack) {.mstrct_dest = (short)n, .mstrct_src = MSTRCT_TID, .mstrct_id = name._id}.mstrct_ptr;})
 
 #define MSTRCT_LET_E0(ptr) short mstrct_tid = ((mstrct_pack) {.mstrct_ptr = ptr}.mstrct_dest)
@@ -374,7 +375,7 @@ static inline void
 mstrct_dealloc_1(void *fun, mstrct_uint id, mstrct_uint line, short tid) {
   if (mstrct_byte(id, tid) != 0) {
     if (((mstrct_munmap_proto)fun)(mstrct_addr(id, tid), mstrct_byte(id, tid)) == -1) {
-      mstrct_error("DEALLOC_FAIL", 4, line);
+      mstrct_error("DEALLOC_FAIL", 4, line, tid);
     }
   }
 }
@@ -391,20 +392,21 @@ static inline mstrct_uint mstrct_alloc(short tid) {
   }
   if (mstrct_y[tid] == 0) { // no archive
     if (__builtin_expect(mstrct_x[tid] + 2 > mstrct_size[tid] / sizeof(mstrct_ulong), 0)) {
-      mstrct_error("META_OVF", 5, 0);
+      mstrct_error("META_OVF", 5, 0, tid);
     } else {mstrct_x[tid] += 2;} return mstrct_x[tid] - 2;
   } else {return (mstrct_y[tid])--;}
 }
 
 __attribute__((noinline, unused)) static void
 mstrct_archive(mstrct_uint id, short tid) {
-  if (__builtin_expect(mstrct_y[tid] + 2 > mstrct_size[tid] / (8 * sizeof(mstrct_uint)), 0)) {mstrct_error("META_OVF", 5, 0);}
-  else {mstrct_y[tid] += 1;} *(mstrct_bin[tid] + mstrct_y[tid]) = id;
+  if (__builtin_expect(mstrct_y[tid] + 2 > mstrct_size[tid] / (8 * sizeof(mstrct_uint)), 0)) {
+    mstrct_error("META_OVF", 5, 0, tid);
+  } else {mstrct_y[tid] += 1;} *(mstrct_bin[tid] + mstrct_y[tid]) = id;
 }
 
 __attribute__((always_inline)) static inline void
 mstrct_assign(mstrct_uint id, mstrct_uint line, short tid, mstrct_ulong size, void *ptr) {
-  if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, line);}   \
+  if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, line, tid);}   \
   *(mstrct_fixed[tid] + id) = ((((mstrct_ulong)ptr << 8) >> 8) | (((mstrct_ulong)line >> 8) << (8*sizeof(mstrct_ulong) - 8)));
   *(mstrct_fixed[tid] + id + 1) = (size | ((mstrct_ulong)line << (8 * sizeof(mstrct_ulong) - 8)));
 }
@@ -421,7 +423,7 @@ mstrct_init(void) {
   if (mstrctfixed[0] == 0) {void *space, *time;
     for (mstrct_uint i = 0; i <= (MSTRCT_TNO ? MSTRCT_TNO : 0); i++) {
       space = MSTRCT_ALLOC(mstrctsize[i]); time = MSTRCT_ALLOC(mstrctsize[i] / 8);
-      if (space == NULL || time == NULL) {mstrct_error("ALLOC_FAIL", 3, 0); __builtin_trap();}
+      if (space == NULL || time == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
       mstrctfixed[i] = space; mstrctbin[i] = time;
     }
   } if (mstrct_fixed[0] == NULL) {for (short i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[MSTRCT_TNO ? i-1 : 0] = mstrctfixed[i];}}

@@ -33,13 +33,13 @@
  * MCU APIs *****************************************
  *
  *  MSTRCT_PRINT                          print macro
- *  MSTRCT_PRINT_FMT   print format string (optional)
+ *  MSTRCT_PRINT_FMT              print format string
  *  MSTRCT_ALLOC                block allocator macro
  *
  * literals *****************************************
  *
  *  MSTRCT_BLOCK              reference metadata size
- *  MSTRCT_TNO         no of multithreads (over main)
+ *  MSTRCT_TNO (>=0)   no of multithreads (over main)
  *
  **/
 
@@ -168,7 +168,10 @@ static struct {} mstrct_tid;
 
 #ifndef __clang__
 #pragma GCC diagnostic ignored "-Wstringop-overflow" /*_/\_*/
-#pragma GCC diagnostic warning "-Warray-bounds=2"
+#endif
+
+#ifndef MSTRCT_PRINT_FMT
+  #define MSTRCT_PRINT_FMT                "M_%s/%s/%d\n"
 #endif
 
 #if defined(MSTRCT_MCU)
@@ -178,7 +181,6 @@ static struct {} mstrct_tid;
   #include <stdio.h>
   #include <stdlib.h>
   #define MSTRCT_PRINT                    printf
-  #define MSTRCT_PRINT_FMT                "M_%s/%s/%d\n"
   #define MSTRCT_ALLOC                    malloc
   #define MSTRCT_BLOCK                    (10 * 1024 * 1024) // 10 MiB
   typedef unsigned long long mstrct_ulong; typedef signed long long mstrct_long;

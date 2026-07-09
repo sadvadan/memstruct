@@ -6,27 +6,18 @@
  *
  * SUMMARY ******************************************
  *
- *  A lightweight & fast single header library with a
- *  m-macro API for memory safety in calling program.
- *  Leverages compile-runtime methods & also hoisting
+ *  Single header library for 8-64 bit CPUs, covering
+ *  memory & thread safety through m()/M() macro API.
+ *  Uses compile & runtime optimizations and hoisting
  *  to check OOB/UAF/NULL-deref/double-free and leaks
  *
- * mstrct_errno *************************************
+ * errcodes & errnos ********************************
  *
- *  USE_AFTER_FREE ................................ 1
- *  BOUNDS_CHECK_FAIL ............................. 2
- *  WRONG_TYPE_OF_ARG ............................. 3
- *  TOO_MANY_ARGS ................................. 4
- *  ALLOC_FAIL .................................... 5
- *  DE_ALLOC_FAIL ................................. 6
- *
- * runtime err_strings ******************************
- *
- *  OOB                                 out of bounds
- *  ALLOC_FAIL                     allocation failure
- *  DEALLOC_FAIL                de-allocation failure
- *  OVF                      metadata memory overflow
- *  BAD               bad access : UAF/NULL/not-array
+ *  "BAD" (ILLEGAL_ACCESS) ........................ 1
+ *  "OOB" (BOUNDS_CHECK_FAIL) ..................... 2
+ *  "ALLOC_FAIL" .................................. 3
+ *  "DE_ALLOC_FAIL" ............................... 4
+ *  "META_OVF" (METADATA_OVERFLOW)................. 5
  *
  * flags ********************************************
  *
@@ -35,20 +26,19 @@
  *  NMSTRCT                    disable spatial safety
  *  MSTRCT_SOFT                print err_site line_no
  *  MSTRCT_HARD                segfault at error site
- *  MSTRCT_MCU                   MCU: 32, 16 or 8 bit
  *  MSTRCT_LONG                       make foo.i long
+ *  MSTRCT_MCU                        enable MCU mode
  *
- * language extension APIs **************************
+ * MCU APIs *****************************************
  *
- *  MSTRCT_PRINT(...)                 MCU print macro
- *  MSTRCT_ALLOC(...)    MCU metadata allocator macro
- *  mstrct_realloc(...)    custom re-allocator func 1
- *  mstrct_mremap(...)     custom re-allocator func 2
- *  on_exit(...)     custom leak registering function
+ *  MSTRCT_PRINT                          print macro
+ *  MSTRCT_ALLOC                block allocator macro
+ *  mstrct_size       custom metadata size per thread
  *
  * literals *****************************************
  *
- *  MSTRCT_SIZE         reference metadata block size
+ *  MSTRCT_BLOCK              reference metadata size
+ *  MSTRCT_TNO         no of multithreads (over main)
  *
  **/
 
@@ -59,6 +49,25 @@
 #define MSTRCT_VER_MAJOR                  1
 #define MSTRCT_VER_MINOR                  0
 #define MSTRCT_VER_PATCH                  0
+
+#define MSTRCT_auto                       ~,1
+#define MSTRCT_static                     ~,1
+#define MSTRCT___thread                   ~,1
+#define MSTRCT_extern                     ~,1
+#define MSTRCT_realloc                    ~,~,2
+#define MSTRCT_mremap                     ~,~,2
+#define MSTRCT_alloca                     ~,~,~,3
+#define MSTRCT___builtin_alloca           ~,~,~,3
+#define MSTRCT_void                       ~,~,~,~,4
+
+#define _MSTRCT___thread
+#define _MSTRCT_static
+#define _MSTRCT_auto                      ~,1
+
+#define MSTRCT__enum                      ~,1
+#define MSTRCT___                         ~,~,2
+#define MSTRCT__void                      ~,~,~,3
+#define MSTRCT__sizeof                    ~,~,~,~,4
 
 #define MSTRCT_DEF1(a)                    #a
 #define MSTRCT_DEF2(a,b)                  a##b
@@ -77,67 +86,62 @@
 #define MSTRCT_IDX9(i,j,k,l,m,n,o,p,q)    [i][j][k][l][m][n][o][p][q]
 #define MSTRCT_IDX10(i,j,k,l,m,n,o,p,q,r) [i][j][k][l][m][n][o][p][q][r]
 
-#define MSTRCT_$14(foo,i,...)             MSTRCT_ASSERT(MSTRCT_TOO_MANY_ARGS)
-#define MSTRCT_$13(foo,i,...)             MSTRCT_ASSERT(MSTRCT_TOO_MANY_ARGS)
-#define MSTRCT_$12(foo,i,...)             MSTRCT_GET(foo, i, MSTRCT_IDX10(__VA_ARGS__))
-#define MSTRCT_$11(foo,i,...)             MSTRCT_GET(foo, i, MSTRCT_IDX9(__VA_ARGS__))
-#define MSTRCT_$10(foo,i,...)             MSTRCT_GET(foo, i, MSTRCT_IDX8(__VA_ARGS__))
-#define MSTRCT_$9(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX7(__VA_ARGS__))
-#define MSTRCT_$8(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX6(__VA_ARGS__))
-#define MSTRCT_$7(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX5(__VA_ARGS__))
-#define MSTRCT_$6(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX4(__VA_ARGS__))
-#define MSTRCT_$5(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX3(__VA_ARGS__))
-#define MSTRCT_$4(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX2(__VA_ARGS__))
-#define MSTRCT_$3(foo,i,...)              MSTRCT_GET(foo, i, MSTRCT_IDX1(__VA_ARGS__))
-#define MSTRCT_$2(foo,i,...)              MSTRCT_CAT2(MSTRCT_M2, MSTRCT_ARG_COUNT(i))(foo, i)
-#define MSTRCT_$1(foo)                    MSTRCT_CAT2(MSTRCT_M1, MSTRCT_META(foo))(foo)
-#define MSTRCT_$0()                       MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
+#define MSTRCT_INDEX1(...)                MSTRCT_CAT2(MSTRCT_IDX, MSTRCT_ARG_COUNT(__VA_ARGS__)) (__VA_ARGS__)
+#define MSTRCT_INDEX0(a,...)              [0] MSTRCT_CAT2(MSTRCT_IDX, MSTRCT_ARG_COUNT(__VA_ARGS__)) (__VA_ARGS__)
+#define MSTRCT_FIRST(a,...)               MSTRCT_ARG_COUNT(a)
 
-#define MSTRCT_$$15(typ,foo,empty,...)    MSTRCT_ASSERT(TOO_MANY_ARGS)
-#define MSTRCT_$$14(typ,foo,empty,...)    MSTRCT_ASSERT(TOO_MANY_ARGS)
-#define MSTRCT_$$13(typ,foo,empty,...)    MSTRCT_LET(typ,foo,empty,MSTRCT_IDX10(__VA_ARGS__))
-#define MSTRCT_$$12(typ,foo,empty,...)    MSTRCT_LET(typ,foo,empty, MSTRCT_IDX9(__VA_ARGS__))
-#define MSTRCT_$$11(typ,foo,empty,...)    MSTRCT_LET(typ,foo,empty, MSTRCT_IDX8(__VA_ARGS__))
-#define MSTRCT_$$10(typ,foo,empty,...)    MSTRCT_LET(typ,foo,empty, MSTRCT_IDX7(__VA_ARGS__))
-#define MSTRCT_$$9(typ,foo,empty,...)     MSTRCT_LET(typ,foo,empty, MSTRCT_IDX6(__VA_ARGS__))
-#define MSTRCT_$$8(typ,foo,empty,...)     MSTRCT_LET(typ,foo,empty, MSTRCT_IDX5(__VA_ARGS__))
-#define MSTRCT_$$7(typ,foo,empty,...)     MSTRCT_LET(typ,foo,empty, MSTRCT_IDX4(__VA_ARGS__))
-#define MSTRCT_$$6(typ,foo,empty,...)     MSTRCT_LET(typ,foo,empty, MSTRCT_IDX3(__VA_ARGS__))
-#define MSTRCT_$$5(typ,foo,empty,...)     MSTRCT_LET(typ,foo,empty, MSTRCT_IDX2(__VA_ARGS__))
-#define MSTRCT_$$4(typ,foo,empty,...)     MSTRCT_LET(typ,foo,empty, MSTRCT_IDX1(__VA_ARGS__))
-#define MSTRCT_$$3(arg1,arg2,arg3)        MSTRCT_CAT3(MSTRCT_M3, MSTRCT_STORE(arg1), MSTRCT_ARG_COUNT(arg3))(arg1,arg2,arg3)
-#define MSTRCT_$$2(de_store,foo)          MSTRCT_LET2(de_store, foo)
-#define MSTRCT_$$1(foo)                   MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
-#define MSTRCT_$$0()                      MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
+#define MSTRCT_$3(foo,typ,i)              MSTRCT_CAT2(MSTRCT_PARSE_A, MSTRCT_PARSE(i, MSTRCT_META))(foo, typ, i)
+#define MSTRCT_$2(foo,i)                  MSTRCT_CAT2(MSTRCT_PARSE_B, MSTRCT_PARSE(i, MSTRCT_META))(foo, i)
+#define MSTRCT_$1(foo)                    MSTRCT_GET0(foo._id, (typeof(foo.typ[0])), MSTRCT_TSIZ(foo), MSTRCT_TID,  \
+                                          MSTRCT_LINE(foo), sizeof(foo.con[0]))
 
-#define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT_, arg))  /* 3=alloca, 2=realloc, 1=store, 0=none */
-#define MSTRCT_AUTO(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(_MSTRCT_, arg)) /* 1=auto, 0=none */
-#define MSTRCT_META(arg)                  MSTRCT_HAS_COMMA(MSTRCT_CAT2(MSTRCT__, arg)) /* 4=size, 3=base, 2=span, 1=id, 0=none */
+#define MSTRCT_$$4(typ1,typ2,foo,i)       MSTRCT_CAT3(MSTRCT_PARSE_C, MSTRCT_PARSE(i, MSTRCT_AUTO),  \
+                                          MSTRCT_ARG_COUNT(i))(typ1, typ2, foo, i)
+#define MSTRCT_$$3(store,foo,range)       MSTRCT_CAT3(MSTRCT_PARSE_D, MSTRCT_PARSE(store, MSTRCT_STORE), \
+                                          MSTRCT_PARSE(range, MSTRCT_AUTO))(store,foo,range)
+#define MSTRCT_$$2(de_store,foo)          MSTRCT_DEL(de_store, foo)
+#define MSTRCT_$$1(foo)                   MSTRCT_LET_E0(foo)
 
-#define MSTRCT_M10(foo)                   MSTRCT_GET0(foo)
-#define MSTRCT_M11(span_id)               MSTRCT_GET1(MSTRCT_LET1(span_id))
-#define MSTRCT_M12(span_foo)              MSTRCT_GET2(MSTRCT_LET1(span_foo))
-#define MSTRCT_M13(base_foo)              MSTRCT_GET3(MSTRCT_LET1(base_foo))
-#define MSTRCT_M14(size_foo)              MSTRCT_GET4(MSTRCT_LET1(size_foo))
-#define MSTRCT_LET1(arg)                  MSTRCT_CAT2(__MSTRCT__, arg)
+#define MSTRCT_PARSE(i, macr)             MSTRCT_CAT2(MSTRCT_PARSE_, MSTRCT_ARG_COUNT(MSTRCT_DUMMY i))(i, macr)
+#define MSTRCT_DUMMY(...)
+#define MSTRCT_EXPAND(...)                __VA_ARGS__
+#define MSTRCT_LIST(...)                  {__VA_ARGS__}
+#define MSTRCT_PARSE_1(i, macr)           macr(i)  // keyword
+#define MSTRCT_PARSE_0(i, macr)           5        // multi-index
 
-#define MSTRCT_M20(foo, i)                MSTRCT_LET0(foo)
-#define MSTRCT_M21(foo, i)                MSTRCT_GET(foo, i, [0])
+#define MSTRCT_PARSE_A0(foo, typ, n)      MSTRCT_GET_A0(foo, typ, (n))              
+#define MSTRCT_PARSE_A2(foo, typ, span)   MSTRCT_GET_A2(foo, typ)              
+#define MSTRCT_PARSE_A3(foo, typ, base)   MSTRCT_GET_A3(foo, typ)              
+#define MSTRCT_PARSE_A4(foo, typ, size)   MSTRCT_GET_A4(foo, typ)              
 
-#define MSTRCT_M301(memory, foo, idx)     MSTRCT_LET3(memory, foo, idx, 1)
-#define MSTRCT_M311(store, foo, idx)      MSTRCT_PUT(store, foo, idx)
-#define MSTRCT_M300(typ, foo, empty)      MSTRCT_LET(typ, foo, empty, [1])
-#define MSTRCT_M310(store, foo, empty)    MSTRCT_PUT(store, foo, 1)
-#define MSTRCT_M320(rememory, foo, empty) MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
-#define MSTRCT_M321(rememory, foo, idx)   MSTRCT_LET4(rememory, foo, idx)
-#define MSTRCT_M330(alloca, foo, empty)   MSTRCT_ASSERT(WRONG_TYPE_OF_ARG)
-#define MSTRCT_M331(alloca, foo, idx)     MSTRCT_LET3(alloca, foo, idx, 0)
+#define MSTRCT_PARSE_B0(foo, n)           MSTRCT_GET_B0(foo, (n))              
+#define MSTRCT_PARSE_B1(foo, id)          MSTRCT_GET_B1(foo)              
+#define MSTRCT_PARSE_B2(foo, span)        MSTRCT_GET_B2(foo)              
+#define MSTRCT_PARSE_B3(foo, base)        MSTRCT_GET_B3(foo)              
+#define MSTRCT_PARSE_B4(foo, size)        MSTRCT_GET_B4(foo)              
+#define MSTRCT_PARSE_B5(foo, index)       MSTRCT_GET_B5(foo, index)
 
-// API
+#define MSTRCT_PARSE_C00(ty1,ty2,foo,i)   MSTRCT_LET_C0(ty1, ty2, foo)              
+#define MSTRCT_PARSE_C01(ty1,ty2,foo,i)   MSTRCT_LET_C1(ty1, ty2, foo, (i))              
+#define MSTRCT_PARSE_C51(ty1,ty2,foo,i)   MSTRCT_LET_C2(ty1, ty2, foo, i)              
+
+#define MSTRCT_PARSE_D00(alloc,foo,r)     MSTRCT_LET_D0(alloc, foo, r)              
+#define MSTRCT_PARSE_D10(store,foo,r)     MSTRCT_LET_D1(store, foo, r, __COUNTER__)              
+#define MSTRCT_PARSE_D15(store,foo,ini)   MSTRCT_LET_D2(store, foo, ini, __COUNTER__)
+#define MSTRCT_PARSE_D20(_realloc,foo,n)  MSTRCT_LET_D3(_realloc, foo, n)              
+#define MSTRCT_PARSE_D30(_alloca,foo,n)   MSTRCT_LET_D4(_alloca, foo, n)              
+#define MSTRCT_PARSE_D40(_union_,foo,n)   MSTRCT_LET_D5(foo, n)              
+
+#define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_ ## arg)  /* 4=mstrct, 3=alloca, 2=realloc, 1=store, 0=none */
+#define MSTRCT_AUTO(arg)                  MSTRCT_HAS_COMMA(_MSTRCT_ ## arg) /* 1=auto, 0=none */
+#define MSTRCT_META(arg)                  MSTRCT_HAS_COMMA(MSTRCT__ ## arg) /* 4=size, 3=base, 2=span, 1=id, 0=none */
+
+// user API
 #define m(...)                            MSTRCT_CAT2(MSTRCT_$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 #define M(...)                            MSTRCT_CAT2(MSTRCT_$$, MSTRCT_ARG_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
-#define MSTRCT_SIZE                       (1ULL * 1024 * 1024 * 1024 - 8) // 1 GiB (virtual)
+#define MSTRCT_TID                        ((short)__builtin_choose_expr(sizeof(mstrct_tid), mstrct_tid, -1*(MSTRCT_TNO != 0)))
+
 #define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NMSTRCT)
 #define MSTRCT_CHK2                       MSTRCT_ARG_COUNT(NMSTRCTH)
 #define MSTRCT_CHK3                       MSTRCT_ARG_COUNT(NMSTRCTS)
@@ -155,69 +159,66 @@
 #define MSTRCT_ARG6(_1, _2, _3, _4, _5, _6, ...)  _6
 #define MSTRCT_MACR16(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, NAME,...) NAME
 
-#define MSTRCT_auto ~,1
-#define MSTRCT_static ~,1
-#define MSTRCT___thread ~,1
-#define MSTRCT_realloc ~,~,2
-#define MSTRCT_alloca ~,~,~,3
-#define MSTRCT_mstrct_realloc ~,~,2
-#define MSTRCT___builtin_alloca ~,~,~,3
-#define MSTRCT_mstrct_mremap ~,~,2
-#define MSTRCT_mremap ~,~,2
-#define _MSTRCT_auto ~,1
-#define _MSTRCT___thread
-#define _MSTRCT_static
-#define __MSTRCT__id
-#define __MSTRCT__span
-#define __MSTRCT__base
-#define __MSTRCT__size
-#define MSTRCT__id ~,1
-#define MSTRCT__span ~,~,2
-#define MSTRCT__base ~,~,~,3
-#define MSTRCT__size ~,~,~,~,4
+#ifndef MSTRCT_TNO
+  #define MSTRCT_TNO 0
+#endif
 
 #ifndef __clang__
-#pragma  GCC diagnostic ignored "-Wstringop-overflow" /*_/\_*/
+#pragma GCC diagnostic ignored "-Wstringop-overflow" /*_/\_*/
+#pragma GCC diagnostic warning "-Warray-bounds=2"
 #endif
 
 #if defined(MSTRCT_MCU)
+  #define MSTRCT_BLOCK                    1024 // 1 KiB
   typedef unsigned int mstrct_ulong; typedef signed int mstrct_long;
 #else
   #include <stdio.h>
   #include <stdlib.h>
-  #include <sys/mman.h>
-  #define MSTRCT_PRINT(...) printf(__VA_ARGS__)
-  #define MSTRCT_ALLOC mstrct_alloc()
+  #define MSTRCT_PRINT                    printf
+  #define MSTRCT_PRINT_FMT                "M_%s/%s/%d\n"
+  #define MSTRCT_ALLOC                    malloc
+  #define MSTRCT_BLOCK                    (10 * 1024 * 1024) // 10 MiB
   typedef unsigned long long mstrct_ulong; typedef signed long long mstrct_long;
 #endif
 
 typedef unsigned int mstrct_uint; typedef signed int mstrct_int;
-typedef struct {union {void *ptr; struct {mstrct_uint _d; /*low*/ mstrct_uint _s; /*high*/};};} mstrct_pack;
+typedef struct {union {void *mstrct_ptr; struct {short mstrct_dest; short mstrct_src; mstrct_uint mstrct_id;};};} mstrct_pack;
 
-__attribute__((weak)) void * mstrct_global; __attribute__((weak)) volatile mstrct_uint mstrct_offset;
-static __thread char mstrct_errno = 0; static void *restrict mstrct_start;
+__attribute__((weak)) mstrct_ulong mstrctsize[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = MSTRCT_BLOCK};
+static mstrct_ulong *mstrct_size = &mstrctsize[MSTRCT_TNO ? 1 : 0];
+
+__attribute__((weak)) mstrct_ulong *mstrctfixed[MSTRCT_TNO + 1];
+static mstrct_ulong **restrict mstrct_fixed = &mstrctfixed[MSTRCT_TNO ? 1 : 0];
+
+__attribute__((weak)) mstrct_uint *mstrctbin[MSTRCT_TNO + 1]; static mstrct_uint **mstrct_bin = &mstrctbin[MSTRCT_TNO ? 1 : 0];
+__attribute__((weak)) mstrct_uint mstrctx[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = 2}, mstrcty[MSTRCT_TNO + 1] = {0};
+
+static volatile mstrct_uint *mstrct_x = &mstrctx[MSTRCT_TNO ? 1 : 0], *mstrct_y = &mstrcty[MSTRCT_TNO ? 1 : 0];
+static struct {} mstrct_tid; static char mstrct_errno = 0;
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
-mstrct_base(mstrct_uint siz, mstrct_uint offset, char var) {
-  (void)siz; (void)var; return *(char **)((mstrct_ulong *)mstrct_start + offset);
+mstrct_base(mstrct_uint siz, mstrct_uint offset, char var, short tid) {
+  (void)siz; (void)var; return (char *)((*((mstrct_fixed[tid]) + offset) << 8) >> 8);
 }
 
 static inline char*
-mstrct_addr(mstrct_uint offset) {return *(char **)((mstrct_ulong *)mstrct_start + offset);}
+mstrct_addr(mstrct_uint offset, short tid) {return (char *)((*((mstrct_fixed[tid]) + offset) << 8) >> 8);}
 
 static inline mstrct_ulong
-mstrct_byte(mstrct_uint offset) {return *((mstrct_ulong *)mstrct_start + offset + 1);}
+mstrct_byte(mstrct_uint offset, short tid) {return ((*((mstrct_fixed[tid]) + offset + 1) << 8) >> 8);}
 
 __attribute__((noinline, unused, const)) static mstrct_long
-mstrct_span(mstrct_uint siz, mstrct_uint offset, char var) {(void)var; return (mstrct_long)mstrct_byte(offset) / siz;}
+mstrct_span(mstrct_uint siz, mstrct_uint offset, char var, short tid) {
+  (void)var; return (mstrct_long)mstrct_byte(offset, tid) / siz;
+}
 
 __attribute__((always_inline)) static inline char
-mstrct_reset(mstrct_uint offset) {return (char)(*((mstrct_ulong *)mstrct_start + offset + 1));}
+mstrct_reset(mstrct_uint offset, short tid) {return (char)(*((mstrct_fixed[tid]) + offset + 1));}
 
 // memstruct; see doc
-#define MSTRCT_T(type, index, line) struct {  \
-  MSTRCT_CAT2(MSTRCT_TYP_, MSTRCT_ARG_COUNT(MSTRCT_LONG))(type, index) i; \
-  mstrct_uint id;   \
+#define MSTRCT_T(type, index, line, key) struct {  \
+  MSTRCT_CAT3(MSTRCT_TYP_, MSTRCT_ARG_COUNT(MSTRCT_LONG), MSTRCT_ARG_COUNT(key))(type, index) i; \
+  mstrct_uint _id;   \
   /* typ[0] */ typeof(type) typ[0] __attribute__((packed)); \
   /* con[0] */ struct {char a[((MSTRCT_CON(type)) ? ((__builtin_constant_p(sizeof(char index))) ? 1 : 0) : 0)];} con[0];   \
   /* lin[0] */ struct {char a[line];} lin[0];   \
@@ -226,191 +227,219 @@ mstrct_reset(mstrct_uint offset) {return (char)(*((mstrct_ulong *)mstrct_start +
 
 #define MSTRCT_CON(type) __builtin_types_compatible_p(typeof(type) const *, type *)
 
-#define MSTRCT_TYP_0(type, index) typeof  \
-(__builtin_choose_expr((sizeof(char index)), ((MSTRCT_CON(type)) ? (mstrct_long const)0 : (mstrct_long)0), (struct {}){}))
-
-#define MSTRCT_TYP_1(type, index) typeof  \
-(__builtin_choose_expr((sizeof(char index)), ((MSTRCT_CON(type)) ? (mstrct_int const)0 : (mstrct_int)0), (struct {}){}))
-
-__attribute__((always_inline)) static inline void
-mstrct_set(void *ptr) {
-  *((mstrct_ulong *)mstrct_start + *(mstrct_uint *)ptr + 1) = 0;
-  *(void **)((mstrct_ulong *)mstrct_start + *(mstrct_uint *)ptr) = mstrct_start;
-  asm volatile (" " : "+m" (*((mstrct_ulong *)mstrct_start + *(mstrct_uint *)ptr + 1)) : :);
-}
-
-__attribute__((noreturn)) static inline void
-mstrct_sigsegv(void) {char *ptr = NULL; asm volatile (" " : "+r" (ptr) : :); *ptr = 0; __builtin_unreachable();}
+#define MSTRCT_TYP_00(type, index) typeof((struct {}){})
+#define MSTRCT_TYP_01(type, index) typeof((MSTRCT_CON(type)) ? (mstrct_long const)0 : (mstrct_long)0)
+#define MSTRCT_TYP_10(type, index) typeof((struct {}){})
+#define MSTRCT_TYP_11(type, index) typeof((MSTRCT_CON(type)) ? (mstrct_int const)0 : (mstrct_int)0)
 
 __attribute__((cold)) static inline void
 mstrct_error(const char *ops, const char err_no, const mstrct_int line) {
-  MSTRCT_PRINT("M_%s/%s/%d\n", ops, __BASE_FILE__, line);
-  if (MSTRCT_ARG_COUNT(MSTRCT_HARD) == 0) {mstrct_sigsegv();} else {mstrct_errno = err_no;}
-}
-
-#define MSTRCT_ASSERT(ops) MSTRCT_CAT2(MSTRCT_, ops)()
-__attribute__((weak, warning("MSTRCT ERR: INCOMPATIBLE arg(s)!")))
-void MSTRCT_WRONG_TYPE_OF_ARG(void);
-__attribute__((weak, warning("MSTRCT ERR: too MANY args!")))
-void MSTRCT_TOO_MANY_ARGS(void);
-__attribute__((weak, warning("MSTRCT ERR: M(...) third argument must be EMPTY (it belongs to runtime index)!!")))
-void MSTRCT_NON_EMPTY_THIRD_ARG(void);
-
-static inline void
-mstrct_leak(__attribute__((unused)) int status, void *ptr) {
-  if (mstrct_byte((mstrct_uint)(mstrct_ulong)ptr) != 0) {
-    MSTRCT_PRINT("M_%s/%s/%d\n", "LEAK", __BASE_FILE__, (int)(((mstrct_ulong)ptr) >> 32));
-  }
+  MSTRCT_PRINT(MSTRCT_PRINT_FMT, ops, __BASE_FILE__, line);
+  if (MSTRCT_ARG_COUNT(MSTRCT_HARD) == 0) {__builtin_trap();} else {mstrct_errno = err_no;}
 }
 
 __attribute__((cold)) static inline mstrct_long
-mstrct_bounds_error(mstrct_int _d, mstrct_int line) {
-  if (mstrct_byte(_d) == 0) {mstrct_error("BAD", 1, line);}
-  else {mstrct_error("OOB", 2, line);};
-  return 0;
+mstrct_bounds_error(mstrct_int _d, mstrct_int line, short tid) {
+  if (mstrct_byte(_d, tid) == 0) {mstrct_error("BAD", 1, line);} else {mstrct_error("OOB", 2, line);}; return 0;
 }
 
 __attribute__((hot)) static inline mstrct_long
-mstrct_check(mstrct_uint id, mstrct_uint type_size, mstrct_int line, mstrct_long index) {
-  if ((mstrct_ulong)mstrct_span(type_size, id, mstrct_reset(id)) > (mstrct_ulong)index) {return index;}
-  else {return mstrct_bounds_error(MSTRCT_ID(id), line);}
+mstrct_check(mstrct_uint id, mstrct_uint type_size, mstrct_int line, mstrct_long index, short tid) {
+  if (__builtin_expect(((mstrct_ulong)mstrct_span(type_size, id, mstrct_reset(id, tid), tid) > (mstrct_ulong)index), 1))
+  {return index;} else {return mstrct_bounds_error(MSTRCT_ID(id), line, tid);}
 }
-
 
 // utility
+
 #define MSTRCT_TSIZ(name)        ((mstrct_uint)sizeof(*(name.typ[0])))
-#define MSTRCT_DSIZ(name)        ((sizeof(*(name.dim[0].a))) ? (sizeof(*(name.dim[0].a))) : 1)
-#define MSTRCT_FLAT(name,ix,idx) ((mstrct_long)(&(*(typeof(name.dim[0].a) *)0) ix idx [0]) + name.i)
-#define MSTRCT_CLEANUP(store)    (MSTRCT_CHK3 && MSTRCT_AUTO(store))
-#define MSTRCT_ASIZ(name, range) ((mstrct_ulong)(range) * MSTRCT_DSIZ(name))
+#define MSTRCT_ASIZ(name, range) ((range) * (mstrct_ulong)sizeof(*(name.dim[0].a)))
 #define MSTRCT_BSIZ(name, range) (MSTRCT_TSIZ(name) * MSTRCT_ASIZ(name, range))
-#define MSTRCT_R(counter)        (MSTRCT_CAT2(mstrct_arr_, counter))
-#define MSTRCT_R1(counter)       ((mstrct_uint *)MSTRCT_CAT2(mstrct_clean_, counter))
+#define MSTRCT_FLAT(name,idx)    ((mstrct_long)(&(*(typeof(name.dim[0].a) *)0) idx [0]) + \
+                                 __builtin_choose_expr(sizeof(name.i), (name.i), (0)))
+
+#define MSTRCT_CLEANUP(store)    (MSTRCT_CHK3 && MSTRCT_AUTO(store))
+#define MSTRCT_R(counter)        (MSTRCT_CAT2(mstrct__, counter))
+#define MSTRCT_R1(counter)       MSTRCT_CAT2(mstrct_clean_, counter)
 #define MSTRCT_PRAG0             _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 #define MSTRCT_PRAG1             _Pragma("GCC diagnostic warning \"-Warray-bounds\"")
+#define MSTRCT_CID(ptr)          ((mstrct_pack) {.mstrct_ptr = ptr}.mstrct_src)
+#define MSTRCT_I(ptr)            ((mstrct_pack) {.mstrct_ptr = ptr}.mstrct_id)
 
-// get
-#define MSTRCT_GET1(name)        ({asm volatile (" " : "+m" (*((mstrct_ulong *)mstrct_start + (name.id) + 1)) : :); name.id;})
-#define MSTRCT_GET2(name)        (mstrct_span(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))
-#define MSTRCT_GET3(name)        (mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)))
-#define MSTRCT_GET4(name)        (mstrct_byte(name.id))
-#define MSTRCT_GET(name,i,index) MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_ARG_COUNT(i), MSTRCT_CHK1)(name, i, index)
-
-#define MSTRCT_GET0(name) ({(typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)));   \
-MSTRCT_PRAG0}) [({mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), 0); MSTRCT_PRAG1})]
-
-#define MSTRCT_GET_10(name, i, index)  \
-((typeof(name.typ[0]))(mstrct_base(__UINT32_MAX__, name.id, mstrct_reset(name.id)))) [MSTRCT_FLAT(name, [i], index)]
-
-#define MSTRCT_GET_11(name, i, index) ({(typeof(name.typ[0]))(mstrct_base(MSTRCT_TSIZ(name), name.id, mstrct_reset(name.id)));   \
-MSTRCT_PRAG0}) [({mstrct_check(name.id, MSTRCT_TSIZ(name), MSTRCT_LINE(name), MSTRCT_FLAT(name, [i], index)); MSTRCT_PRAG1})]
-
-#define MSTRCT_GET_00(name, i, index) MSTRCT_GET_10(name, 0, index)
-
-#define MSTRCT_GET_01(name, i, index) (__builtin_choose_expr(  \
-(sizeof(name.con[0]) && __builtin_constant_p(sizeof(char index))), MSTRCT_GET_10(name, 0, index), MSTRCT_GET_11(name, 0, index)))
-
-// put
-#define MSTRCT_PUT(store, name, range) \
-MSTRCT_CAT2(MSTRCT_PUT_, MSTRCT_ARG_COUNT(MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES range))(store,name,range,__COUNTER__)
-
-// static/on-stack array initializer list handler
-#define MSTRCT_ERR__RANGE_MUST_NOT_BE_IN_PARENTHESES(a,b,...) /* deliberate fail for single input (a) */
-#define MSTRCT_PAR(...) {__VA_ARGS__}
-#define MSTRCT_FULL(...) __VA_ARGS__
-
-#define MSTRCT_PUT_0(store, name, range, counter) store typeof(*(name.typ[0]))  \
-MSTRCT_CAT2(mstrct_arr_,counter)[MSTRCT_ASIZ(name,1)] __attribute__((aligned(MSTRCT_TSIZ(name)))) = MSTRCT_PAR(MSTRCT_FULL range);\
-mstrct_uint MSTRCT_CAT2(mstrct_clean_, counter)[MSTRCT_CLEANUP(store)] MSTRCT_CLEAN(store); \
-if (sizeof(MSTRCT_CAT2(mstrct_arr_, counter))) {   \
-  __builtin_memset(&name, 0, sizeof(name)); name.id = MSTRCT_ALLOC;  \
-  mstrct_put(MSTRCT_R1(counter), MSTRCT_R(counter), (name.id), MSTRCT_BSIZ(name,1), MSTRCT_CLEANUP(store));   \
-}
-
-#define MSTRCT_PUT_1(store, name, range, counter) store typeof(*(name.typ[0]))  \
-MSTRCT_CAT2(mstrct_arr_, counter)[MSTRCT_ASIZ(name, range)] __attribute__((aligned(MSTRCT_TSIZ(name))));   \
-mstrct_uint MSTRCT_CAT2(mstrct_clean_, counter)[MSTRCT_CLEANUP(store)] MSTRCT_CLEAN(store); \
-if (sizeof(MSTRCT_CAT2(mstrct_arr_, counter))) {  \
-  __builtin_memset(&name, 0, sizeof(name)); name.id = MSTRCT_ALLOC;  \
-  mstrct_put(MSTRCT_R1(counter), MSTRCT_R(counter), (name.id), MSTRCT_BSIZ(name, range), MSTRCT_CLEANUP(store)); \
-}
-
-#define MSTRCT_CLEAN(store) MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))
+#define MSTRCT_CLEAN(store)      MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))
+#define MSTRCT_CLEAN_11          __attribute__((cleanup(mstrct_set)))
 #define MSTRCT_CLEAN_00
 #define MSTRCT_CLEAN_10
-#define MSTRCT_CLEAN_11 __attribute__((cleanup(mstrct_set)))
 #define MSTRCT_CLEAN_01
 
-// let
-#define MSTRCT_LET(typ, name, empty, index) MSTRCT_CAT2(MSTRCT_LET_, MSTRCT_ARG_COUNT(empty))(typ, name, index)
-#define MSTRCT_LET_0(typ, name, index) MSTRCT_T(typ, index, __LINE__) name
-#define MSTRCT_LET_1(typ, name, index) MSTRCT_ASSERT(NON_EMPTY_THIRD_ARG)
+// GET
 
-#define MSTRCT_LET4(rememory, name, range) do {   \
-  char *ptr = (char *)(rememory);   \
-  *(void **)((mstrct_ulong *)mstrct_start + name.id) = (void *)ptr; \
-  *((mstrct_ulong *)mstrct_start + name.id + 1) = MSTRCT_BSIZ(name, range);   \
-  mstrct_leak_0(0, __LINE__, 0, ptr); asm volatile (" " : "+m" (*((mstrct_ulong *)mstrct_start + (name.id) + 1)) : :);   \
+#define MSTRCT_GET_A0(ptr,typ,i) \
+({MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_FIRST i, MSTRCT_CHK1) (MSTRCT_I(ptr), i, (typ *), sizeof(typ), MSTRCT_CID(ptr), __LINE__, 0);})
+
+#define MSTRCT_GET_A2(ptr,typ)   \
+(mstrct_span(sizeof(typ), MSTRCT_I(ptr), mstrct_reset(MSTRCT_I(ptr), MSTRCT_CID(ptr)), MSTRCT_CID(ptr)))
+
+#define MSTRCT_GET_A3(ptr,typ)   \
+mstrct_base(sizeof(typ), MSTRCT_I(ptr), mstrct_reset(MSTRCT_I(ptr), MSTRCT_CID(ptr)), MSTRCT_CID(ptr))
+
+#define MSTRCT_GET_A4(ptr,typ)   (mstrct_byte(MSTRCT_I(ptr), MSTRCT_CID(ptr)))
+
+#define MSTRCT_GET_B0(name,i)    MSTRCT_GET_B5(name, i)
+
+#define MSTRCT_GET_B1(name)      (*({asm volatile (" " : "+m" (*(mstrct_fixed[MSTRCT_TID] + name._id + 1))); &(name._id);}))
+
+#define MSTRCT_GET_B2(name)      (mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id, MSTRCT_TID), MSTRCT_TID))
+
+#define MSTRCT_GET_B3(name)      (mstrct_base(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id, MSTRCT_TID), MSTRCT_TID))
+
+#define MSTRCT_GET_B4(name)      (mstrct_byte(name._id, MSTRCT_TID))
+
+#define MSTRCT_GET_B5(name,i)    \
+MSTRCT_CAT3(MSTRCT_GET_, MSTRCT_FIRST i, MSTRCT_CHK1) (name._id, MSTRCT_FLAT(name, MSTRCT_CAT2(MSTRCT_INDEX, MSTRCT_FIRST i) i), \
+(typeof(name.typ[0])), MSTRCT_TSIZ(name), MSTRCT_TID, MSTRCT_LINE(name), (sizeof(name.con[0])))
+
+#define MSTRCT_GET0(id, typ, tsiz, cid, lin, con)  \
+({typ(mstrct_base(tsiz, id, mstrct_reset(id, cid),  cid)); MSTRCT_PRAG0}) [({mstrct_check(id, tsiz, lin, 0, cid); MSTRCT_PRAG1})]
+
+#define MSTRCT_GET_10(id, i, typ, tsiz, cid, lin, con) (typ(mstrct_base(__UINT32_MAX__, id, mstrct_reset(id, cid), cid))) [i]
+
+#define MSTRCT_GET_11(id, i, typ, tsiz, cid, lin, con) ({(void)sizeof(i); \
+typ(mstrct_base(tsiz, id, mstrct_reset(id, cid), cid)); MSTRCT_PRAG0}) [({mstrct_check(id, tsiz, lin, i, cid); MSTRCT_PRAG1})]
+
+#define MSTRCT_GET_00(id, i, typ, tsiz, cid, lin, con) MSTRCT_GET_10(id, i, typ, tsiz, cid, lin)
+
+#define MSTRCT_GET_01(id, i, typ, tsiz, cid, lin, con) (__builtin_choose_expr(con && __builtin_constant_p(sizeof(char[i])),  \
+MSTRCT_GET_10(id, i, typ, tsiz, cid, lin, con), MSTRCT_GET_11(id, i, typ, tsiz, cid, lin, con)))
+
+// LET
+
+#define MSTRCT_LET_C0(ty1, ty2, name) MSTRCT_T(ty1 *ty2,, __LINE__, ) name
+
+#define MSTRCT_LET_C1(ty1, ty2, name, i) MSTRCT_T(ty1 *ty2, MSTRCT_INDEX1 i, __LINE__, 1) name
+
+#define MSTRCT_LET_C2(ty1, ty2, name, i) MSTRCT_T(ty1 *ty2, MSTRCT_INDEX1 i, __LINE__, ) name
+
+#define MSTRCT_LET_D0(alloc, name, range) do {   \
+  __builtin_memset(&name, 0, sizeof(name)); char *ptr = (char *)(alloc);   \
+  name._id = mstrct_alloc(MSTRCT_TID); mstrct_assign(name._id, __LINE__, MSTRCT_TID, MSTRCT_BSIZ(name, range), ptr); \
 } while(0)
 
-#define MSTRCT_LET3(memory, name, range, key) do {   \
-  __builtin_memset(&name, 0, sizeof(name)); char *ptr = (char *)(memory);   \
-  name.id = MSTRCT_ALLOC; *(void **)((mstrct_ulong *)mstrct_start + name.id) = (void *)ptr;\
-  *((mstrct_ulong *)mstrct_start + name.id + 1) = MSTRCT_BSIZ(name, range);   \
-  MSTRCT_CAT2(mstrct_leak_, MSTRCT_CHK2)(name.id, __LINE__, key, ptr);  \
+#define MSTRCT_LET_D1(store, name, range, cnt)  \
+store typeof(*(name.typ[0])) MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, range)] __attribute__((aligned(MSTRCT_TSIZ(name))));   \
+mstrct_pack MSTRCT_CAT2(mstrct_clean_, cnt)[MSTRCT_CLEANUP(store)] MSTRCT_CLEAN(store); \
+if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {  \
+  __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID);  \
+  mstrct_put(MSTRCT_R1(cnt), MSTRCT_R(cnt), (name._id), MSTRCT_BSIZ(name, range), MSTRCT_CLEANUP(store), MSTRCT_TID); \
+}
+
+#define MSTRCT_LET_D2(store, name, ini, cnt) store typeof(*(name.typ[0]))  \
+MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, MSTRCT_ARG_COUNT ini)] __attribute__((aligned(MSTRCT_TSIZ(name)))) = \
+MSTRCT_LIST(MSTRCT_EXPAND ini); mstrct_pack MSTRCT_CAT2(mstrct_clean_, cnt)[MSTRCT_CLEANUP(store)] MSTRCT_CLEAN(store); \
+if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR: " #name " must not have static index!");  \
+  __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID);  \
+  mstrct_put(MSTRCT_R1(cnt),MSTRCT_R(cnt),(name)._id,MSTRCT_BSIZ(name,MSTRCT_ARG_COUNT ini),MSTRCT_CLEANUP(store),MSTRCT_TID); \
+}
+
+#define MSTRCT_LET_D3(re_alloc, name, range) do {   \
+  char *ptr = (char *)(re_alloc); mstrct_assign(name._id, __LINE__, MSTRCT_TID, MSTRCT_BSIZ(name, range), ptr); \
 } while(0)
 
-#define MSTRCT_LET2(de_store, name) do {__builtin_choose_expr(   \
-  (sizeof(de_store) == 1), (mstrct_dealloc_0(de_store, (name.id))), (mstrct_dealloc_1(de_store, (name.id), __LINE__))); \
-  asm volatile (" " : "+m" (*((mstrct_ulong *)mstrct_start + name.id + 1)) : :);  \
-  *((mstrct_ulong *)mstrct_start + name.id + 1) = 0;  \
-  *(void **)((mstrct_ulong *)mstrct_start + name.id) = mstrct_start; \
+#define MSTRCT_LET_D4(allo_ca, name, range) do {   \
+  char *ptr = (char *)(allo_ca); __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID);  \
+  *(void **)((mstrct_fixed[MSTRCT_TID]) + name._id) = ptr;  \
+  *((mstrct_fixed[MSTRCT_TID]) + name._id + 1) = MSTRCT_BSIZ(name, range);   \
+} while(0)
+
+#define MSTRCT_LET_D5(name, n)   \
+((mstrct_pack) {.mstrct_dest = (short)n, .mstrct_src = MSTRCT_TID, .mstrct_id = name._id}.mstrct_ptr)
+
+#define MSTRCT_LET_E0(ptr) short mstrct_tid = ((mstrct_pack) {.mstrct_ptr = ptr}.mstrct_dest)
+
+#define MSTRCT_DEL(de_alloc, name) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \
+  (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \
+  *(mstrct_fixed[MSTRCT_TID] + name._id + 1) = 0;  \
+  *(mstrct_fixed[MSTRCT_TID] + name._id) = (mstrct_ulong)(mstrct_fixed[MSTRCT_TID]); \
+  asm volatile (" " : "+m" (*(mstrct_fixed[MSTRCT_TID] + name._id + 1))); mstrct_archive(name._id, MSTRCT_TID); \
 } while(0)
 
 // prototypes for free() & munmap()                                                                                   
 typedef void (*mstrct_free_proto)(void *); typedef mstrct_int (*mstrct_munmap_proto)(void *, mstrct_ulong);
 
 static inline void
-mstrct_dealloc_0(void *fun, mstrct_uint id) {if (mstrct_byte(id) != 0) {((mstrct_free_proto)fun)(mstrct_addr(id));}}
-
-static inline void
-mstrct_dealloc_1(void *fun, mstrct_uint id, mstrct_uint line) {
-  if (mstrct_byte(id) != 0)
-  {if (((mstrct_munmap_proto)fun)(mstrct_addr(id), mstrct_byte(id)) == -1) {mstrct_error("DEALLOC_FAIL", 6, line);}}
-}
-
-static inline void 
-mstrct_leak_1(mstrct_uint id, mstrct_int line, char key, void *ptr) {
-  if (ptr == NULL) {mstrct_error("ALLOC_FAIL", 5, line);}
-  if (key) {mstrct_pack temp; temp._d = id; temp._s = (mstrct_uint)line; on_exit(mstrct_leak, temp.ptr);}
+mstrct_dealloc_0(void *fun, mstrct_uint id, short tid) {
+  if (mstrct_byte(id, tid) != 0) {((mstrct_free_proto)fun)(mstrct_addr(id, tid));}
 }
 
 static inline void
-mstrct_leak_0(mstrct_uint id, mstrct_int line, char key, void *ptr) {
-  (void)id; (void)line; (void)key; if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 5, line);}
-}
-
-#if !defined(MSTRCT_16) && !defined(MSTRCT_32)
-  static inline mstrct_uint mstrct_alloc(void) {
-    mstrct_uint increment = 2;
-
-    if (__builtin_expect(mstrct_global == NULL, 0)) {
-      void* space = mmap(NULL, MSTRCT_SIZE, 0x3, 0x4021, -1, 0); // PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_SHARED|MAP_NORESERVE
-      if (space == ((void *)-1)) {mstrct_error("ALLOC_FAIL", 5, 0); mstrct_sigsegv();}
-      mstrct_global = space; mstrct_start = space; mstrct_offset = 512; // skip 1st page
+mstrct_dealloc_1(void *fun, mstrct_uint id, mstrct_uint line, short tid) {
+  if (mstrct_byte(id, tid) != 0) {
+    if (((mstrct_munmap_proto)fun)(mstrct_addr(id, tid), mstrct_byte(id, tid)) == -1) {
+      mstrct_error("DEALLOC_FAIL", 4, line);
     }
-
-    increment = __atomic_fetch_add(&mstrct_offset, increment, __ATOMIC_RELAXED); // increment = old mstrct_offset
-    if (__builtin_expect(increment + 2 > (MSTRCT_SIZE / 8), 0)) {mstrct_error("OVF", 5, 0); mstrct_sigsegv();} // OOB
-    if ((increment & 1023) == 0) {MSTRCT_PRINT("M_%s/%d/%llu\n", "ID_", increment, MSTRCT_SIZE / 8);} // ID diagnostic, periodic 
-    return increment;
   }
-#endif
+}
 
 static inline void
-mstrct_put(mstrct_uint *cleaner, void *arr, mstrct_uint name_id, mstrct_ulong size, char cleanup) {
-  *(void **)((mstrct_ulong *)mstrct_start + name_id) = arr;
-  *((mstrct_ulong *)mstrct_start + name_id + 1) = size; if (cleanup) {*cleaner = name_id;}
+mstrct_put(mstrct_pack *cleaner, void *arr, mstrct_uint name_id, mstrct_ulong size, char cleanup, short tid) {
+  *(void **)((mstrct_fixed[tid]) + name_id) = arr; *((mstrct_fixed[tid]) + name_id + 1) = size;
+  if (cleanup) {cleaner->mstrct_id = name_id; cleaner->mstrct_src = tid;}
+}
+
+static inline mstrct_uint mstrct_alloc(short tid) {
+  if ((MSTRCT_ARG_COUNT(MSTRCT_SOFT) == 0) && (mstrct_x[tid] & 1023) == 0) { // print ID per 1024, in SOFT MODE
+    MSTRCT_PRINT(MSTRCT_PRINT_FMT, "", "ID", mstrct_x[tid]);
+  }
+  if (mstrct_y[tid] == 0) { // no archive
+    if (__builtin_expect(mstrct_x[tid] + 2 > mstrct_size[tid] / sizeof(mstrct_ulong), 0)) {
+      mstrct_error("META_OVF", 5, 1);
+    } else {mstrct_x[tid] += 2;} return mstrct_x[tid] - 2;
+  } else {return (mstrct_y[tid])--;}
+}
+
+__attribute__((noinline, unused)) static void
+mstrct_archive(mstrct_uint id, short tid) {
+  if (__builtin_expect(mstrct_y[tid] + 2 > mstrct_size[tid] / (8 * sizeof(mstrct_uint)), 0)) {mstrct_error("META_OVF", 5, 0);}
+  else {mstrct_y[tid] += 1;} *(mstrct_bin[tid] + mstrct_y[tid]) = id;
+}
+
+__attribute__((always_inline)) static inline void
+mstrct_assign(mstrct_uint id, mstrct_uint line, short tid, mstrct_ulong size, void *ptr) {
+  if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, line);}   \
+  *(mstrct_fixed[tid] + id) = ((((mstrct_ulong)ptr << 8) >> 8) | (((mstrct_ulong)line >> 8) << (8*sizeof(mstrct_ulong) - 8)));
+  *(mstrct_fixed[tid] + id + 1) = (size | ((mstrct_ulong)line << (8 * sizeof(mstrct_ulong) - 8)));
+}
+
+__attribute__((always_inline)) static inline void
+mstrct_set(void *ptr) {
+  *(mstrct_fixed[((mstrct_pack *)ptr)->mstrct_src] + ((mstrct_pack *)ptr)->mstrct_id + 1) = 0;
+  asm volatile (" " : "+m" (*(mstrct_fixed[((mstrct_pack *)ptr)->mstrct_src] + ((mstrct_pack *)ptr)->mstrct_id + 1)));
+  mstrct_archive(((mstrct_pack *)ptr)->mstrct_id, ((mstrct_pack *)ptr)->mstrct_src);
+}
+
+__attribute__((constructor)) static inline void
+mstrct_init(void) {
+  if (mstrctfixed[0] == 0) {void *space, *time;
+    for (mstrct_uint i = 0; i <= (MSTRCT_TNO ? MSTRCT_TNO : 0); i++) {
+      space = MSTRCT_ALLOC(mstrctsize[i]); time = MSTRCT_ALLOC(mstrctsize[i] / 8);
+      if (space == NULL || time == NULL) {mstrct_error("ALLOC_FAIL", 3, 0); __builtin_trap();}
+      mstrctfixed[i] = space; mstrctbin[i] = time;
+    }
+  } if (mstrct_fixed[0] == NULL) {for (short i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[MSTRCT_TNO ? i-1 : 0] = mstrctfixed[i];}}
+}
+
+__attribute__((destructor)) static inline void
+mstrct_leak(void) {
+  if (MSTRCT_CHK2) { 
+    for (mstrct_uint i = 0; i <= MSTRCT_TNO; i++) {
+      for (mstrct_uint j = 2; j <= mstrctx[i]; j += 2) {
+        if (*(mstrctfixed[i] + j + 1) != 0) {
+          mstrct_uint line = ((mstrct_uint)0 | (*(mstrctfixed[i] + j + 1) >> (8 * sizeof(mstrct_ulong) - 8))) |
+          (*((mstrct_ulong *)mstrctfixed[i] + j) >> (8 * sizeof(mstrct_ulong) - 16));
+          if (line != 0) {MSTRCT_PRINT(MSTRCT_PRINT_FMT, "LEAK", __BASE_FILE__, line);}
+        }
+      }
+    }
+  }
 }
 
 

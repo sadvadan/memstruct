@@ -1,15 +1,15 @@
 // at >O1 memstruct warns at compile time if memstruct syntax is used non-idiomatically,
 // or if puns and aliased dereferences to memstruct held memories are made.
 // note: 
-// a) similar static level safety extends to m(base foo) also.
+// a) similar static level safety extends to m(foo,void) also.
 // b) when ptr arithmetic is purely run-time/ obfuscated, the static only check fails (case 4)
 
 #include <stdio.h>
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int * ,var,);
-  M(malloc(48),var,12);
+  M(int,, var, );
+  M(malloc(48), var, 12);
   m(var,5) = 10;
 
   // case 1: uncomment below: compile-time err!

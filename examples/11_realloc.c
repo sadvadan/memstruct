@@ -1,13 +1,12 @@
 // create memstructs, allocate and then re-allocate
 
 #define _GNU_SOURCE
-#include <stdio.h>
 #include <sys/mman.h>
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int *,foo,); // declare int[][1]
-  M(int *,bar,); // declare int[][1]
+  M(int,, foo, ); // declare int[][1]
+  M(int,, bar, ); // declare int[][1]
 
   // note: sanity checks (if ptr == NULL etc) are implicit
   M(malloc(32), foo, 8); // int[8][1]
@@ -20,8 +19,8 @@ int main(void) {
   printf("bar[9], before realloc: %d\n\n", m(bar,9)); // fetch memory (before realloc)
 
   // re-allocation; note: sanity checks are implicit
-  M(realloc(m(base foo), 60), foo, 15); // int[15][1]
-  M(mremap(m(base bar), 48, 44, MREMAP_MAYMOVE), bar, 11); // int[11][1]
+  M(realloc(m(foo,void), 60), foo, 15); // int[15][1]
+  M(mremap(m(bar,void), 48, 44, MREMAP_MAYMOVE), bar, 11); // int[11][1]
 
   printf("foo[5], after realloc: %d\n", m(foo,5)); // fetch memory (after realloc)
   printf("bar[9], after realloc: %d\n", m(bar,9)); // fetch memory (after realloc)

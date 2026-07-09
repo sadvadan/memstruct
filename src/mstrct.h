@@ -353,8 +353,8 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR:
   *((mstrct_fixed[MSTRCT_TID]) + name._id + 1) = MSTRCT_BSIZ(name, range);   \
 } while(0)
 
-#define MSTRCT_LET_D5(name, n) ({if ((unsigned short)n >= MSTRCT_TNO) {mstrct_error("TID_OVF", 6, __LINE__, MSTRCT_TID);}; \
-(mstrct_pack) {.mstrct_dest = (short)n, .mstrct_src = MSTRCT_TID, .mstrct_id = name._id}.mstrct_ptr;})
+#define MSTRCT_LET_D5(name, n) ({if ((unsigned short)(n) >= MSTRCT_TNO) {mstrct_error("TID_OVF", 6, __LINE__, MSTRCT_TID);}; \
+(mstrct_pack) {.mstrct_dest = (short)(n), .mstrct_src = MSTRCT_TID, .mstrct_id = name._id}.mstrct_ptr;})
 
 #define MSTRCT_LET_E0(ptr) short mstrct_tid = ((mstrct_pack) {.mstrct_ptr = ptr}.mstrct_dest)
 

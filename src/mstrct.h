@@ -94,6 +94,7 @@
 #define MSTRCT_$2(foo,i)                  MSTRCT_CAT2(MSTRCT_PARSE_B, MSTRCT_PARSE(i, MSTRCT_META))(foo, i)
 #define MSTRCT_$1(foo)                    MSTRCT_GET0(foo._id, (typeof(foo.typ[0])), MSTRCT_TSIZ(foo), MSTRCT_TID,  \
                                           MSTRCT_LINE(foo), sizeof(foo.con[0]))
+#define MSTRCT_$0()                       mstrct_errno[MSTRCT_TID]
 
 #define MSTRCT_$$4(typ1,typ2,foo,i)       MSTRCT_CAT3(MSTRCT_PARSE_C, MSTRCT_PARSE(i, MSTRCT_AUTO),  \
                                           MSTRCT_ARG_COUNT(i))(typ1, typ2, foo, i)
@@ -195,7 +196,7 @@ __attribute__((weak)) mstrct_uint *mstrctbin[MSTRCT_TNO + 1]; static mstrct_uint
 __attribute__((weak)) mstrct_uint mstrctx[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = 2}, mstrcty[MSTRCT_TNO + 1] = {0};
 
 static volatile mstrct_uint *mstrct_x = &mstrctx[MSTRCT_TNO ? 1 : 0], *mstrct_y = &mstrcty[MSTRCT_TNO ? 1 : 0];
-static char mstrcterrno[MSTRCT_TNO + 1]; static char *mstrct_errno = &mstrcterrno[MSTRCT_TNO ? 1 : 0];
+__attribute__((weak)) char mstrcterrno[MSTRCT_TNO + 1]; static char *mstrct_errno = &mstrcterrno[MSTRCT_TNO ? 1 : 0];
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_uint siz, mstrct_uint offset, char var, short tid) {

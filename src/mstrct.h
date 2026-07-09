@@ -350,8 +350,8 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR:
   *((mstrct_fixed[MSTRCT_TID]) + name._id + 1) = MSTRCT_BSIZ(name, range);   \
 } while(0)
 
-#define MSTRCT_LET_D5(name, n)   \
-((mstrct_pack) {.mstrct_dest = (short)n, .mstrct_src = MSTRCT_TID, .mstrct_id = name._id}.mstrct_ptr)
+#define MSTRCT_LET_D5(name, n) ({if (n >= MSTRCT_TNO) {mstrct_error("META_OVF", 5, 1);};  \
+(mstrct_pack) {.mstrct_dest = (short)n, .mstrct_src = MSTRCT_TID, .mstrct_id = name._id}.mstrct_ptr;})
 
 #define MSTRCT_LET_E0(ptr) short mstrct_tid = ((mstrct_pack) {.mstrct_ptr = ptr}.mstrct_dest)
 
@@ -391,7 +391,7 @@ static inline mstrct_uint mstrct_alloc(short tid) {
   }
   if (mstrct_y[tid] == 0) { // no archive
     if (__builtin_expect(mstrct_x[tid] + 2 > mstrct_size[tid] / sizeof(mstrct_ulong), 0)) {
-      mstrct_error("META_OVF", 5, 1);
+      mstrct_error("META_OVF", 5, 0);
     } else {mstrct_x[tid] += 2;} return mstrct_x[tid] - 2;
   } else {return (mstrct_y[tid])--;}
 }

@@ -32,8 +32,8 @@
  * MCU APIs *****************************************
  *
  *  MSTRCT_PRINT                          print macro
+ *  MSTRCT_PRINT_FMT   print format string (optional)
  *  MSTRCT_ALLOC                block allocator macro
- *  mstrct_size       custom metadata size per thread
  *
  * literals *****************************************
  *
@@ -222,7 +222,7 @@ mstrct_reset(mstrct_uint offset, short tid) {return (char)(*((mstrct_fixed[tid])
   /* typ[0] */ typeof(type) typ[0] __attribute__((packed)); \
   /* con[0] */ struct {char a[((MSTRCT_CON(type)) ? ((__builtin_constant_p(sizeof(char index))) ? 1 : 0) : 0)];} con[0];   \
   /* lin[0] */ struct {char a[line];} lin[0];   \
-  /* dim[0] */ struct {char a[] index [1];} dim[0];   \
+  /* dim[0] */ struct {char b; char a[] index [1];} dim[0];   \
 }
 
 #define MSTRCT_CON(type) __builtin_types_compatible_p(typeof(type) const *, type *)

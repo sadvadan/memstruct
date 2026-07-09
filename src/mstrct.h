@@ -425,7 +425,7 @@ mstrct_init(void) {
     for (mstrct_uint i = 0; i <= (MSTRCT_TNO ? MSTRCT_TNO : 0); i++) {
       space = MSTRCT_ALLOC(mstrctsize[i]); time = MSTRCT_ALLOC(mstrctsize[i] / 8);
       if (space == NULL || time == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
-      mstrctfixed[i] = space; mstrctbin[i] = time;
+      mstrct_fixed[MSTRCT_TNO ? (short)i - 1 : 0] = space; mstrctbin[i] = time;
     }
   } if (mstrct_fixed[0] == NULL) {for (short i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[MSTRCT_TNO ? i-1 : 0] = mstrctfixed[i];}}
 }

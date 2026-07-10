@@ -5,12 +5,13 @@ C + memstruct = performance + memory safety
 
 ## Features
 
-- **Code size**    - memstruct is a 350 LoC single header-file library with no external dependencies.
+- **Code size**    - memstruct is a 370 LoC single header-file library with no external dependencies.
 - **Memory safety**- covers UAF, NULL deref, OOB (multi-dim), leaks, double free & memory sharing, for both array & non-array types.
-- **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed.
+- **Thread safety**- provides single-write memory & read-only share. complements libs like pthread when atomics/locks are needed.
+- **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed at >O0.
 - **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
-- **Robustness**   - either linter or compile-time warning for bad grammar, puns, and illegal raw dereferences.
-- **Target**       - gcc, clang | -std=gnu99 &ONWS | 8-64 bit CPUs. batteries included: opt-out, hardening, MCU flags, & more.
+- **Robustness**   - linter (gcc & clang) and compile-time (gcc only) warning for bad grammar, puns, and hatches.
+- **Target**       - gcc, clang | -std=gnu99 &ONWS | 8-64 bit CPUs. batteries included: opt-out, hardening, and MCU flags.
 
 ## Quick Start
 
@@ -19,50 +20,54 @@ C + memstruct = performance + memory safety
     `mstrct.h` in your file.
 - **Declare and allocate** a memstruct:
 
-    declaration prototype: `M(ptr_type, name,, optional_static_indexes)`
+    declaration prototype: `M(ptr_type, ptr_qualifier, name, optional_static_indexes)`
 
     allocation prototype: `M(any_allocator, name, dynamic_index)`
     ```
-    M(int *,foo,);                // declare simple foo as int[][1]
-    M(auto,foo,10);               // allocate on-stack foo as int[10][1]
+    M(int, const, foo,);        // declare simple foo as (int *const)[][1]
+    M(auto, foo, 3);            // allocate on-stack as int[3][1] or simply int[3]
+    M(auto, foo, (1,2,3));      // or allocate on-stack as int[3] = {1,2,3}
 
-    M(int *const,bar,,2,5,7);     // declare multidim bar as int[][2][5][7]
-    M(malloc(2800),bar,10);       // allocate bar on-heap as int[10][2][5][7]
-
-    M(int *,foo,) = {0};          // declare foo as int[][1] & assign foo.id=0 & foo.i=0
+    M(int, , bar, (2,5,7));     // declare multidim bar as (int *)[][2][5][7]
+    M(malloc(2800), bar, 10);   // allocate bar on-heap as (int *)[10][2][5][7]
     ```
 - **Re-allocate** memory: same as allocation, `M(re_allocator, name, dynamic_index)`.
-- **Share** memory: simply pass around the int `foo.id`.
-    ```
-    bar.id = foo.id;              // bar now shares memory with foo 
-    
-    func(foo.id, other_inputs);   // share memory with callee
-     ```
-- **Read / write** memory: `m(name,i,j...) is safe name[i][j]...`
-    ```
-    m(foo,5) = 10;                // simple memstruct
 
-    m(bar,5,7,2) = 10;            // multidim memstruct
+- **Read / write** memory: `m(name,(i,j...)) is safe name[i][j]...`
+    ```
+    m(foo,5) = 10;              // 1-D memstruct
+
+    m(bar,(5,7,2)) = 10;        // multidim memstruct
      ```
 - **Metadata** access:
      ```
-    m(size foo)                   // byte size
+    m(foo,sizeof)               // byte size
 
-    m(base foo)                   // base addr
+    m(foo,void)                 // base addr
 
-    m(span foo)                   // index span
+    m(foo,_)                    // index span
 
-    m(id foo)                     // foo ID
+    m(foo,enum)                 // foo ID
 
-    m(foo)                        // foo first element
+    m(foo)                      // foo first element
      ```
+- **Share** memory: simply pass around the int `m(foo,id)`.
+    ```
+    m(bar,enum) = m(foo,enum);  // bar now shares memory with foo 
+    
+    func(m(foo,enum), args);    // share memory with callee
+
+    func(m(foo,sizeof), args);  // or share other metadata
+     ```
+     in multithreading contexts, use `M(void, foo, thread_enum)` taxonomy (see, doc).
+
 - **index** arithmetic:
      ```
-    foo.i++;                      // array index increment
+    foo.i++;                    // array index increment
 
-    foo.i--;                      // array index decrement
+    foo.i--;                    // array index decrement
 
-    foo.i = 0;                    // set array index
+    foo.i = 0;                  // set array index
      ```
 - **De**-allocate memstruct: double de-allocation is idempotent (gets elided!).
 
@@ -72,6 +77,9 @@ C + memstruct = performance + memory safety
 
     M(munmap, bar);               // mmapped memory
      ```
+- **Get errno**: `m()` generates memory related errno's (1-6). thread safe.
+
+
 ## Documentation 
 - See: [Documentation](doc/Documentation.md)
 

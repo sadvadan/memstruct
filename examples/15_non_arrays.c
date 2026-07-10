@@ -22,7 +22,7 @@ int main(void) {
  
   return 0;
 } /* out
-size of a non-array memstruct foo should be 8. check: 8
+size of a non-array memstruct foo should be 4. check: 4
 value of foo = 10, addr of foo: 0x55d140c80010
 
 size of a non-array memstruct bar should be 4. check: 4

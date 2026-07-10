@@ -2,6 +2,7 @@
 # ![memstruct banner](../banner.svg) memstruct DOCUMENT
 
 This document explains how to configure and use the memstruct.h library.
+**[NOTE: this doc is currently significantly outdated]**
 
 ## Table of contents
 

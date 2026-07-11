@@ -193,7 +193,7 @@ typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned long lon
 typedef union {struct {mstrct_unit _mstrct_id; mstrct_uhalf _mstrct_dest; mstrct_uhalf _mstrct_src;};
                mstrct_utwice _mstrct_uni;} mstrct_pack;
 
-#define MSTRCT_SHIFT (8 * (sizeof(mstrct_utwice) - sizeof(mstrct_unit) - sizeof(mstrct_uhalf) * MSTRCT_ARG_COUNT(MSTRCT_MCU)))
+#define MSTRCT_SHIFT (8*(sizeof(mstrct_utwice) - sizeof(mstrct_unit) - sizeof(mstrct_uhalf) * (MSTRCT_ARG_COUNT(MSTRCT_MCU)==0)))
 #define MSTRCT_SIZE(word) ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 
 __attribute__((weak)) mstrct_usize mstrctblock[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = MSTRCT_BLOCK};
@@ -273,8 +273,8 @@ mstrct_check(mstrct_unit id, mstrct_unit type_size, mstrct_unit line, mstrct_siz
 #define MSTRCT_R1(counter)       MSTRCT_CAT2(mstrct_clean_, counter)
 #define MSTRCT_PRAG0             _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 #define MSTRCT_PRAG1             _Pragma("GCC diagnostic warning \"-Warray-bounds\"")
-#define MSTRCT_CID(ptr)          ((mstrct_pack) {._mstrct_uni = ptr}._mstrct_src)
-#define MSTRCT_I(ptr)            ((mstrct_pack) {._mstrct_uni = ptr}._mstrct_id)
+#define MSTRCT_CID(ptr)          ((mstrct_pack) {._mstrct_uni = (mstrct_utwice)(mstrct_usize)ptr}._mstrct_src)
+#define MSTRCT_I(ptr)            ((mstrct_pack) {._mstrct_uni = (mstrct_utwice)(mstrct_usize)ptr}._mstrct_id)
 
 #define MSTRCT_CLEAN(store)      MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))
 #define MSTRCT_CLEAN_11          __attribute__((cleanup(mstrct_set)))
@@ -362,10 +362,10 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR:
   *((mstrct_fixed[MSTRCT_TID]) + name._id + 1) = MSTRCT_BSIZ(name, range);   \
 } while(0)
 
-#define MSTRCT_LET_D5(name, n) ({if ((unsigned mstrct_uhalf)(n) >= MSTRCT_TNO) {mstrct_error("TID_OVF",6,__LINE__,MSTRCT_TID);}; \
+#define MSTRCT_LET_D5(name, n) ({if ((mstrct_uhalf)(n) >= MSTRCT_TNO) {mstrct_error("TID_OVF",6,__LINE__,MSTRCT_TID);}; \
 (mstrct_pack) {._mstrct_dest = 1 + (mstrct_uhalf)(n), ._mstrct_src = MSTRCT_TID, ._mstrct_id = name._id}._mstrct_uni;})
 
-#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = ((mstrct_pack) {._mstrct_uni = ptr}._mstrct_dest)
+#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = ((mstrct_pack) {._mstrct_uni = (mstrct_utwice)(mstrct_usize)ptr}._mstrct_dest)
 
 #define MSTRCT_DEL(de_alloc, name) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \
   (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \
@@ -404,7 +404,8 @@ static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid) {
   if (mstrct_y[tid] == 0) { // no archive
     if (__builtin_expect(mstrct_x[tid] + 2 > mstrct_block[tid] / sizeof(mstrct_usize), 0)) {
       mstrct_error("META_OVF", 5, 0, tid);
-    } else {mstrct_x[tid] += 1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize);} return mstrct_x[tid] - 2;
+    } else {mstrct_x[tid] += (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));}
+    return mstrct_x[tid] - (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));
   } else {return (mstrct_y[tid])--;}
 }
 
@@ -443,7 +444,7 @@ mstrct_init(void) {
 
 __attribute__((destructor)) static inline void
 mstrct_leak(void) {
-  if (MSTRCT_CHK2 && mstrctfixed[0] != (mstrct_usize *)7) {mstrctfixed[0] = (mstrct_usize *)7;
+  if (MSTRCT_CHK2 && mstrctfixed[0] != (mstrct_usize *)7) {
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
       for (mstrct_unit j = 2; j <= mstrctx[i]; j += 1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize)) {
         if (*(mstrct_utwice *)(mstrctfixed[i] + j + 1) != 0) {
@@ -452,7 +453,7 @@ mstrct_leak(void) {
         }
       }
     }
-  }
+  } mstrctfixed[0] = (mstrct_usize *)7;
 }
 
 

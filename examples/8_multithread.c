@@ -66,7 +66,7 @@ int main(void) {
 
   for (int i = 0; i < m(threads,_); i++) {
   // pass shared
-    pthread_create(&m(threads,i), NULL, native_thread, M(void, shared, i));
+    pthread_create(&m(threads,i), NULL, native_thread, (void *)M(void, shared, i));
   }
 
   for (int i = 0; i < m(threads,_); i++) {
@@ -83,7 +83,7 @@ int main(void) {
   printf("=== memstruct multithreading-II starts ===\n"); ///////////////////////////////////////////////////////////
 
   for (int i = 0; i < m(threads,_); i++) {
-    pthread_create(&m(threads,i), NULL, library_thread, M(void, shared, i));
+    pthread_create(&m(threads,i), NULL, library_thread, (void *)M(void, shared, i));
   }
 
   for (int i = 0; i < m(threads,_); i++) {

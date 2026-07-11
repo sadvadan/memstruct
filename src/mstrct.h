@@ -132,7 +132,7 @@
 #define MSTRCT_PARSE_D15(store,foo,ini)   MSTRCT_LET_D2(store, foo, ini, __COUNTER__)
 #define MSTRCT_PARSE_D20(_realloc,foo,n)  MSTRCT_LET_D3(_realloc, foo, n)              
 #define MSTRCT_PARSE_D30(_alloca,foo,n)   MSTRCT_LET_D4(_alloca, foo, n)              
-#define MSTRCT_PARSE_D40(_union_,foo,n)   MSTRCT_LET_D5(foo, n)              
+#define MSTRCT_PARSE_D40(_void_,foo,n)    MSTRCT_LET_D5(foo, n)              
 
 #define MSTRCT_STORE(arg)                 MSTRCT_HAS_COMMA(MSTRCT_ ## arg)  /* 4=addr, 3=alloca, 2=realloc, 1=store, 0=none */
 #define MSTRCT_AUTO(arg)                  MSTRCT_HAS_COMMA(_MSTRCT_ ## arg) /* 1=auto, 0=none */
@@ -189,23 +189,19 @@ static struct {} mstrct_tid;
 typedef unsigned int mstrct_unit;         typedef signed int mstrct_nit;   // 8,16,32,64b :: 2,2,4,4 B
 typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned short)0, (unsigned char)0)) mstrct_uhalf;
 typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned long long)0, (unsigned long)0)) mstrct_utwice;
-
 typedef union {struct {mstrct_unit _mstrct_id; mstrct_uhalf _mstrct_dest; mstrct_uhalf _mstrct_src;};
                mstrct_utwice _mstrct_uni;} mstrct_pack;
 
 #define MSTRCT_SHIFT (8*(sizeof(mstrct_utwice) - sizeof(mstrct_unit) - sizeof(mstrct_uhalf) * MSTRCT_ARG_COUNT(MSTRCT_MCU)))
 #define MSTRCT_SIZE(word) ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 
-__attribute__((weak)) mstrct_usize mstrctblock[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = MSTRCT_BLOCK};
-static mstrct_usize *mstrct_block = mstrctblock;
-
+__attribute__((weak)) char mstrcterrno[MSTRCT_TNO + 1]; static char *mstrct_errno = mstrcterrno;
+__attribute__((weak)) mstrct_utwice mstrctblock[MSTRCT_TNO + 1]; static mstrct_utwice *mstrct_block = mstrctblock;
 __attribute__((weak)) mstrct_usize *mstrctfixed[MSTRCT_TNO + 1]; static mstrct_usize **restrict mstrct_fixed = mstrctfixed;
 __attribute__((weak)) mstrct_unit *mstrctbin[MSTRCT_TNO + 1]; static mstrct_unit **mstrct_bin = mstrctbin;
-
 __attribute__((weak)) mstrct_unit mstrctx[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = 2}, mstrcty[MSTRCT_TNO + 1] = {0};
-static volatile mstrct_unit *mstrct_x = mstrctx, *mstrct_y = mstrcty;
 
-__attribute__((weak)) char mstrcterrno[MSTRCT_TNO + 1]; static char *mstrct_errno = mstrcterrno;
+static volatile mstrct_unit *mstrct_x = mstrctx, *mstrct_y = mstrcty;
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_unit siz, mstrct_unit offset, char var, mstrct_uhalf tid) {
@@ -273,8 +269,8 @@ mstrct_check(mstrct_unit id, mstrct_unit type_size, mstrct_unit line, mstrct_siz
 #define MSTRCT_R1(counter)       MSTRCT_CAT2(mstrct_clean_, counter)
 #define MSTRCT_PRAG0             _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 #define MSTRCT_PRAG1             _Pragma("GCC diagnostic warning \"-Warray-bounds\"")
-#define MSTRCT_CID(ptr)          ((mstrct_pack) {._mstrct_uni = (mstrct_utwice)(mstrct_usize)ptr}._mstrct_src)
-#define MSTRCT_I(ptr)            ((mstrct_pack) {._mstrct_uni = (mstrct_utwice)(mstrct_usize)ptr}._mstrct_id)
+#define MSTRCT_CID(ptr)          ((mstrct_pack) {._mstrct_uni = *(mstrct_utwice *)ptr}._mstrct_src)
+#define MSTRCT_I(ptr)            ((mstrct_pack) {._mstrct_uni = *(mstrct_utwice *)ptr}._mstrct_id)
 
 #define MSTRCT_CLEAN(store)      MSTRCT_CAT3(MSTRCT_CLEAN_, MSTRCT_CHK3, MSTRCT_AUTO(store))
 #define MSTRCT_CLEAN_11          __attribute__((cleanup(mstrct_set)))
@@ -362,8 +358,11 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR:
   *((mstrct_fixed[MSTRCT_TID]) + name._id + 1) = MSTRCT_BSIZ(name, range);   \
 } while(0)
 
-#define MSTRCT_LET_D5(name, n) ({if ((mstrct_uhalf)(n) >= MSTRCT_TNO) {mstrct_error("TID_OVF",6,__LINE__,MSTRCT_TID);}; \
-(mstrct_pack) {._mstrct_dest = 1 + (mstrct_uhalf)(n), ._mstrct_src = MSTRCT_TID, ._mstrct_id = name._id}._mstrct_uni;})
+#define MSTRCT_LET_D5(name, n)   \
+({if ((mstrct_uhalf)(n) >= MSTRCT_TNO) {mstrct_error("TID_OVF",6,__LINE__,MSTRCT_TID);}; \
+mstrctblock[1 + (mstrct_uhalf)(n)] =   \
+(mstrct_pack) {._mstrct_dest = 1 + (mstrct_uhalf)(n), ._mstrct_src = MSTRCT_TID, ._mstrct_id = name._id}._mstrct_uni;   \
+(void *)&mstrctblock[1 + (mstrct_uhalf)(n)];})
 
 #define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = ((mstrct_pack) {._mstrct_uni = (mstrct_utwice)(mstrct_usize)ptr}._mstrct_dest)
 
@@ -435,6 +434,7 @@ __attribute__((constructor)) static inline void
 mstrct_init(void) {
   if (mstrctfixed[0] == 0) {void *space, *time;
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
+      if (mstrctblock[i] == 0) mstrctblock[i] = MSTRCT_BLOCK;
       space = MSTRCT_ALLOC(mstrctblock[i]); time = MSTRCT_ALLOC(mstrctblock[i] / 8);
       if (space == NULL || time == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
       mstrct_fixed[i] = space; mstrctbin[i] = time;

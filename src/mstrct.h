@@ -405,14 +405,14 @@ static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid, char key) {
       mstrct_error("META_OVF", 5, 0, tid);
     } else {mstrctx[tid] += (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));}
     return mstrctx[tid] - (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));
-  } else {return (mstrcty[tid])--;} // access archive
+  } else {return *(mstrctbin[tid] + (mstrcty[tid])--);} // access archive
 }
 
 __attribute__((noinline, unused)) static void
 mstrct_archive(mstrct_unit id, mstrct_uhalf tid) {
   if (__builtin_expect(mstrcty[tid] + 2 > *(mstrctfixed[tid] + 1) / (8 * sizeof(mstrct_unit)), 0)) {
     mstrct_error("META_OVF", 5, 0, tid);
-  } else {mstrcty[tid] += 1;} *(mstrctbin[tid] + mstrcty[tid]) = id;
+  } else {mstrcty[tid] += 1; *(mstrctbin[tid] + mstrcty[tid]) = id;}
 }
 
 __attribute__((always_inline)) static inline void

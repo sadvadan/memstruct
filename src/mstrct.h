@@ -193,7 +193,7 @@ typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned long lon
 typedef union {struct {mstrct_unit _mstrct_id; mstrct_uhalf _mstrct_dest; mstrct_uhalf _mstrct_src;};
                mstrct_utwice _mstrct_uni;} mstrct_pack;
 
-#define MSTRCT_SHIFT (8*(sizeof(mstrct_utwice) - sizeof(mstrct_unit) - sizeof(mstrct_uhalf) * (MSTRCT_ARG_COUNT(MSTRCT_MCU)==0)))
+#define MSTRCT_SHIFT (8*(sizeof(mstrct_utwice) - sizeof(mstrct_unit) - sizeof(mstrct_uhalf) * MSTRCT_ARG_COUNT(MSTRCT_MCU)))
 #define MSTRCT_SIZE(word) ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 
 __attribute__((weak)) mstrct_usize mstrctblock[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = MSTRCT_BLOCK};
@@ -419,8 +419,8 @@ mstrct_archive(mstrct_unit id, mstrct_uhalf tid) {
 __attribute__((always_inline)) static inline void
 mstrct_assign(mstrct_unit id, mstrct_unit line, mstrct_uhalf tid, mstrct_usize size, void *ptr) {
   if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, line, tid);}   \
-  *(mstrct_fixed[tid] + id) = (mstrct_usize)ptr;
-  *(mstrct_utwice *)(mstrct_fixed[tid] + id + 1) = ((mstrct_utwice)size | ((mstrct_utwice)line << MSTRCT_SHIFT));
+  *(mstrct_fixed[tid] + id) = (mstrct_usize)ptr; *(mstrct_utwice *)(mstrct_fixed[tid] + id + 1) =
+  ((mstrct_utwice)size | ((mstrct_utwice)(mstrct_uhalf)line << (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT)));
 }
 
 __attribute__((always_inline)) static inline void
@@ -448,7 +448,7 @@ mstrct_leak(void) {
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
       for (mstrct_unit j = 2; j <= mstrctx[i]; j += 1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize)) {
         if (*(mstrct_utwice *)(mstrctfixed[i] + j + 1) != 0) {
-          mstrct_unit line = (*(mstrct_utwice *)(mstrctfixed[i] + j + 1)) >> MSTRCT_SHIFT;
+          mstrct_unit line = (*(mstrct_utwice *)(mstrctfixed[i] + j + 1)) >> (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT);
           if (line != 0) {MSTRCT_PRINT(MSTRCT_PRINT_FMT, "LEAK", __BASE_FILE__, line);}
         }
       }

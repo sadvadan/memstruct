@@ -218,7 +218,7 @@ mstrct_addr(mstrct_unit offset, mstrct_uhalf tid) {return (char *)(*((mstrct_fix
 static inline mstrct_usize
 mstrct_byte(mstrct_unit offset, mstrct_uhalf tid) {return MSTRCT_SIZE(*(mstrct_utwice *)((mstrct_fixed[tid]) + offset + 1));}
 
-__attribute__((noinline, unused, const)) static mstrct_usize
+__attribute__((noinline, unused, const)) static mstrct_size
 mstrct_span(mstrct_unit tsiz, mstrct_unit offset, char var, mstrct_uhalf tid) {
   (void)var; return mstrct_byte(offset, tid) / tsiz;
 }

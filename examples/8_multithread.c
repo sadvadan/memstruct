@@ -78,7 +78,7 @@ int main(void) {
     if (m(shared,i) != 0) count++;
   }
 
-  printf("multi-threading-I finished. Modified elements: %d / %d\n", count, ARRAY_SIZE);
+  printf("multi-threading-I finished. Modified elements: %d / %d\n", count+1, ARRAY_SIZE);
  
   printf("=== memstruct multithreading-II starts ===\n"); ///////////////////////////////////////////////////////////
 
@@ -95,7 +95,7 @@ int main(void) {
       if (m(shared,i) != 0) count++;
   }
 
-  printf("multi-threading-II finished. Modified elements: %d / %d\n", count, ARRAY_SIZE);
+  printf("multi-threading-II finished. Modified elements: %d / %d\n", count+1, ARRAY_SIZE);
 
   M(free, shared);
   pthread_mutex_destroy(&mutex);
@@ -111,7 +111,7 @@ Thread(I) 7 done
 Thread(I) 5 done
 Thread(I) 2 done
 Thread(I) 6 done
-multi-threading-I finished. Modified elements: 9999 / 10000
+multi-threading-I finished. Modified elements: 10000 / 10000
 === memstruct multithreading-II starts ===
 Thread(II) 1 done
 Thread(II) 2 done
@@ -121,5 +121,5 @@ Thread(II) 4 done
 Thread(II) 5 done
 Thread(II) 7 done
 Thread(II) 6 done
-multi-threading-II finished. Modified elements: 9999 / 10000
+multi-threading-II finished. Modified elements: 10000 / 10000
 */

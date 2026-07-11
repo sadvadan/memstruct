@@ -201,6 +201,8 @@ __attribute__((weak)) mstrct_unit *mstrctbin[MSTRCT_TNO + 1];
 __attribute__((weak)) mstrct_usize *mstrctfixed[MSTRCT_TNO + 1]; static mstrct_usize **restrict mstrct_fixed = mstrctfixed;
 __attribute__((weak)) mstrct_unit mstrctx[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = 2}, mstrcty[MSTRCT_TNO + 1] = {0};
 
+_Static_assert(sizeof(void(*)()) == sizeof(void*), "M_ERR: code & data ptrs must be same size!"); // no harvard
+
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_unit siz, mstrct_unit offset, char var, mstrct_uhalf tid) {
   (void)siz; (void)var; return (char *)(*((mstrct_fixed[tid]) + offset));

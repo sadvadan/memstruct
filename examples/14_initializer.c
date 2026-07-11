@@ -8,7 +8,7 @@ int main(void) {
   M(auto, foo, (1,2,3,4,10)); // foo -> int[5][1] on-stack, with initializer list
 
   m(foo,4) = 5; // define int[0][4]
-  printf("byte size of foo: %llu\n", m(foo,sizeof));
+  printf("byte size of foo: %lu\n", m(foo,sizeof));
 
   // note: fetches are completely compile time checked (fixed type memstruct), even with checks disabled
   printf("var[0], with checks: %d\n", m(foo,0)); // fetch memory (with checks)

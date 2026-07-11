@@ -9,8 +9,8 @@ int main(void) {
 
   printf("ptr_ID: %d\n",               m(var,enum));
   printf("ptr_base_addr: %p\n",        m(var,void));
-  printf("arr_byte_size: %llu\n",      m(var,sizeof));
-  printf("arr_index_span: %llu\n",     m(var,_));
+  printf("arr_byte_size: %lu\n",      m(var,sizeof));
+  printf("arr_index_span: %lu\n",     m(var,_));
   printf("value of 1st element: %d\n", m(var));
 
   M(free, var);

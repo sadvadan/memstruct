@@ -22,19 +22,27 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Features and design
 
-- Bare *minimum* safety checks; additionally: opt-out, hardening, and MCU flags.
+- Flags: opt-out, hardening, and MCU. Literals: metadata size, and max threads.
 
-- Supports custom allocators & de-allocators. drop-in.
+- Supports: MCU, x86-64 | gcc, clang : GNU C99 & ONWS | custom allocators & de-allocators.
 
-- Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
+- Single‑header: no separate `.c` file needed. no external dependencies. MCU support.
 
-- Guard-rails: non-idiomatic usage, punning, and aliasing memstruct via raw pointers - whenever statically proven - get *warned* receives linter (in gcc & clang) and compile-time (gcc only) warnings.
+- Guard-rails: non-idiomatic usage and puns warned through linter (gcc & clang) and compiler (gcc only).
 
-- Works across TUs: simply share int `m(foo,enum)` (memory ID) to pass memory handle to the callee safely across / within TU.
+- Works across TUs: int `m(foo,enum)` (memory ID) passed around to share memory.
 
-- Thread safety: memstruct is made inherently thread safe using single-writer / read-only-share framework. this is more than sufficient, but if locks are really needed, use external libraries (e.g. pthread) and protect reads and writes as usual.
+- Thread safety: inherently thread safe using single-writer / shared-read framework. this is more than sufficient, but if locks are really needed, use external libraries (e.g. pthread) and protect reads and writes as usual.
 
-- Leaky program detection: in a healthy application, the total number of allocations stays bounded; **unbounded/steady** growth in the ID counter (printed every 1024 allocs in SOFT mode) indicates memory unsafe design.
+## Limitations
+
+- doesn't support Harvard architecture. and, MSVC.
+
+- no GC: every allocation must have a de-allocation (dup-de-allocations -> no-op).
+
+- block-scope IDs get re-cycled: aliased on-stack orphans e.g. revive when ref'd IDs get renewed.
+
+- multi-threading model is lock-free. if locks are a requirement #include relevant multi-threading library.
 
 ## Configuration
 

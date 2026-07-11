@@ -59,6 +59,7 @@
 #define MSTRCT_mremap                     ~,~,2
 #define MSTRCT_alloca                     ~,~,~,3
 #define MSTRCT___builtin_alloca           ~,~,~,3
+#define MSTRCT_mstrct_base                ~,~,~,3
 #define MSTRCT_void                       ~,~,~,~,4
 
 #define _MSTRCT___thread
@@ -329,14 +330,14 @@ MSTRCT_GET_10(id, i, typ, tsiz, cid, lin, con), MSTRCT_GET_11(id, i, typ, tsiz, 
 
 #define MSTRCT_LET_D0(alloc, name, range) do {   \
   __builtin_memset(&name, 0, sizeof(name)); char *ptr = (char *)(alloc);   \
-  name._id = mstrct_alloc(MSTRCT_TID); mstrct_assign(name._id, __LINE__, MSTRCT_TID, MSTRCT_BSIZ(name, range), ptr); \
+  name._id = mstrct_alloc(MSTRCT_TID, 0); mstrct_assign(name._id, __LINE__, MSTRCT_TID, MSTRCT_BSIZ(name, range), ptr); \
 } while(0)
 
 #define MSTRCT_LET_D1(store, name, range, cnt)  \
 store typeof(*(name.typ[0])) MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, range)] __attribute__((aligned(MSTRCT_TSIZ(name))));   \
 mstrct_pack MSTRCT_CAT2(mstrct_clean_, cnt)[MSTRCT_CLEANUP(store)] MSTRCT_CLEAN(store); \
 if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {  \
-  __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID);  \
+  __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID, MSTRCT_AUTO(store));  \
   mstrct_put(MSTRCT_R1(cnt), MSTRCT_R(cnt), (name._id), MSTRCT_BSIZ(name, range), MSTRCT_CLEANUP(store), MSTRCT_TID); \
 }
 
@@ -344,7 +345,7 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {  \
 MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, MSTRCT_ARG_COUNT ini)] __attribute__((aligned(MSTRCT_TSIZ(name)))) = \
 MSTRCT_LIST(MSTRCT_EXPAND ini); mstrct_pack MSTRCT_CAT2(mstrct_clean_, cnt)[MSTRCT_CLEANUP(store)] MSTRCT_CLEAN(store); \
 if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR: " #name " must not have static index!");  \
-  __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID);  \
+  __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID, MSTRCT_AUTO(store));  \
   mstrct_put(MSTRCT_R1(cnt),MSTRCT_R(cnt),(name)._id,MSTRCT_BSIZ(name,MSTRCT_ARG_COUNT ini),MSTRCT_CLEANUP(store),MSTRCT_TID); \
 }
 
@@ -353,7 +354,7 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR:
 } while(0)
 
 #define MSTRCT_LET_D4(allo_ca, name, range) do {   \
-  char *ptr = (char *)(allo_ca); __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID);  \
+  char *ptr = (char *)(allo_ca); __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID, 1);  \
   *(void **)((mstrct_fixed[MSTRCT_TID]) + name._id) = ptr;  \
   *((mstrct_fixed[MSTRCT_TID]) + name._id + 1) = MSTRCT_BSIZ(name, range);   \
 } while(0)
@@ -369,7 +370,7 @@ if (mstrct_temp >= MSTRCT_TNO) {mstrct_error("TID_OVF",6,__LINE__,MSTRCT_TID); m
   (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \
   *(mstrct_fixed[MSTRCT_TID] + name._id + 1) = 0;  \
   *(mstrct_fixed[MSTRCT_TID] + name._id) = (mstrct_usize)(mstrct_fixed[MSTRCT_TID]); \
-  asm volatile (" " : "+m" (*(mstrct_utwice *)(mstrct_fixed[MSTRCT_TID] + name._id + 1))); mstrct_archive(name._id, MSTRCT_TID); \
+  asm volatile (" " : "+m" (*(mstrct_utwice *)(mstrct_fixed[MSTRCT_TID] + name._id + 1)));   \
 } while(0)
 
 // prototypes for free() & munmap()                                                                                   
@@ -395,16 +396,16 @@ mstrct_put(mstrct_pack *cleaner, void *arr, mstrct_unit name_id, mstrct_usize si
   if (cleanup) {cleaner->_mstrct_id = name_id; cleaner->_mstrct_src = tid;}
 }
 
-static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid) {
+static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid, char key) {
   if ((MSTRCT_ARG_COUNT(MSTRCT_SOFT) == 0) && (mstrctx[tid] & 1023) == 0) { // print ID per 1024, in SOFT MODE
     MSTRCT_PRINT(MSTRCT_PRINT_FMT, "", "ID", mstrctx[tid]);
   }
-  if (mstrcty[tid] == 0) { // no archive
+  if (key == 0 || mstrcty[tid] == 0) {
     if (__builtin_expect(mstrctx[tid] + 2 > *(mstrctfixed[tid] + 1) / sizeof(mstrct_usize), 0)) {
       mstrct_error("META_OVF", 5, 0, tid);
     } else {mstrctx[tid] += (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));}
     return mstrctx[tid] - (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));
-  } else {return (mstrcty[tid])--;}
+  } else {return (mstrcty[tid])--;} // access archive
 }
 
 __attribute__((noinline, unused)) static void

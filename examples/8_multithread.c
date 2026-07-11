@@ -14,7 +14,7 @@ void* native_thread(void *arg) {
   M(arg);
 
   // thread's own global:
-  M(int,, view,);
+  M(int,, view, );
   M(malloc(1000*sizeof(int)), view, 1000);
 
   for (int i = 0; i < 1000; i++) {
@@ -33,7 +33,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 void* library_thread(void *arg) {
   M(arg);
 
-  M(int,, view,);
+  M(int,, view, );
   // alias (for write) 1000 elems of (global) shared
   M(m(arg,int,void), view, 1000);
 

@@ -357,10 +357,9 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR:
 } while(0)
 
 #define MSTRCT_LET_D5(name, n)   \
-({if ((mstrct_uhalf)(n) >= MSTRCT_TNO) {mstrct_error("TID_OVF",6,__LINE__,MSTRCT_TID);}; \
-mstrctblock[1 + (mstrct_uhalf)(n)] =   \
-(mstrct_pack) {._mstrct_dest = 1 + (mstrct_uhalf)(n), ._mstrct_src = MSTRCT_TID, ._mstrct_id = name._id}._mstrct_uni;   \
-(void *)&mstrctblock[1 + (mstrct_uhalf)(n)];})
+({mstrct_uhalf temp = (mstrct_uhalf)(n); if (temp >= MSTRCT_TNO) {mstrct_error("TID_OVF",6,__LINE__,MSTRCT_TID); temp = 0;}; \
+mstrctblock[1 + temp] = (mstrct_pack) {._mstrct_dest = 1 + temp, ._mstrct_src = MSTRCT_TID, ._mstrct_id = name._id}._mstrct_uni; \
+(void *)&mstrctblock[1 + temp];})
 
 #define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = ((mstrct_pack) {._mstrct_uni = *(mstrct_utwice *)ptr}._mstrct_dest)
 

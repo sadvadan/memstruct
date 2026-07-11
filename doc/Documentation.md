@@ -16,9 +16,9 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system. the error reporting system supplements this with optimizations from the compiler, leading to -- fully compile-time, or heavily elided / auto-hoisted / pipelined runtime checks. also, UAF & `NULL` checks are folded within OOB check and incur no extra overhead.
+- **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system suited to compiler optimizations facilitating either fully compile-time or heavily elided / auto-hoisted / pipelined checks. also, UAF & `NULL` checks are folded within OOB check. memstruct subscribes thread safe (locks/atomics free, single-write & read-share) semantics to make multi-threading feasible in bare metal while also complementing external libraries (pthread etc) on 64-bit builds.
 
-- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata (base address + size) stored in a custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
+- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a thread-safe custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
 
 ## Features and design
 
@@ -28,13 +28,13 @@ This document explains how to configure and use the memstruct.h library.
 
 - Single‑header; no separate `.c` file needed. no external dependencies. MCU support.
 
-- Guard-rails: non-idiomatic usage, punning, and aliasing memstruct via raw pointers - whenever statically proven - get *warned* at compile-time.
+- Guard-rails: non-idiomatic usage, punning, and aliasing memstruct via raw pointers - whenever statically proven - get *warned* receives linter (in gcc & clang) and compile-time (gcc only) warnings.
 
-- Works across TUs: simply share int `m(id foo)` (memory ID) to pass memory handle to the callee safely. or, share base address `m(base foo)` & size `m(size foo)` (both R-values) with legacy code.
+- Works across TUs: simply share int `m(foo,enum)` (memory ID) to pass memory handle to the callee safely across / within TU.
 
-- Thread safety: user must protect writes e.g. de/re-allocations *while* multithreading is ON. note this is the basics of of multi-threading, and not specific to memstruct.
+- Thread safety: memstruct is made inherently thread safe using single-writer / read-only-share framework. this is more than sufficient, but if locks are really needed, use external libraries (e.g. pthread) and protect reads and writes as usual.
 
-- Leaky program detection: in a healthy application, the total number of *unique* memstruct allocation stays bounded; **unbounded/steady** growth in the ID counter (printed every 1024 allocs) indicates memory unsafe design. flag `MSTRCT_SIZE` determines total virtual metadata size (default: 1 GiB, extensible upto: 32 GiB) hitting which evokes segfault and a `OVF` error message. 
+- Leaky program detection: in a healthy application, the total number of allocations stays bounded; **unbounded/steady** growth in the ID counter (printed every 1024 allocs in SOFT mode) indicates memory unsafe design.
 
 ## Configuration
 
@@ -49,36 +49,40 @@ This document explains how to configure and use the memstruct.h library.
     ```
     [ default ]   : print detailed err (with line_no of memsruct genesis site), continue with default "safe", handle mstrct_errno.
     MSTRCT_SOFT   : print detailed err (with line_no of error_site), continue with default "safe", handle mstrct_errno.
-    MSTRCT_HARD   : print "BAD", segfault at the error site (get line_no from post-analysis).
+    MSTRCT_HARD   : print "BAD", segfault at the error site (get line_no from crash-analysis).
     ```
 
 - Include MCU flag: `#define MSTRCT_MCU` for MCU programming.
 
+- Define literal `MSTRCT_TNO` (number of maximum simultaneous threads over and above main; default: 0) if required.
+
+- Define literal `MSTRCT_BLOCK` (reference metadata size in bytes) if required. or, define thread-specific mstrctblock[thread_ID]. 
+
 - Include `mstrct.h`.
 
-- Alternatively, instead of directives in the source, place the needed flags `-DFLAG` directly in compilation.
+- Alternatively, instead of directives in the source, use flags `-DFLAG` directly in makefile.
 
 ## Usage
 
-- **Working theory**: a memory array `foo[ i ][ j ][ k ]..` is constructed of two components-
+- **Working theory**: a memory array `foo[ I ][ J ][ K ]..` is constructed of two components-
 
-    a) the static part `foo[ ][ j ][ k ]..` that is with constant indexes and part of the memstruct type system, and
+    a) the static part `foo[ ][ J ][ K ]..` that is with constant indexes and part of the memstruct type system, and
 
-    b) the dynamic part `foo[ i ][ ][ ]..` where the single index i is dynamically decided during memory allocation to foo.
+    b) the dynamic part `foo[ I ][ ][ ]..` where the single index (may or may not be literal) i is dynamically allocated.
 
-    therefore, when a memstruct is declared as `M(type,foo,,j,k..)` the empty 3rd argument (you get compile time error if it isn't empty) is to signify that the dynamic index i is to be determined during allocation later as `M(allocator,foo,i)`.
+    a memstruct is declared as `M(type, const, foo, (J,K..))` where `(J,K,..)` is a typical multi-dim static index. dynamic index `I` is placed during allocation later as e.g. `M(malloc(48), foo, I)`.
 
-    for most purposes, the array is a simple dynamic array (either declared or accessed dynamic) so declare memstruct as `M(type,foo,,1)` or `M(type,foo,)`, then allocate as `M(allocator, foo, i)`, and access as `m(foo,i)`.
+    for most purposes, the array is a simple 1-D array so declare memstruct as e.g. `M(type, volatile, foo, )` or `M(type, volatile foo, 1)`, then allocate as e.g. `M(auto, foo, I)`, and access as `m(foo,i)`.
 
-    if you only need a constant sized array then declare memstruct as `M(type,foo,,J,K...)`, then allocate as `M(allocator,foo,1)` and later access as `m(foo,0,j,k..)` or `m(foo,,j,k..)` (see API reference).
+    if you only need a statically indexed array then declare memstruct as e.g. `M(type, const, foo, (J,K...))`, then allocate as e.g. `M(auto, foo, 1)` and later access as `m(foo,(0,j,k..))` or `m(foo, (,j,k..))`.
 
-    of course if you are using gcc, even indexes j,k, etc are allowed to be dynamic. but subscribing to the dynamic vs static framework lets your code remain portable between clang and gcc. also note that comptime OOB warning for the static component is generated by the compiler itself at the behest of memstruct.
+    in gcc, indexes J,K, etc are allowed to be dynamic. but subscribing to the dynamic vs static split is portable between clang and gcc. also note that compile time OOB warning for the static component is generated by the compiler itself at the behest of memstruct.
 
-    to make use of initializer list in static and on-stack arrays, first declare a memstruct with fixed dimensions e.g. `M(int *const, foo,,4)` then `M(storage_keyword, foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list entering the prior fixed dimension in memstruct. 
+    to make use of initializer list in 1-D arrays, first declare a memstruct as e.g. `M(int, const, foo, )` then `M(malloc(16), foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list with its cardinality as the mono-span. 
 
-    for non-array types, optionally declare the memstruct as `M(ptr_type, foo,, 0)` to result in a lightweight memstruct, and access the type as `m(foo)` for values and `m(base foo)` for address.
+    for non-array types, declare the memstruct as e.g. `M(struct alpha, volatile, foo, )`, then allocate as e.g. `M(auto, alpha, 1)`, and access as `m(foo)`.
 
-- **Memory sharing:** a uint32_t sized metadata ID - `m(id foo)` (globally) / `foo.id` (locally) - is simply passed around. one may also share base_addr & size as `m(base foo)` & `m(size foo)` directly.
+- **Memory sharing:** a uint32_t sized metadata ID `m(foo,enum)` is simply passed around. one may also share base_addr & size as `m(base foo)` & `m(size foo)` directly.
     ```
     bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type alias
 

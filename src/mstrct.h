@@ -95,7 +95,7 @@
 #define MSTRCT_$2(foo,i)                  MSTRCT_CAT2(MSTRCT_PARSE_B, MSTRCT_PARSE(i, MSTRCT_META))(foo, i)
 #define MSTRCT_$1(foo)                    MSTRCT_GET0(foo._id, (typeof(foo.typ[0])), MSTRCT_TSIZ(foo), MSTRCT_TID,  \
                                           MSTRCT_LINE(foo), sizeof(foo.con[0]))
-#define MSTRCT_$0()                       mstrct_errno[MSTRCT_TID]
+#define MSTRCT_$0()                       mstrcterrno[MSTRCT_TID]
 
 #define MSTRCT_$$4(typ1,typ2,foo,i)       MSTRCT_CAT3(MSTRCT_PARSE_C, MSTRCT_PARSE(i, MSTRCT_AUTO),  \
                                           MSTRCT_ARG_COUNT(i))(typ1, typ2, foo, i)
@@ -195,13 +195,11 @@ typedef union {struct {mstrct_unit _mstrct_id; mstrct_uhalf _mstrct_dest; mstrct
 #define MSTRCT_SHIFT (8*(sizeof(mstrct_utwice) - sizeof(mstrct_unit) - sizeof(mstrct_uhalf) * MSTRCT_ARG_COUNT(MSTRCT_MCU)))
 #define MSTRCT_SIZE(word) ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 
-__attribute__((weak)) char mstrcterrno[MSTRCT_TNO + 1]; static char *mstrct_errno = mstrcterrno;
-__attribute__((weak)) mstrct_utwice mstrctblock[MSTRCT_TNO + 1]; static mstrct_utwice *mstrct_block = mstrctblock;
+__attribute__((weak)) char mstrcterrno[MSTRCT_TNO + 1];
+__attribute__((weak)) mstrct_utwice mstrctblock[MSTRCT_TNO + 1];
+__attribute__((weak)) mstrct_unit *mstrctbin[MSTRCT_TNO + 1];
 __attribute__((weak)) mstrct_usize *mstrctfixed[MSTRCT_TNO + 1]; static mstrct_usize **restrict mstrct_fixed = mstrctfixed;
-__attribute__((weak)) mstrct_unit *mstrctbin[MSTRCT_TNO + 1]; static mstrct_unit **mstrct_bin = mstrctbin;
 __attribute__((weak)) mstrct_unit mstrctx[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = 2}, mstrcty[MSTRCT_TNO + 1] = {0};
-
-static volatile mstrct_unit *mstrct_x = mstrctx, *mstrct_y = mstrcty;
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_unit siz, mstrct_unit offset, char var, mstrct_uhalf tid) {
@@ -242,7 +240,7 @@ mstrct_reset(mstrct_unit offset, mstrct_uhalf tid) {return (char)(*(mstrct_utwic
 __attribute__((cold)) static inline void
 mstrct_error(const char *ops, const char err_no, const mstrct_unit line, mstrct_uhalf tid) {
   MSTRCT_PRINT(MSTRCT_PRINT_FMT, ops, __BASE_FILE__, line);
-  if (MSTRCT_ARG_COUNT(MSTRCT_HARD) == 0) {__builtin_trap();} else {mstrct_errno[tid] = err_no;}
+  if (MSTRCT_ARG_COUNT(MSTRCT_HARD) == 0) {__builtin_trap();} else {mstrcterrno[tid] = err_no;}
 }
 
 __attribute__((cold)) static inline mstrct_size
@@ -364,7 +362,7 @@ mstrctblock[1 + (mstrct_uhalf)(n)] =   \
 (mstrct_pack) {._mstrct_dest = 1 + (mstrct_uhalf)(n), ._mstrct_src = MSTRCT_TID, ._mstrct_id = name._id}._mstrct_uni;   \
 (void *)&mstrctblock[1 + (mstrct_uhalf)(n)];})
 
-#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = ((mstrct_pack) {._mstrct_uni = (mstrct_utwice)(mstrct_usize)ptr}._mstrct_dest)
+#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = ((mstrct_pack) {._mstrct_uni = *(mstrct_utwice *)ptr}._mstrct_dest)
 
 #define MSTRCT_DEL(de_alloc, name) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \
   (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \
@@ -397,22 +395,22 @@ mstrct_put(mstrct_pack *cleaner, void *arr, mstrct_unit name_id, mstrct_usize si
 }
 
 static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid) {
-  if ((MSTRCT_ARG_COUNT(MSTRCT_SOFT) == 0) && (mstrct_x[tid] & 1023) == 0) { // print ID per 1024, in SOFT MODE
-    MSTRCT_PRINT(MSTRCT_PRINT_FMT, "", "ID", mstrct_x[tid]);
+  if ((MSTRCT_ARG_COUNT(MSTRCT_SOFT) == 0) && (mstrctx[tid] & 1023) == 0) { // print ID per 1024, in SOFT MODE
+    MSTRCT_PRINT(MSTRCT_PRINT_FMT, "", "ID", mstrctx[tid]);
   }
-  if (mstrct_y[tid] == 0) { // no archive
-    if (__builtin_expect(mstrct_x[tid] + 2 > mstrct_block[tid] / sizeof(mstrct_usize), 0)) {
+  if (mstrcty[tid] == 0) { // no archive
+    if (__builtin_expect(mstrctx[tid] + 2 > *(mstrctfixed[tid] + 1) / sizeof(mstrct_usize), 0)) {
       mstrct_error("META_OVF", 5, 0, tid);
-    } else {mstrct_x[tid] += (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));}
-    return mstrct_x[tid] - (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));
-  } else {return (mstrct_y[tid])--;}
+    } else {mstrctx[tid] += (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));}
+    return mstrctx[tid] - (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize));
+  } else {return (mstrcty[tid])--;}
 }
 
 __attribute__((noinline, unused)) static void
 mstrct_archive(mstrct_unit id, mstrct_uhalf tid) {
-  if (__builtin_expect(mstrct_y[tid] + 2 > mstrct_block[tid] / (8 * sizeof(mstrct_unit)), 0)) {
+  if (__builtin_expect(mstrcty[tid] + 2 > *(mstrctfixed[tid] + 1) / (8 * sizeof(mstrct_unit)), 0)) {
     mstrct_error("META_OVF", 5, 0, tid);
-  } else {mstrct_y[tid] += 1;} *(mstrct_bin[tid] + mstrct_y[tid]) = id;
+  } else {mstrcty[tid] += 1;} *(mstrctbin[tid] + mstrcty[tid]) = id;
 }
 
 __attribute__((always_inline)) static inline void
@@ -437,7 +435,7 @@ mstrct_init(void) {
       if (mstrctblock[i] == 0) mstrctblock[i] = MSTRCT_BLOCK;
       space = MSTRCT_ALLOC(mstrctblock[i]); time = MSTRCT_ALLOC(mstrctblock[i] / 8);
       if (space == NULL || time == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
-      mstrct_fixed[i] = space; mstrctbin[i] = time;
+      mstrct_fixed[i] = space; mstrctbin[i] = time; *(mstrctfixed[i] + 1) = (mstrct_usize)mstrctblock[i];
     }
   } if (mstrct_fixed[0] == NULL) {for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[i] = mstrctfixed[i];}}
 }

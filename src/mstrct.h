@@ -167,7 +167,7 @@ static struct {} mstrct_tid;
 #endif
 
 #ifndef __clang__
-#pragma GCC diagnostic ignored            "-Wstringop-overflow" /*_/\_*/
+#pragma GCC diagnostic ignored            "-Wstringop-overflow" // _/\_
 #endif
 
 #ifndef MSTRCT_PRINT_FMT
@@ -195,13 +195,13 @@ typedef union {struct {mstrct_unit _mstrct_id; mstrct_uhalf _mstrct_dest; mstrct
 #define MSTRCT_SHIFT (8*(sizeof(mstrct_utwice) - sizeof(mstrct_unit) - sizeof(mstrct_uhalf) * MSTRCT_ARG_COUNT(MSTRCT_MCU)))
 #define MSTRCT_SIZE(word) ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 
-__attribute__((weak)) char mstrcterrno[MSTRCT_TNO + 1];
-__attribute__((weak)) mstrct_utwice mstrctblock[MSTRCT_TNO + 1];
-__attribute__((weak)) mstrct_unit *mstrctbin[MSTRCT_TNO + 1];
-__attribute__((weak)) mstrct_usize *mstrctfixed[MSTRCT_TNO + 1]; static mstrct_usize **restrict mstrct_fixed = mstrctfixed;
-__attribute__((weak)) mstrct_unit mstrctx[MSTRCT_TNO + 1] = {[0 ... MSTRCT_TNO] = 2}, mstrcty[MSTRCT_TNO + 1] = {0};
+__attribute__((common)) char mstrcterrno[MSTRCT_TNO + 1];
+__attribute__((common)) mstrct_unit *mstrctbin[MSTRCT_TNO + 1];
+__attribute__((common)) mstrct_utwice mstrctblock[MSTRCT_TNO + 1];
+__attribute__((common)) mstrct_unit mstrctx[MSTRCT_TNO + 1], mstrcty[MSTRCT_TNO + 1];
+__attribute__((common)) mstrct_usize *mstrctfixed[MSTRCT_TNO + 1]; static mstrct_usize **restrict mstrct_fixed = mstrctfixed;
 
-_Static_assert(sizeof(void(*)()) == sizeof(void*), "M_ERR: code & data ptrs must be same size!"); // no harvard
+_Static_assert(sizeof(void(*)(void)) == sizeof(void*), "M_ERR: code & data ptrs must be same size!"); // no harvard
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_unit siz, mstrct_unit offset, char var, mstrct_uhalf tid) {
@@ -436,7 +436,8 @@ mstrct_init(void) {
       if (mstrctblock[i] == 0) mstrctblock[i] = MSTRCT_BLOCK;
       space = MSTRCT_ALLOC(mstrctblock[i]); time = MSTRCT_ALLOC(mstrctblock[i] / 8);
       if (space == NULL || time == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
-      mstrct_fixed[i] = space; mstrctbin[i] = time; *(mstrctfixed[i] + 1) = (mstrct_usize)mstrctblock[i];
+      mstrct_fixed[i] = space; mstrctbin[i] = time; mstrctx[i] = 2; mstrcty[i] = 0;
+      *(mstrctfixed[i] + 1) = (mstrct_usize)mstrctblock[i];
     }
   } if (mstrct_fixed[0] == NULL) {for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[i] = mstrctfixed[i];}}
 }

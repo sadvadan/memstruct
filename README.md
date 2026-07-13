@@ -59,8 +59,6 @@ C + memstruct = performance + memory safety
 
     func(m(foo,sizeof), args);  // or share other metadata
      ```
-     in multithreading contexts, use `M(void, foo, thread_enum)` taxonomy (see, doc).
-
 - **index** arithmetic:
      ```
     foo.i++;                    // array index increment

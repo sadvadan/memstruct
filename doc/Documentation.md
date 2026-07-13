@@ -32,17 +32,17 @@ This document explains how to configure and use the memstruct.h library.
 
 - Works across TUs: int `m(foo,enum)` (memory ID) passed around to share memory.
 
-- Thread safety: inherently thread safe using single-writer / shared-read framework. this is more than sufficient, but if locks are really needed, use external libraries (e.g. pthread) and protect reads and writes as usual.
+- Thread safety: inherently thread safe using exclusive-writer / shared-read framework (no locks or atomics). this is more than sufficient, but if locks / atomics are really needed, use external libraries (e.g. pthread) and protect reads and writes as usual.
+
+- Health monitoring: except for on-stack memories, memory IDs aren't recycled. an unboundedly increasing ID score (printed evry 1024 allocs in SOFT mode) indicates poor design for long running applications.
 
 ## Limitations
 
 - doesn't support Harvard architecture. and, MSVC.
 
-- no GC: every allocation must have a de-allocation (dup-de-allocations -> no-op).
+- no GC: every allocation must have a de-allocation (dup-de-allocations -> no-op though).
 
-- block-scope IDs get re-cycled: aliased on-stack orphans e.g. revive when ref'd IDs get renewed.
-
-- multi-threading model is lock-free. if locks are a requirement #include relevant multi-threading library.
+- multi-threading model is lock-free. if locks are a requirement include relevant multi-threading library.
 
 ## Configuration
 

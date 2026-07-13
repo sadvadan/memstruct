@@ -199,7 +199,7 @@ typedef union {struct {mstrct_unit _mstrct_id; mstrct_uhalf _mstrct_dest; mstrct
 #define MSTRCT_SIZE(word) ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 
 __attribute__((common)) char mstrcterrno[MSTRCT_TNO + 1]; __attribute__((common)) mstrct_utwice mstrctbox[MSTRCT_TNO + 1];
-__attribute__((common)) mstrct_unit mstrctx[MSTRCT_TNO + 1], mstrcty[MSTRCT_TNO + 1], mstrctz[MSTRCT_TNO + 1];
+__attribute__((common)) mstrct_unit mstrctx[MSTRCT_TNO + 1], mstrcty[MSTRCT_TNO + 1];
 __attribute__((common)) mstrct_usize *mstrctfixed[MSTRCT_TNO + 1]; static mstrct_usize **restrict mstrct_fixed = mstrctfixed;
 
 _Static_assert(sizeof(void(*)(void)) == sizeof(void*), "M_ERR: code & data ptrs must be same size!"); // no harvard
@@ -283,8 +283,9 @@ mstrct_check(mstrct_unit id, mstrct_unit type_size, mstrct_unit line, mstrct_siz
 #define MSTRCT_CLEAN(cnt,store)  MSTRCT_CAT2(MSTRCT_CLEAN_, MSTRCT_EXTERN(store))(cnt)
 #define MSTRCT_CLEAN_0(cnt)
 #define MSTRCT_CLEAN_1(cnt)
-#define MSTRCT_CLEAN_2(cnt)      struct mstrct_arc; mstrct_uhalf MSTRCT_CAT2(mstrct_clean_, cnt) \
-                                 __attribute__((cleanup(mstrct_set))) = MSTRCT_ARC; typedef struct mstrct_arc mstrct_arc
+#define MSTRCT_CLEAN_2(cnt)      \
+struct mstrct_arc; mstrct_pack MSTRCT_CAT2(mstrct_clean_, cnt) __attribute__((cleanup(mstrct_set))) = \
+{._mstrct_dest = MSTRCT_ARC, ._mstrct_id = mstrcty[MSTRCT_TID]}; typedef struct mstrct_arc mstrct_arc
 // GET
 
 #define MSTRCT_GET_A0(ptr,typ,i) \
@@ -336,7 +337,7 @@ MSTRCT_GET_10(id, i, typ, tsiz, cid, lin, con), MSTRCT_GET_11(id, i, typ, tsiz, 
 
 #define MSTRCT_LET_D0(alloc, name, range) do {   \
   __builtin_memset(&name, 0, sizeof(name)); char *ptr = (char *)(alloc); name._id = mstrct_alloc(MSTRCT_TID, MSTRCT_HASH_3); \
-  if (arr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
+  if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
   mstrct_put(ptr, name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, MSTRCT_HASH_3); \
 } while(0)
 
@@ -408,32 +409,20 @@ static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid, mstrct_unit hash) {
   if ((MSTRCT_ARG_COUNT(MSTRCT_SOFT) == 0) && (mstrctx[tid] & 1023) == 0) {MSTRCT_PRINT(MSTRCT_PRINT_FMT,"","ID",mstrctx[tid]);}
   mstrct_unit ret = 0; if (__builtin_expect(mstrctx[tid] >= mstrcty[tid], 0)) {mstrct_error("META_OVF", 5, 0, tid);}
   if (!(hash & 0x2)) {ret = mstrctx[tid]; mstrctx[tid] += MSTRCT_STEP;}
-  else {
-    if (mstrcty[tid] >= mstrctz[tid]) {mstrctz[tid] = MSTRCTZ(MSTRCT_STEP, tid);}
-    mstrct_unit hash1 = (*(mstrct_utwice *)(mstrctfixed[tid] + mstrctz[tid] + 1)) >> (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT);
-    if (hash != hash1) {ret = mstrctz[tid]; mstrctz[tid] -= MSTRCT_STEP;}
-    else {ret = mstrcty[tid]; mstrcty[tid] -= MSTRCT_STEP;}
-  }
+  else {mstrcty[tid] -= MSTRCT_STEP; ret = mstrcty[tid];}
   return ret;
 }
 
 static inline void
 mstrct_set(void *ptr) {
-  mstrct_uhalf tid = *(mstrct_uhalf *)ptr;
-  if (tid != (mstrct_uhalf)~(mstrct_uhalf)0) {
-    char iter = 1;
-    mstrct_unit hash = (*(mstrct_utwice *)(mstrctfixed[tid] + mstrcty[tid] + 1)) >> (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT);
-    while (iter) {
-      *(mstrct_utwice *)(mstrctfixed[tid] + mstrcty[tid] + 1) = 0;
-      *(mstrctfixed[tid] + mstrcty[tid]) = (mstrct_usize)(mstrct_fixed[tid]);
-      asm volatile (" " : "+m" (*(mstrct_utwice *)(mstrct_fixed[tid] + mstrcty[tid] + 1)));
-      if (mstrcty[tid] + MSTRCT_STEP >= MSTRCTZ(0, tid)) {iter = 0;}
-      else {
-        mstrcty[tid] += MSTRCT_STEP;
-        if (hash != (*(mstrct_utwice *)(mstrctfixed[tid] + mstrcty[tid] + 1)) >> (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT))
-        {iter = 0;}
-      }
+  mstrct_pack p; __builtin_memcpy(&p, ptr, sizeof(p));
+  if (p._mstrct_dest != (mstrct_uhalf)~(mstrct_uhalf)0) {
+    mstrct_uhalf tid = p._mstrct_dest;
+    for (mstrct_unit j = mstrcty[tid]; j < p._mstrct_id; j += MSTRCT_STEP) {
+      *(mstrct_utwice *)(mstrctfixed[tid] + j + 1) = 0; *(mstrctfixed[tid] + j) = (mstrct_usize)(mstrct_fixed[tid]);
+      asm volatile (" " : "+m" (*(mstrct_utwice *)(mstrct_fixed[tid] + j + 1)));
     }
+    mstrcty[tid] = p._mstrct_id;
   }
 }
 
@@ -443,7 +432,8 @@ mstrct_init(void) {
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
       if (mstrctbox[i] == 0) mstrctbox[i] = MSTRCT_BLOCK; space = MSTRCT_ALLOC(mstrctbox[i]);
       if (space == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
-      mstrct_fixed[i] = space; mstrctx[i] = 2;  mstrcty[i] = MSTRCTZ(0, i); *(mstrctfixed[i] + 1) = (mstrct_usize)mstrctbox[i];
+      mstrct_fixed[i] = space; mstrctx[i] = 2;
+      *(mstrctfixed[i] + 1) = (mstrct_usize)mstrctbox[i]; mstrcty[i] = MSTRCTZ(0, i);
     }
   } if (mstrct_fixed[0] == NULL) {for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[i] = mstrctfixed[i];}}
 }

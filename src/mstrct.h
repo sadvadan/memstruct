@@ -188,7 +188,7 @@ static struct {} mstrct_tid;
   typedef unsigned long mstrct_usize;     typedef signed long mstrct_size; // 64b :: 8B
 #endif
 
-#define MSTRCTZ(idx)                      (*(mstrctfixed[tid]+1) / sizeof(mstrct_usize) - idx)
+#define MSTRCTZ(idx, tid)                 (*(mstrctfixed[tid]+1) / sizeof(mstrct_usize) - idx)
 typedef unsigned int mstrct_unit;         typedef signed int mstrct_nit;   // 8,16,32,64b :: 2,2,4,4 B
 typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned short)0, (unsigned char)0)) mstrct_uhalf;
 typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned long long)0, (unsigned long)0)) mstrct_utwice;
@@ -241,8 +241,8 @@ mstrct_reset(mstrct_unit offset, mstrct_uhalf tid) {return (char)(*(mstrct_utwic
 #define MSTRCT_TYP_11(type, index) typeof((MSTRCT_CON(type)) ? (mstrct_nit const)0 : (mstrct_nit)0)
 
 struct mstrct_arc {}; typedef struct mstrct_arc mstrct_arc;
-#define MSTRCT_ARC   \
-(__builtin_choose_expr(__builtin_types_compatible_p(typeof((mstrct_arc *)0), typeof((struct mstrct_arc *)0))), 0, MSTRCT_TID)
+#define MSTRCT_ARC (__builtin_choose_expr(__builtin_types_compatible_p(   \
+typeof((mstrct_arc *)0), typeof((struct mstrct_arc *)0)), (mstrct_uhalf)~(mstrct_uhalf)0, MSTRCT_TID))
 
 __attribute__((cold)) static inline void
 mstrct_error(const char *ops, const char err_no, const mstrct_unit line, mstrct_uhalf tid) {
@@ -336,7 +336,7 @@ MSTRCT_GET_10(id, i, typ, tsiz, cid, lin, con), MSTRCT_GET_11(id, i, typ, tsiz, 
 
 #define MSTRCT_LET_D0(alloc, name, range) do {   \
   __builtin_memset(&name, 0, sizeof(name)); char *ptr = (char *)(alloc); name._id = mstrct_alloc(MSTRCT_TID, MSTRCT_HASH_3); \
-  if (arr == NULL || arr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, tid);}   \
+  if (arr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
   mstrct_put(ptr, name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, MSTRCT_HASH_3); \
 } while(0)
 
@@ -344,7 +344,6 @@ MSTRCT_GET_10(id, i, typ, tsiz, cid, lin, con), MSTRCT_GET_11(id, i, typ, tsiz, 
 store typeof(*(name.typ[0])) MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, range)]; MSTRCT_CLEAN(cnt, store); \
 if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {  \
   __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID, MSTRCT_HASH(store));  \
-  if (arr == NULL || arr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
   mstrct_put(MSTRCT_CAT2(mstrct__, cnt), name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, MSTRCT_HASH(store)); \
 }
 
@@ -352,7 +351,6 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {  \
 MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, MSTRCT_ARG_COUNT ini)] = MSTRCT_LIST(MSTRCT_EXPAND ini); MSTRCT_CLEAN(cnt, store); \
 if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {_Static_assert(!sizeof(name.i), "M_ERR: " #name " must not have static index!");  \
   __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID, MSTRCT_HASH(store));  \
-  if (arr == NULL || arr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
   mstrct_put(MSTRCT_CAT2(mstrct__, cnt), name._id, MSTRCT_BSIZ(name, MSTRCT_ARG_COUNT ini), MSTRCT_TID, MSTRCT_HASH(store)); \
 }
 
@@ -411,10 +409,10 @@ static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid, mstrct_unit hash) {
   mstrct_unit ret = 0; if (__builtin_expect(mstrctx[tid] >= mstrcty[tid], 0)) {mstrct_error("META_OVF", 5, 0, tid);}
   if (!(hash & 0x2)) {ret = mstrctx[tid]; mstrctx[tid] += MSTRCT_STEP;}
   else {
-    if (mstrcty[tid] >= mstrctz[tid]) {mstrctz[tid] = MSTRCTZ(MSTRCT_STEP);}
+    if (mstrcty[tid] >= mstrctz[tid]) {mstrctz[tid] = MSTRCTZ(MSTRCT_STEP, tid);}
     mstrct_unit hash1 = (*(mstrct_utwice *)(mstrctfixed[tid] + mstrctz[tid] + 1)) >> (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT);
     if (hash != hash1) {ret = mstrctz[tid]; mstrctz[tid] -= MSTRCT_STEP;}
-    else {ret = mstrcty[tid]; mstrcty[tid] += MSTRCT_STEP;}
+    else {ret = mstrcty[tid]; mstrcty[tid] -= MSTRCT_STEP;}
   }
   return ret;
 }
@@ -422,14 +420,14 @@ static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid, mstrct_unit hash) {
 static inline void
 mstrct_set(void *ptr) {
   mstrct_uhalf tid = *(mstrct_uhalf *)ptr;
-  if (tid != 0) {
+  if (tid != (mstrct_uhalf)~(mstrct_uhalf)0) {
     char iter = 1;
     mstrct_unit hash = (*(mstrct_utwice *)(mstrctfixed[tid] + mstrcty[tid] + 1)) >> (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT);
     while (iter) {
       *(mstrct_utwice *)(mstrctfixed[tid] + mstrcty[tid] + 1) = 0;
       *(mstrctfixed[tid] + mstrcty[tid]) = (mstrct_usize)(mstrct_fixed[tid]);
       asm volatile (" " : "+m" (*(mstrct_utwice *)(mstrct_fixed[tid] + mstrcty[tid] + 1)));
-      if (mstrcty[tid] + MSTRCT_STEP >= MSTRCTZ(0)) {iter = 0;}
+      if (mstrcty[tid] + MSTRCT_STEP >= MSTRCTZ(0, tid)) {iter = 0;}
       else {
         mstrcty[tid] += MSTRCT_STEP;
         if (hash != (*(mstrct_utwice *)(mstrctfixed[tid] + mstrcty[tid] + 1)) >> (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT))
@@ -445,7 +443,7 @@ mstrct_init(void) {
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
       if (mstrctbox[i] == 0) mstrctbox[i] = MSTRCT_BLOCK; space = MSTRCT_ALLOC(mstrctbox[i]);
       if (space == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
-      mstrct_fixed[i] = space; mstrctx[i] = 2; *(mstrctfixed[i] + 1) = (mstrct_usize)mstrctbox[i];
+      mstrct_fixed[i] = space; mstrctx[i] = 2;  mstrcty[i] = MSTRCTZ(0, i); *(mstrctfixed[i] + 1) = (mstrct_usize)mstrctbox[i];
     }
   } if (mstrct_fixed[0] == NULL) {for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[i] = mstrctfixed[i];}}
 }

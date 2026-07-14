@@ -41,23 +41,23 @@ C + memstruct = performance + memory safety
      ```
 - **Metadata** access:
      ```
-    m(foo,sizeof)               // byte size
+    m(foo,sizeof)               // foo byte size
 
-    m(foo,void)                 // base addr
+    m(foo,void)                 // foo base addr
 
-    m(foo,_)                    // index span
+    m(foo,_)                    // foo index span
 
     m(foo,enum)                 // foo ID
 
     m(foo)                      // foo first element
      ```
-- **Share** memory: simply pass around the int `m(foo,id)`.
+- **Share** memory: simply pass around the int ID `m(foo,enum)`.
     ```
     m(bar,enum) = m(foo,enum);  // bar now shares memory with foo 
     
-    func(m(foo,enum), args);    // share memory with callee
+    func(m(foo,enum), args);    // share read-write memory with callee
 
-    func(m(foo,sizeof), args);  // or share other metadata
+    func(m(foo,sizeof), args);  // read-only memory (or share other metadata)
      ```
 - **index** arithmetic:
      ```

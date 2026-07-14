@@ -175,6 +175,8 @@ typedef unsigned int mstrct_unit;         typedef signed int mstrct_nit;   // 8,
 
 #ifndef __clang__
 #pragma GCC diagnostic ignored            "-Wstringop-overflow" // _/\_
+#else
+#pragma clang diagnostic ignored          "-Wtypedef-redefinition"
 #endif
 
 #ifndef MSTRCT_PRINT_FMT
@@ -209,15 +211,18 @@ static inline char*
 mstrct_addr(mstrct_unit offset, mstrct_uhalf tid) {return (char *)(*((mstrct_fixed[tid]) + offset));}
 
 static inline mstrct_usize
-mstrct_byte(mstrct_unit offset, mstrct_uhalf tid) {return MSTRCT_SIZE(*(mstrct_utwice *)((mstrct_fixed[tid]) + offset + 1));}
+mstrct_byte(mstrct_unit offset, mstrct_uhalf tid) {
+  if (offset >= mstrcty[tid]) {return *((mstrct_fixed[tid]) + offset + 1);}
+  else {return MSTRCT_SIZE(*(mstrct_utwice *)((mstrct_fixed[tid]) + offset + 1));}
+}
 
 __attribute__((noinline, unused, const)) static mstrct_size
 mstrct_span(mstrct_unit tsiz, mstrct_unit offset, char var, mstrct_uhalf tid) {
-  (void)var; return mstrct_byte(offset, tid) / tsiz;
+  asm volatile (" " : "+m" (var)); return mstrct_byte(offset, tid) / tsiz;
 }
 
 __attribute__((always_inline)) static inline char
-mstrct_reset(mstrct_unit offset, mstrct_uhalf tid) {return (char)(*(mstrct_utwice *)((mstrct_fixed[tid]) + offset + 1));}
+mstrct_reset(mstrct_unit offset, mstrct_uhalf tid) {return (char)(*((mstrct_fixed[tid]) + offset + 1));}
 
 // memstruct; see doc
 #define MSTRCT_T(type, index, line, key) struct {  \
@@ -229,12 +234,11 @@ mstrct_reset(mstrct_unit offset, mstrct_uhalf tid) {return (char)(*(mstrct_utwic
   /* dim[0] */ struct {char b; char a[] index [1];} dim[0];   \
 }
 
-#define MSTRCT_CON(type) (__builtin_types_compatible_p(typeof(type) const *, type *))
-
-#define MSTRCT_TYP_00(type, index) typeof((struct {}){})
-#define MSTRCT_TYP_01(type, index) typeof((MSTRCT_CON(type)) ? (mstrct_size const)0 : (mstrct_size)0)
-#define MSTRCT_TYP_10(type, index) typeof((struct {}){})
-#define MSTRCT_TYP_11(type, index) typeof((MSTRCT_CON(type)) ? (mstrct_nit const)0 : (mstrct_nit)0)
+#define MSTRCT_CON(type)                  (__builtin_types_compatible_p(typeof(type) const *, type *))
+#define MSTRCT_TYP_00(type, index)        typeof((struct {}){})
+#define MSTRCT_TYP_01(type, index)        typeof((MSTRCT_CON(type)) ? (mstrct_size const)0 : (mstrct_size)0)
+#define MSTRCT_TYP_10(type, index)        typeof((struct {}){})
+#define MSTRCT_TYP_11(type, index)        typeof((MSTRCT_CON(type)) ? (mstrct_nit const)0 : (mstrct_nit)0)
 
 struct mstrct_arc {}; typedef struct mstrct_arc mstrct_arc;
 #define MSTRCT_ARC   \
@@ -258,24 +262,25 @@ mstrct_check(mstrct_unit id, mstrct_unit type_size, mstrct_unit line, mstrct_siz
 }
 
 // utility
-#define MSTRCT_STEP              (MSTRCT_CHK2 ? (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize)) : 2)
-#define MSTRCT_TSIZ(name)        ((mstrct_unit)sizeof(*(name.typ[0])))
-#define MSTRCT_ASIZ(name, range) ((range) * (mstrct_usize)sizeof(*(name.dim[0].a)))
-#define MSTRCT_BSIZ(name, range) (MSTRCT_TSIZ(name) * MSTRCT_ASIZ(name, range))
-#define MSTRCT_FLAT(name,idx)    ((mstrct_size)(&(*(typeof(name.dim[0].a) *)0) idx [0]) + \
-                                 __builtin_choose_expr(sizeof(name.i), (name.i), (0)))
+#define MSTRCT_ID(ptr)                    ((*(mstrct_pack *)ptr)->_mstrct_id)
+#define MSTRCT_CID(ptr)                   ((*(mstrct_pack *)ptr)->_mstrct_src)
+#define MSTRCT_STEP                       (MSTRCT_CHK2 ? (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize)) : 2)
+#define MSTRCT_TSIZ(name)                 ((mstrct_unit)sizeof(*(name.typ[0])))
+#define MSTRCT_ASIZ(name, range)          ((range) * (mstrct_usize)sizeof(*(name.dim[0].a)))
+#define MSTRCT_BSIZ(name, range)          (MSTRCT_TSIZ(name) * MSTRCT_ASIZ(name, range))
+#define MSTRCT_FLAT(name,idx)             ((mstrct_size)(&(*(typeof(name.dim[0].a) *)0) idx [0]) + \
+                                          __builtin_choose_expr(sizeof(name.i), (name.i), (0)))
 
-#define MSTRCT_PRAG0             _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
-#define MSTRCT_PRAG1             _Pragma("GCC diagnostic warning \"-Warray-bounds\"")
-#define MSTRCT_PRAG2             _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wattributes\"")
-#define MSTRCT_PRAG3             _Pragma("GCC diagnostic pop")
-#define MSTRCT_ID(ptr)           ((mstrct_pack) {._mstrct_uni = *(mstrct_utwice *)ptr}._mstrct_id)
-#define MSTRCT_CID(ptr)          ((mstrct_pack) {._mstrct_uni = *(mstrct_utwice *)ptr}._mstrct_src)
+#define MSTRCT_PRAG0                      _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
+#define MSTRCT_PRAG1                      _Pragma("GCC diagnostic warning \"-Warray-bounds\"")
+#define MSTRCT_PRAG2                      _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wattributes\"")   \
+                                          _Pragma("GCC diagnostic ignored \"-Wunused-local-typedefs\"")
+#define MSTRCT_PRAG3                      _Pragma("GCC diagnostic pop")
 
 #define MSTRCT_CLEAN(cnt)  \
-struct mstrct_arc; MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack)0, (mstrct_pass)0))   \
+struct mstrct_arc; MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_pass){}))   \
 MSTRCT_CAT2(mstrct_clean_, cnt) __attribute__((cleanup(mstrct_set))) = {._mstrct_id = mstrcty[MSTRCT_TID]}; \
-MSTRCT_CAT2(mstrct_clean_, cnt)._mstrct_dest = MSTRCT_ARC; MSTRCT_PRAG3 typedef struct mstrct_arc mstrct_arc
+MSTRCT_CAT2(mstrct_clean_, cnt)._mstrct_dest = MSTRCT_ARC; typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG3
 
 // GET
 
@@ -297,7 +302,7 @@ mstrct_base(sizeof(typ), MSTRCT_ID(ptr), mstrct_reset(MSTRCT_ID(ptr), MSTRCT_CID
 
 #define MSTRCT_GET_B0(name,i)    MSTRCT_GET_B5(name, i)
 
-#define MSTRCT_GET_B1(name)      (*({asm volatile (" " : "+m" (*(mstrct_utwice *)(mstrct_fixed[MSTRCT_TID] + name._id + 1))); \
+#define MSTRCT_GET_B1(name)      (*({asm volatile (" " : "+m" (*(mstrct_fixed[MSTRCT_TID] + name._id + 1))); \
                                  &(name._id);}))
 
 #define MSTRCT_GET_B2(name)      (mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id, MSTRCT_TID), MSTRCT_TID))
@@ -338,7 +343,7 @@ MSTRCT_GET_10(id, i, typ, tsiz, cid, lin, con), MSTRCT_GET_11(id, i, typ, tsiz, 
 } while(0)
 
 #define MSTRCT_LET_D1(store, name, range, cnt)  \
-store typeof(*(name.typ[0])) MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, range)]; MSTRCT_CLEAN(cnt); \
+store typeof(*(name.typ[0])) MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, range)]; MSTRCT_CLEAN(cnt);  \
 if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {  \
   __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_alloc(MSTRCT_TID, (MSTRCT_AUTO(store)));  \
   mstrct_put(MSTRCT_CAT2(mstrct__, cnt), name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, 0); \
@@ -370,7 +375,7 @@ ptr = mstrct_addr((*(mstrct_pack *)ptr)->_mstrct_id, (*(mstrct_pack *)ptr)->_mst
   (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \
   *(mstrct_utwice *)(mstrct_fixed[MSTRCT_TID] + name._id + 1) = 0;  \
   *(mstrct_fixed[MSTRCT_TID] + name._id) = (mstrct_usize)(mstrct_fixed[MSTRCT_TID]); \
-  asm volatile (" " : "+m" (*(mstrct_utwice *)(mstrct_fixed[MSTRCT_TID] + name._id + 1)));   \
+  asm volatile (" " : "+m" (*(mstrct_fixed[MSTRCT_TID] + name._id + 1)));   \
 } while(0)
 
 // prototypes for free() & munmap()                                                                                   
@@ -393,8 +398,10 @@ mstrct_dealloc_1(void *fun, mstrct_unit id, mstrct_unit line, mstrct_uhalf tid) 
 static inline void
 mstrct_put(void *arr, mstrct_unit name_id, mstrct_usize size, mstrct_uhalf tid, mstrct_unit hash) {
   *(void **)((mstrct_fixed[tid]) + name_id) = arr;
-  *(typeof(__builtin_choose_expr(MSTRCT_STEP == 2, (mstrct_usize *)0, (mstrct_utwice *)0)))(mstrct_fixed[tid] + name_id + 1) =
-  (hash) ? ((mstrct_utwice)size | ((mstrct_utwice)(mstrct_uhalf)hash << (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT))) : size;
+  if (hash) {
+    *(typeof(__builtin_choose_expr(MSTRCT_STEP == 2, (mstrct_usize *)0, (mstrct_utwice *)0)))(mstrct_fixed[tid] + name_id + 1) =
+    (mstrct_utwice)size | ((mstrct_utwice)(mstrct_uhalf)hash << (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT));
+  } else *(mstrct_fixed[tid] + name_id + 1) = size;
 }
 
 static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid, char stack) {
@@ -408,10 +415,10 @@ static inline mstrct_unit mstrct_alloc(mstrct_uhalf tid, char stack) {
 static inline void
 mstrct_set(void *ptr) {
   if (*(mstrct_uhalf *)ptr) {
-    mstrct_pack p; __builtin_memcpy(&p, ptr, sizeof(p)); mstrct_uhalf tid = p._mstrct_dest - 1;
-    for (mstrct_unit j = mstrcty[tid]; j < p._mstrct_id; j += MSTRCT_STEP) {
-      *(mstrct_utwice *)(mstrctfixed[tid] + j + 1) = 0; *(mstrctfixed[tid] + j) = (mstrct_usize)(mstrct_fixed[tid]);
-      asm volatile (" " : "+m" (*(mstrct_utwice *)(mstrct_fixed[tid] + j + 1)));
+    mstrct_pack p = *(mstrct_pack *)ptr; mstrct_uhalf tid = p._mstrct_dest - 1;
+    for (mstrct_unit j = mstrcty[tid]; j <= p._mstrct_id; j += 2) {
+      *(mstrctfixed[tid] + j + 1) = 0; *(mstrctfixed[tid] + j) = (mstrct_usize)(mstrct_fixed[tid]);
+      asm volatile (" " : "+m" (*(mstrct_fixed[tid] + j + 1)));
     }
     mstrcty[tid] = p._mstrct_id;
   }
@@ -419,7 +426,7 @@ mstrct_set(void *ptr) {
 
 __attribute__((constructor)) static inline void
 mstrct_init(void) {
-  if (mstrctfixed[0] == 0) {void *space, *time;
+  if (mstrctfixed[0] == 0) {void *space;
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
       if ((mstrctbox[i])._mstrct_uni == 0) (mstrctbox[i])._mstrct_uni = MSTRCT_BLOCK;
       space = MSTRCT_ALLOC((mstrctbox[i])._mstrct_uni);

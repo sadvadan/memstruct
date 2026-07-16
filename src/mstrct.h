@@ -107,26 +107,27 @@
 #define MSTRCT_PARSE_1(i, macr)           macr(i)  // keyword
 #define MSTRCT_PARSE_0(i, macr)           9        // multi-index
 
-#define MSTRCT_PARSE_A00(hea, typ, n)     MSTRCT_HEAP(((char *)MSTRCT_KEY(hea)), (n), typ)
+#define MSTRCT_PARSE_A00(hea, typ, n)     MSTRCT_HEAP(((char *)MSTRCT_KEY(hea, mstrct_usize)), (n), typ)
 #define MSTRCT_PARSE_A01(foo, tid, id)    MSTRCT_GET_A0(foo, (tid))              
-#define MSTRCT_PARSE_A02(hea, typ, span)  (mstrct_span0(sizeof(typ), ((char *)MSTRCT_KEY(hea))))
-#define MSTRCT_PARSE_A03(hea, typ, base)  ((char *)MSTRCT_KEY(hea))
-#define MSTRCT_PARSE_A04(hea, typ, size)  MSTRCT_SIZE((mstrct_usize *)((char *)MSTRCT_KEY(hea)) + 1)
-#define MSTRCT_PARSE_A09(hea, typ, idx)   MSTRCT_HEAP(((char *)MSTRCT_KEY(hea)), MSTRCT_FLAT0(typ, MSTRCT_INDEX idx), typ)
+#define MSTRCT_PARSE_A02(hea, typ, span)  (mstrct_span0(sizeof(typ), ((char *)MSTRCT_KEY(hea, mstrct_usize))))
+#define MSTRCT_PARSE_A03(hea, typ, base)  ((char *)MSTRCT_KEY(hea, mstrct_usize))
+#define MSTRCT_PARSE_A04(hea, typ, size)  MSTRCT_SIZE((mstrct_usize *)((char *)MSTRCT_KEY(hea, mstrct_usize)) + 1)
+#define MSTRCT_PARSE_A09(hea, typ, idx)   MSTRCT_HEAP(((char *)MSTRCT_KEY(hea, mstrct_usize)),  \
+                                          MSTRCT_FLAT0(typ, MSTRCT_INDEX idx), typ)
 
-#define MSTRCT_PARSE_A20(glo, nil, n)     MSTRCT_GLOBL((glo).ptr, (n), typof((glo).ptr[0]), MSTRCT_LINE(glo), sizeof((glo).ptr))
+#define MSTRCT_PARSE_A20(glo, nil, n)     MSTRCT_GLOBL((glo).ptr, (n), typeof((glo).ptr[0]), MSTRCT_LINE(glo), sizeof((glo).ptr))
 #define MSTRCT_PARSE_A22(glo, nil, span)  ((mstrct_usize)(sizeof(glo.siz[0]) / sizeof(typeof(glo.ptr))))
 #define MSTRCT_PARSE_A23(glo, nil, base)  ((char *)(glo.ptr))
 #define MSTRCT_PARSE_A24(glo, nil, size)  (mstrct_usize)(glo.siz)              
 #define MSTRCT_PARSE_A29(glo, nil, idx)   MSTRCT_GLOBL((glo).ptr, MSTRCT_FLAT0(typeof((glo).ptr[0]), MSTRCT_INDEX idx), \
-                                          typof((glo).ptr[0]), MSTRCT_LINE(glo), sizeof((glo).ptr))
+                                          typeof((glo).ptr[0]), MSTRCT_LINE(glo), sizeof((glo).ptr))
 
 #define MSTRCT_PARSE_B0(foo, n)           MSTRCT_LOCAL((foo), n, ((foo).typ[0]), ((foo).lin[0]))
 #define MSTRCT_PARSE_B1(foo, id)          (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] +(foo)._id +1))); &((foo)._id);}))
 #define MSTRCT_PARSE_B2(foo, span)        (mstrct_span(MSTRCT_TSIZ(foo),(foo)._id,mstrct_reset((foo)._id,MSTRCT_TID),MSTRCT_TID))
 #define MSTRCT_PARSE_B3(foo, base)        (mstrct_base(MSTRCT_TSIZ(foo),(foo)._id,mstrct_reset((foo)._id,MSTRCT_TID),MSTRCT_TID))
 #define MSTRCT_PARSE_B4(foo, size)        (mstrct_byte((foo)._id, MSTRCT_TID))
-#define MSTRCT_PARSE_B5(foo, index)       MSTRCT_LOCAL((foo), MSTRCT_FLAT(foo, MSTRCT_INDEX idx), ((foo).typ[0]), ((foo).lin[0]))
+#define MSTRCT_PARSE_B5(foo, idx)         MSTRCT_LOCAL((foo), MSTRCT_FLAT(foo, MSTRCT_INDEX idx), ((foo).typ[0]), ((foo).lin[0]))
 
 #define MSTRCT_PARSE_C00(t1,t2,foo,i)     MSTRCT_T(t1 *t2, [i], __LINE__, 1) foo
 #define MSTRCT_PARSE_C05(t1,t2,foo,nil)   MSTRCT_T(t1 *t2,, __LINE__, ) foo
@@ -209,10 +210,10 @@ typedef unsigned int mstrct_unit;         typedef signed int mstrct_nit;   // 8,
 #define MSTRCT_TSIZ(name)                 ((mstrct_unit)sizeof(*(name.typ[0])))
 #define MSTRCT_CHECK(type, foo_i, flat)   (((MSTRCT_CON(type) || !sizeof(foo_i))  && __builtin_constant_p(flat)) || !MSTRCT_CHK1)
 
-#define MSTRCT_KEY(ptr, word)             ((word)ptr ^ (word)(MSTRCT_SECRET >> (64 - 8 * sizeof(word))))
+#define MSTRCT_KEY(data, word)            ((word)data ^ (word)(MSTRCT_SECRET >> (64 - 8 * sizeof(word))))
 #define MSTRCT_ASIZ(name, range)          ((range) * (mstrct_usize)sizeof(*(name.dim[0].a)))
 #define MSTRCT_BSIZ(name, range)          (MSTRCT_TSIZ(name) * MSTRCT_ASIZ(name, range))
-#define MSTRCT_FLAT0(typ, idx)            ((mstrct_size)(&(*(typ *)0) idx [0])
+#define MSTRCT_FLAT0(typ, idx)            ((mstrct_size)(&(*(typ *)0) idx [0]))
 #define MSTRCT_FLAT(name, idx)            ((mstrct_size)(&(*(typeof(name.dim[0].a) *)0) idx [0]) + \
                                           __builtin_choose_expr(sizeof(name.i), (name.i), (0)))
 
@@ -305,7 +306,7 @@ MSTRCT_CAT2(mstrct_clean_, cnt)._mstrct_dest = MSTRCT_ARC; typedef struct mstrct
 (base) [({(__builtin_constant_p(flat) || !MSTRCT_CHK1) ? flat : mstrct_check_global(base, sizeof(*type), flat, line, size);})]
 
 #define MSTRCT_HEAP(meta, flat, type)  \
-({(*(type **)meta)) [({MSTRCT_CHECK(type, 0) ? flat : mstrct_check_heap(meta, sizeof(type), flat);})];})
+({(*(type **)meta) [({MSTRCT_CHECK(type, 0) ? flat : mstrct_check_heap(meta, sizeof(type), flat);})];})
 
 #define MSTRCT_LOCAL(foo, flat, typ, lin)  \
 ({(void)sizeof(flat); (typeof(typ))mstrct_base(sizeof(*typ), foo._id, mstrct_reset(foo._id, MSTRCT_TID), MSTRCT_TID); MSTRCT_PRAG0}) \
@@ -337,7 +338,7 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {  \
   mstrct_put(MSTRCT_CAT2(mstrct__, cnt), name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, 0); \
 }
 
-#define MSTRCT_LET_D2(store, name, ini, cnt) store typeof(*(name.typ[0]))  \
+#define MSTRCT_LET_D2(name, ini, cnt) store typeof(*(name.typ[0]))  \
 MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, MSTRCT_ARG_COUNT ini)] = MSTRCT_LIST(MSTRCT_EXPAND ini); MSTRCT_CLEAN(cnt); \
 if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) { \
   _Static_assert(!sizeof(name.i), "M_ERR: " #name " must not have static index as cardinality derives from initializer list!");  \
@@ -356,8 +357,8 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) { \
   name._id = mstrct_alloc(MSTRCT_TID, 0); mstrct_put(ptr, name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, 0); \
 } while(0)
 
-#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = (*(mstrct_pack **)ptr)->_mstrct_dest; ptr =   \
-(void *)((mstrct_usize)(mstrct_fixed[(*(mstrct_pack **)ptr)->_mstrct_src] + (*(mstrct_pack **)ptr)->_mstrct_id) ^ MSTRCT_MASK)
+#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = (*(mstrct_pack **)ptr)->_mstrct_dest; ptr = (void *)((mstrct_usize)  \
+(mstrct_fixed[(*(mstrct_pack **)ptr)->_mstrct_src] + (*(mstrct_pack **)ptr)->_mstrct_id) ^ MSTRCT_KEY(ptr, mstrct_usize))
 
 #define MSTRCT_DEL(de_alloc, name) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \
   (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \

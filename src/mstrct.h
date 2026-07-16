@@ -98,7 +98,7 @@
 #define MSTRCT_$$3(foo,store,range)       MSTRCT_CAT3(MSTRCT_PARSE_D, MSTRCT_PARSE(store, MSTRCT_HEAD), \
                                           MSTRCT_PARSE(range, MSTRCT_TAIL))(store,foo,range)
 #define MSTRCT_$$2(foo,de_store)          MSTRCT_DEL(de_store, foo)
-#define MSTRCT_$$1(foo)                   MSTRCT_LET_E0(MSTRCT_KEY(foo, mstrct_usize))
+#define MSTRCT_$$1(foo)                   MSTRCT_LET_E0(foo)
 
 #define MSTRCT_PARSE(i, macr)             MSTRCT_CAT2(MSTRCT_PARSE_, MSTRCT_ARG_COUNT(MSTRCT_DUMMY i))(i, macr)
 #define MSTRCT_DUMMY(...)
@@ -116,9 +116,9 @@
                                           MSTRCT_FLAT0(typ, MSTRCT_INDEX idx), typ)
 
 #define MSTRCT_PARSE_A20(glo, nil, n)     MSTRCT_GLOBL((glo).ptr, (n), typeof((glo).ptr[0]), MSTRCT_LINE(glo), sizeof((glo).ptr))
-#define MSTRCT_PARSE_A22(glo, nil, span)  ((mstrct_usize)(sizeof(glo.siz[0]) / sizeof(typeof(glo.ptr))))
+#define MSTRCT_PARSE_A22(glo, nil, span)  ((mstrct_usize)(sizeof((glo).ptr) / sizeof((glo).ptr[0])))
 #define MSTRCT_PARSE_A23(glo, nil, base)  ((char *)(glo.ptr))
-#define MSTRCT_PARSE_A24(glo, nil, size)  (mstrct_usize)(glo.siz)              
+#define MSTRCT_PARSE_A24(glo, nil, size)  ((mstrct_usize)sizeof((glo).ptr))
 #define MSTRCT_PARSE_A29(glo, nil, idx)   MSTRCT_GLOBL((glo).ptr, MSTRCT_FLAT0(typeof((glo).ptr[0]), MSTRCT_INDEX idx), \
                                           typeof((glo).ptr[0]), MSTRCT_LINE(glo), sizeof((glo).ptr))
 
@@ -132,8 +132,8 @@
 #define MSTRCT_PARSE_C00(t1,t2,foo,i)     MSTRCT_T(t1 *t2, [i], __LINE__, 1) foo
 #define MSTRCT_PARSE_C05(t1,t2,foo,nil)   MSTRCT_T(t1 *t2,, __LINE__, ) foo
 #define MSTRCT_PARSE_C09(t1,t2,foo,idx)   MSTRCT_T(t1 *t2, MSTRCT_INDEX idx, __LINE__, ) foo
-#define MSTRCT_PARSE_C10(t1,glo,foo,i)    glo MSTRCT_T1(t1, [i], __LINE__)
-#define MSTRCT_PARSE_C19(t1,glo,foo,idx)  glo MSTRCT_T1(t1, MSTRCT_INDEX idx, __LINE__)
+#define MSTRCT_PARSE_C10(t1,glo,foo,i)    glo MSTRCT_T1(t1, [i], __LINE__) foo
+#define MSTRCT_PARSE_C19(t1,glo,foo,idx)  glo MSTRCT_T1(t1, MSTRCT_INDEX idx, __LINE__) foo
 #define MSTRCT_PARSE_C20(t1,nil,foo,i)    MSTRCT_T(t1 *, [i], __LINE__, 1) foo
 #define MSTRCT_PARSE_C25(t1,nil,foo,nul)  MSTRCT_T(t1 *,, __LINE__, ) foo
 #define MSTRCT_PARSE_C29(t1,nil,foo,idx)  MSTRCT_T(t1 *, MSTRCT_INDEX idx, __LINE__, ) foo
@@ -239,7 +239,7 @@ typedef unsigned int mstrct_unit;         typedef signed int mstrct_nit;   // 8,
   /* dim[0] */ struct {char b; char a[] index [1];} dim[0];   \
 }
 
-#define MSTRCT_T1(type, index, line) struct {type ptr index [1]; /* lin[0] */ struct {char a[line];} lin[0];}
+#define MSTRCT_T1(type, index, line) struct {type ptr index; /* lin[0] */ struct {char a[line];} lin[0];}
 
 typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned short)0, (unsigned char)0)) mstrct_uhalf;
 typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned long long)0, (unsigned long)0)) mstrct_utwice;
@@ -294,6 +294,22 @@ mstrct_bounds_error(mstrct_unit _d, mstrct_unit line, mstrct_uhalf tid) {
 }
 
 __attribute__((hot)) static inline mstrct_size
+mstrct_check_heap(void *meta, mstrct_unit tsiz, mstrct_size index) {
+  mstrct_utwice word = *(mstrct_utwice *)((mstrct_usize *)meta + 1);
+  if (__builtin_expect((mstrct_usize)index < (mstrct_usize)(MSTRCT_SIZE(word) / tsiz), 1)) {return index;}
+  mstrct_unit line = (mstrct_unit)(word >> (8 * sizeof(mstrct_utwice) - MSTRCT_SHIFT));
+  if (MSTRCT_SIZE(word) == 0) {mstrct_error("BAD", 1, line, MSTRCT_TID);} else {mstrct_error("OOB", 2, line, MSTRCT_TID);}
+  return 0;
+}
+
+__attribute__((hot)) static inline mstrct_size
+mstrct_check_global(const void *base, mstrct_unit tsiz, mstrct_size index, mstrct_unit line, mstrct_usize size) {
+  (void)base;
+  if (__builtin_expect((mstrct_usize)index < (mstrct_usize)(size / tsiz), 1)) {return index;}
+  mstrct_error("OOB", 2, line, MSTRCT_TID); return 0;
+}
+
+__attribute__((hot)) static inline mstrct_size
 mstrct_check(mstrct_unit id, mstrct_unit type_size, mstrct_unit line, mstrct_size index, mstrct_uhalf tid) {
   if (__builtin_expect(((mstrct_usize)mstrct_span(type_size, id, mstrct_reset(id, tid), tid) > (mstrct_usize)index), 1))
   {return index;} else {return mstrct_bounds_error(MSTRCT_HID(id), line, tid);}
@@ -307,7 +323,7 @@ MSTRCT_CAT2(mstrct_clean_, cnt) __attribute__((cleanup(mstrct_set))) = {._mstrct
 MSTRCT_CAT2(mstrct_clean_, cnt)._mstrct_dest = MSTRCT_ARC; typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG3
 
 #define MSTRCT_GLOBL(base, flat, type, line, size) \
-(base) [({(__builtin_constant_p(flat) || !MSTRCT_CHK1) ? flat : mstrct_check_global(base, sizeof(*type), flat, line, size);})]
+(base) [({(__builtin_constant_p(flat) || !MSTRCT_CHK1) ? flat : mstrct_check_global(base, sizeof(type), flat, line, size);})]
 
 #define MSTRCT_HEAP(meta, flat, type)  \
 ({(*(type **)meta) [({MSTRCT_CHECK(type, 0, flat) ? flat : mstrct_check_heap(meta, sizeof(type), flat);})];})
@@ -361,7 +377,7 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) { \
   name._id = mstrct_alloc(MSTRCT_TID, 0); mstrct_put(ptr, name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, 0); \
 } while(0)
 
-#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = (*(mstrct_pack **)ptr)->_mstrct_dest; ptr = (void *)MSTRCT_KEY( \
+#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = ((mstrct_pack *)ptr)->_mstrct_dest; ptr = (void *)MSTRCT_KEY( \
 ((mstrct_usize)(mstrct_fixed[((mstrct_pack *)ptr)->_mstrct_src] + ((mstrct_pack *)ptr)->_mstrct_id)), mstrct_usize)
 
 #define MSTRCT_DEL(de_alloc, name) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \

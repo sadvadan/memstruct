@@ -98,7 +98,7 @@
 #define MSTRCT_$$3(foo,store,range)       MSTRCT_CAT3(MSTRCT_PARSE_D, MSTRCT_PARSE(store, MSTRCT_HEAD), \
                                           MSTRCT_PARSE(range, MSTRCT_TAIL))(store,foo,range)
 #define MSTRCT_$$2(foo,de_store)          MSTRCT_DEL(de_store, foo)
-#define MSTRCT_$$1(foo)                   MSTRCT_LET_E0(foo)
+#define MSTRCT_$$1(foo)                   MSTRCT_LET_E0(MSTRCT_KEY(foo, mstrct_usize))
 
 #define MSTRCT_PARSE(i, macr)             MSTRCT_CAT2(MSTRCT_PARSE_, MSTRCT_ARG_COUNT(MSTRCT_DUMMY i))(i, macr)
 #define MSTRCT_DUMMY(...)
@@ -361,8 +361,8 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) { \
   name._id = mstrct_alloc(MSTRCT_TID, 0); mstrct_put(ptr, name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, 0); \
 } while(0)
 
-#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = (*(mstrct_pack **)ptr)->_mstrct_dest; ptr = (void *)((mstrct_usize)  \
-(mstrct_fixed[(*(mstrct_pack **)ptr)->_mstrct_src] + MSTRCT_KEY((*(mstrct_pack **)ptr)->_mstrct_id, mstrct_usize))
+#define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = (*(mstrct_pack **)ptr)->_mstrct_dest; ptr = (void *)MSTRCT_KEY( \
+((mstrct_usize)(mstrct_fixed[((mstrct_pack *)ptr)->_mstrct_src] + ((mstrct_pack *)ptr)->_mstrct_id)), mstrct_usize)
 
 #define MSTRCT_DEL(de_alloc, name) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \
   (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \

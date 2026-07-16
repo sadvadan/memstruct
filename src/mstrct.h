@@ -132,8 +132,8 @@
 #define MSTRCT_PARSE_C00(t1,t2,foo,i)     MSTRCT_T(t1 *t2, [i], __LINE__, 1) foo
 #define MSTRCT_PARSE_C05(t1,t2,foo,nil)   MSTRCT_T(t1 *t2,, __LINE__, ) foo
 #define MSTRCT_PARSE_C09(t1,t2,foo,idx)   MSTRCT_T(t1 *t2, MSTRCT_INDEX idx, __LINE__, ) foo
-#define MSTRCT_PARSE_C10(t1,glo,foo,i)    MSTRCT_T1(type, [i], __LINE__)
-#define MSTRCT_PARSE_C19(t1,glo,foo,idx)  MSTRCT_T1(type, MSTRCT_INDEX idx, __LINE__)
+#define MSTRCT_PARSE_C10(t1,glo,foo,i)    MSTRCT_T1(t1, [i], __LINE__)
+#define MSTRCT_PARSE_C19(t1,glo,foo,idx)  MSTRCT_T1(t1, MSTRCT_INDEX idx, __LINE__)
 #define MSTRCT_PARSE_C20(t1,nil,foo,i)    MSTRCT_T(t1 *, [i], __LINE__, 1) foo
 #define MSTRCT_PARSE_C25(t1,nil,foo,nul)  MSTRCT_T(t1 *,, __LINE__, ) foo
 #define MSTRCT_PARSE_C29(t1,nil,foo,idx)  MSTRCT_T(t1 *, MSTRCT_INDEX idx, __LINE__, ) foo
@@ -275,6 +275,10 @@ mstrct_span(mstrct_unit tsiz, mstrct_unit offset, char var, mstrct_uhalf tid) {
   asm volatile (" " : "+m" (var)); return mstrct_byte(offset, tid) / tsiz;
 }
 
+static mstrct_size
+mstrct_span0(mstrct_unit tsiz, char *meta) {
+  return MSTRCT_SIZE(*(mstrct_utwice *)((mstrct_usize *)meta + 1)) / tsiz;
+}
 __attribute__((always_inline)) static inline char
 mstrct_reset(mstrct_unit offset, mstrct_uhalf tid) {return (char)(*((mstrct_fixed[tid]) + offset + 1));}
 
@@ -306,7 +310,7 @@ MSTRCT_CAT2(mstrct_clean_, cnt)._mstrct_dest = MSTRCT_ARC; typedef struct mstrct
 (base) [({(__builtin_constant_p(flat) || !MSTRCT_CHK1) ? flat : mstrct_check_global(base, sizeof(*type), flat, line, size);})]
 
 #define MSTRCT_HEAP(meta, flat, type)  \
-({(*(type **)meta) [({MSTRCT_CHECK(type, 0) ? flat : mstrct_check_heap(meta, sizeof(type), flat);})];})
+({(*(type **)meta) [({MSTRCT_CHECK(type, 0, flat) ? flat : mstrct_check_heap(meta, sizeof(type), flat);})];})
 
 #define MSTRCT_LOCAL(foo, flat, typ, lin)  \
 ({(void)sizeof(flat); (typeof(typ))mstrct_base(sizeof(*typ), foo._id, mstrct_reset(foo._id, MSTRCT_TID), MSTRCT_TID); MSTRCT_PRAG0}) \
@@ -316,7 +320,7 @@ MSTRCT_CAT2(mstrct_clean_, cnt)._mstrct_dest = MSTRCT_ARC; typedef struct mstrct
 
 #define MSTRCT_GET_A0(name, n) ({mstrct_uhalf mstrct_temp = (mstrct_uhalf)(n); \
 if (mstrct_temp >= MSTRCT_TNO) {mstrct_error("TID_OVF",6,__LINE__,MSTRCT_TID); mstrct_temp = 0;};  \
-mstrctbox[1 + mstrct_temp] = {._mstrct_dest = 1 + mstrct_temp, ._mstrct_src = MSTRCT_TID, ._mstrct_id = name._id}; \
+mstrctbox[1 + mstrct_temp] = (mstrct_pack){._mstrct_dest = 1 + mstrct_temp, ._mstrct_src = MSTRCT_TID, ._mstrct_id = name._id}; \
 (void *)&mstrctbox[1 + mstrct_temp];})
 
 #define MSTRCT_GET_B0(name,i)    \
@@ -338,7 +342,7 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) {  \
   mstrct_put(MSTRCT_CAT2(mstrct__, cnt), name._id, MSTRCT_BSIZ(name, range), MSTRCT_TID, 0); \
 }
 
-#define MSTRCT_LET_D2(name, ini, cnt) store typeof(*(name.typ[0]))  \
+#define MSTRCT_LET_D2(name, ini, cnt) typeof(*(name.typ[0]))  \
 MSTRCT_CAT2(mstrct__, cnt)[MSTRCT_ASIZ(name, MSTRCT_ARG_COUNT ini)] = MSTRCT_LIST(MSTRCT_EXPAND ini); MSTRCT_CLEAN(cnt); \
 if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) { \
   _Static_assert(!sizeof(name.i), "M_ERR: " #name " must not have static index as cardinality derives from initializer list!");  \
@@ -358,7 +362,7 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) { \
 } while(0)
 
 #define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = (*(mstrct_pack **)ptr)->_mstrct_dest; ptr = (void *)((mstrct_usize)  \
-(mstrct_fixed[(*(mstrct_pack **)ptr)->_mstrct_src] + (*(mstrct_pack **)ptr)->_mstrct_id) ^ MSTRCT_KEY(ptr, mstrct_usize))
+(mstrct_fixed[(*(mstrct_pack **)ptr)->_mstrct_src] + (*(mstrct_pack **)ptr)->_mstrct_id) ^ MSTRCT_SECRET)
 
 #define MSTRCT_DEL(de_alloc, name) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \
   (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \

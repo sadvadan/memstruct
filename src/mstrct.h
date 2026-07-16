@@ -112,15 +112,15 @@
 #define MSTRCT_PARSE_A02(hea, typ, span)  (mstrct_span0(sizeof(typ), ((char *)MSTRCT_KEY(hea, mstrct_usize))))
 #define MSTRCT_PARSE_A03(hea, typ, base)  ((char *)MSTRCT_KEY(hea, mstrct_usize))
 #define MSTRCT_PARSE_A04(hea, typ, size)  MSTRCT_SIZE((mstrct_usize *)((char *)MSTRCT_KEY(hea, mstrct_usize)) + 1)
-#define MSTRCT_PARSE_A09(hea, typ, idx)   MSTRCT_HEAP(((char *)MSTRCT_KEY(hea, mstrct_usize)),  \
-                                          MSTRCT_FLAT0(typ, MSTRCT_INDEX idx), typ)
 
 #define MSTRCT_PARSE_A20(glo, nil, n)     MSTRCT_GLOBL((glo).ptr, (n), typeof((glo).ptr[0]), MSTRCT_LINE(glo), sizeof((glo).ptr))
 #define MSTRCT_PARSE_A22(glo, nil, span)  ((mstrct_usize)(sizeof((glo).ptr) / sizeof((glo).ptr[0])))
 #define MSTRCT_PARSE_A23(glo, nil, base)  ((char *)(glo.ptr))
 #define MSTRCT_PARSE_A24(glo, nil, size)  ((mstrct_usize)sizeof((glo).ptr))
-#define MSTRCT_PARSE_A29(glo, nil, idx)   MSTRCT_GLOBL((glo).ptr, MSTRCT_FLAT0(typeof((glo).ptr[0]), MSTRCT_INDEX idx), \
-                                          typeof((glo).ptr[0]), MSTRCT_LINE(glo), sizeof((glo).ptr))
+#define MSTRCT_PARSE_A29(glo, nil, idx)   MSTRCT_GLOBL(((typeof(MSTRCT_ELEM((glo).ptr, idx)) *)(glo).ptr),  \
+                                          ((mstrct_size)((mstrct_usize)&(MSTRCT_ELEM((glo).ptr, idx))  \
+                                          / sizeof(MSTRCT_ELEM((glo).ptr, idx)))),  \
+                                          typeof(MSTRCT_ELEM((glo).ptr, idx)), MSTRCT_LINE(glo), sizeof((glo).ptr)) 
 
 #define MSTRCT_PARSE_B0(foo, n)           MSTRCT_LOCAL((foo), n, ((foo).typ[0]), ((foo).lin[0]))
 #define MSTRCT_PARSE_B1(foo, id)          (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] +(foo)._id +1))); &((foo)._id);}))
@@ -213,7 +213,7 @@ typedef unsigned int mstrct_unit;         typedef signed int mstrct_nit;   // 8,
 #define MSTRCT_KEY(data, word)            ((word)data ^ (word)(MSTRCT_SECRET >> (64 - 8 * sizeof(word))))
 #define MSTRCT_ASIZ(name, range)          ((range) * (mstrct_usize)sizeof(*(name.dim[0].a)))
 #define MSTRCT_BSIZ(name, range)          (MSTRCT_TSIZ(name) * MSTRCT_ASIZ(name, range))
-#define MSTRCT_FLAT0(typ, idx)            ((mstrct_size)(&(*(typ *)0) idx [0]))
+#define MSTRCT_ELEM(arr, idx)             (*(typeof(arr) *)0) MSTRCT_INDEX idx
 #define MSTRCT_FLAT(name, idx)            ((mstrct_size)(&(*(typeof(name.dim[0].a) *)0) idx [0]) + \
                                           __builtin_choose_expr(sizeof(name.i), (name.i), (0)))
 

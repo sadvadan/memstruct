@@ -132,8 +132,8 @@
 #define MSTRCT_PARSE_C00(t1,t2,foo,i)     MSTRCT_T(t1 *t2, [i], __LINE__, 1) foo
 #define MSTRCT_PARSE_C05(t1,t2,foo,nil)   MSTRCT_T(t1 *t2,, __LINE__, ) foo
 #define MSTRCT_PARSE_C09(t1,t2,foo,idx)   MSTRCT_T(t1 *t2, MSTRCT_INDEX idx, __LINE__, ) foo
-#define MSTRCT_PARSE_C10(t1,glo,foo,i)    MSTRCT_T1(t1, [i], __LINE__)
-#define MSTRCT_PARSE_C19(t1,glo,foo,idx)  MSTRCT_T1(t1, MSTRCT_INDEX idx, __LINE__)
+#define MSTRCT_PARSE_C10(t1,glo,foo,i)    glo MSTRCT_T1(t1, [i], __LINE__)
+#define MSTRCT_PARSE_C19(t1,glo,foo,idx)  glo MSTRCT_T1(t1, MSTRCT_INDEX idx, __LINE__)
 #define MSTRCT_PARSE_C20(t1,nil,foo,i)    MSTRCT_T(t1 *, [i], __LINE__, 1) foo
 #define MSTRCT_PARSE_C25(t1,nil,foo,nul)  MSTRCT_T(t1 *,, __LINE__, ) foo
 #define MSTRCT_PARSE_C29(t1,nil,foo,idx)  MSTRCT_T(t1 *, MSTRCT_INDEX idx, __LINE__, ) foo
@@ -223,7 +223,7 @@ typedef unsigned int mstrct_unit;         typedef signed int mstrct_nit;   // 8,
                                           _Pragma("GCC diagnostic ignored \"-Wunused-local-typedefs\"")
 #define MSTRCT_PRAG3                      _Pragma("GCC diagnostic pop")
 
-#define MSTRCT_CON(type)                  (__builtin_types_compatible_p(typeof(type) const *, type *))
+#define MSTRCT_CON(type)                  (__builtin_types_compatible_p(typeof(type) const *, typeof(type) *))
 #define MSTRCT_TYP_00(type, index)        typeof((struct {}){})
 #define MSTRCT_TYP_01(type, index)        typeof((MSTRCT_CON(type)) ? (mstrct_size const)0 : (mstrct_size)0)
 #define MSTRCT_TYP_10(type, index)        typeof((struct {}){})
@@ -362,7 +362,7 @@ if (sizeof(MSTRCT_CAT2(mstrct__, cnt))) { \
 } while(0)
 
 #define MSTRCT_LET_E0(ptr) mstrct_uhalf mstrct_tid = (*(mstrct_pack **)ptr)->_mstrct_dest; ptr = (void *)((mstrct_usize)  \
-(mstrct_fixed[(*(mstrct_pack **)ptr)->_mstrct_src] + (*(mstrct_pack **)ptr)->_mstrct_id) ^ MSTRCT_SECRET)
+(mstrct_fixed[(*(mstrct_pack **)ptr)->_mstrct_src] + MSTRCT_KEY((*(mstrct_pack **)ptr)->_mstrct_id, mstrct_usize))
 
 #define MSTRCT_DEL(de_alloc, name) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \
   (mstrct_dealloc_0(de_alloc, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(de_alloc, (name._id), __LINE__, MSTRCT_TID))); \

@@ -362,6 +362,8 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 
 #define MSTRCT_$3(name, n, typ)           MSTRCT_CAT2(MSTRCT_$3, MSTRCT_QUAL(n))(name, n, typ)
 #define MSTRCT_$30(name, n, typ)          MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ*,n), (typ*)0, __LINE__)
+#define MSTRCT_$31(name, auto, typ)       ({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] +   \
+                                          (mstrct_unit)(mstrct_usize)name + 1))); (mstrct_unit)(mstrct_usize)name;})  
 #define MSTRCT_$33(name, _, typ)          mstrct_span(sizeof(typ), (mstrct_unit)(mstrct_usize)name, 1, MSTRCT_TID)
 
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)

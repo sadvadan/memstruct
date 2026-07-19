@@ -118,7 +118,7 @@
 #define MSTRCT_UNIT                       mstrct_unit
 #define MSTRCT_SIZE(word)                 ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 #define MSTRCT_TSIZ(name)                 ((mstrct_unit)sizeof(*(name.typ[0])))
-#define MSTRCT_ELEM(type, idx)            (*(typeof(type))0) MSTRCT_SUB(idx)
+#define MSTRCT_ELEM(type, idx)            (*(typeof(type) *)0) MSTRCT_SUB(idx)
 #define MSTRCT_FLAT(typ, idx)             ((mstrct_size)((mstrct_usize)&(MSTRCT_ELEM(typ,idx)) / sizeof(MSTRCT_ELEM(typ,idx))))
 
 #if defined(MSTRCT_MCU)
@@ -171,7 +171,7 @@ _Static_assert(sizeof(void(*)(void)) == sizeof(void*), "M_ERR: code & data ptrs 
 #define MSTRCT_T0(type, index, line, key) struct {  \
   typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i; \
   mstrct_unit _id;   \
-  /* typ[0] */ typeof(type) typ[0] __attribute__((packed)); \
+  /* typ[0] */ typeof(type) * const typ[0] __attribute__((packed)); \
   /* lin[0] */ struct {char a[line];} lin[0];   \
   /* dim[0] */ struct {char b; typeof(type) a[] index [1];} dim[0];   \
 }
@@ -179,9 +179,9 @@ _Static_assert(sizeof(void(*)(void)) == sizeof(void*), "M_ERR: code & data ptrs 
 #define MSTRCT_T1(type, index, line, key) struct {  \
   typeof(__builtin_choose_expr(key, (mstrct_size)0, (struct {}){})) i; \
   mstrct_unit _id;   \
-  /* typ[0] */ typeof(type) typ[0] __attribute__((packed)); \
+  /* typ[0] */ typeof(type) * typ[0] __attribute__((packed)); \
   /* lin[0] */ struct {char a[line];} lin[0];   \
-  /* dim[0] */ struct {typeof(type) a index [1]} dim[1];  \
+  /* dim[0] */ struct {typeof(type) a index [1];} dim[1];  \
 }
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
@@ -331,7 +331,7 @@ if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__
 name._id = mstrct_put(ptr, name._id, mstrct_size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); \
 } while(0)
 
-#define MSTRCT_$$2(name, mstrct_free) do {__builtin_choose_expr((sizeof(de_alloc) == 1),   \
+#define MSTRCT_$$2(name, mstrct_free) do {__builtin_choose_expr((sizeof(mstrct_free) == 1),   \
 (mstrct_dealloc_0(mstrct_free, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(mstrct_free, (name._id), __LINE__, MSTRCT_TID))); \
 *(mstrct_utwice *)(mstrct_fixed[MSTRCT_TID] + name._id + 1) = 0;  \
 *(mstrct_fixed[MSTRCT_TID] + name._id) = (mstrct_usize)(mstrct_fixed[MSTRCT_TID]); \
@@ -362,7 +362,7 @@ name._id = mstrct_put(&(name.dim[0].a), name._id, sizeof(name.dim[0].a), MSTRCT_
 
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)
 #define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), \
-                                          MSTRCT_FLAT(name.typ[0], n), typeof(name.typ[0]), MSTRCT_LIN(name))
+                                          MSTRCT_FLAT(name.dim[0].a, n), name.typ[0], MSTRCT_LIN(name))
 #define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name._id);}))
 #define MSTRCT_$22(name, do)              mstrctbox[MSTRCT_TID] = name._id
 #define MSTRCT_$23(name, _)               mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id,MSTRCT_TID), MSTRCT_TID)

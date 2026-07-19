@@ -15,7 +15,7 @@ int main(void) {
 }
 
 /* out
- * size of this memstruct should be 4. check: 4
+ * size of this memstruct should be 8. check: 8
  * foo[7][1][2][1], with checks: 5
 */
 

@@ -57,7 +57,6 @@
 #define _MSTRCT_do                        1,1,2
 #define _MSTRCT__                         1,1,1,3
 #define MSTRCT_EXPAND(...)                __VA_ARGS__
-#define MSTRCT_QUAL(arg)                  MSTRCT_DO(_MSTRCT_##arg)
 
 #define MSTRCT_DEF1(a)                    #a
 #define MSTRCT_DEF2(a,b)                  a##b
@@ -83,6 +82,11 @@
 #define MSTRCT_SUB(i)                     MSTRCT_CAT2(MSTRCT_SUB, MSTRCT_PAREN(i))(i)
 #define MSTRCT_SUB0(i)                    [i]
 #define MSTRCT_SUB1(i)                    MSTRCT_INDEX(MSTRCT_EXPAND i)
+
+#define MSTRCT_QUAL(arg)                  MSTRCT_CAT2(MSTRCT_QUAL, MSTRCT_ARG_COUNT(MSTRCT_DUMMY arg))(arg)
+#define MSTRCT_QUAL1(arg)                 MSTRCT_DO(_MSTRCT_##arg)
+#define MSTRCT_QUAL0(arg)                 0
+
 
 #define MSTRCT_ARG_COUNT(...)             MSTRCT(10 __VA_OPT__(,) ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #define MSTRCT_DO(...)                    MSTRCT_ARG6(__VA_ARGS__, 4, 3, 2, 1, 0)
@@ -375,7 +379,7 @@ name._id = mstrct_put(&(name.dim[0].a), name._id, sizeof(name.dim[0].a), MSTRCT_
 #define MSTRCT_DATA(id, nidx, flat, typ, lin) \
 (__builtin_choose_expr((nidx && __builtin_constant_p(flat)) || !MSTRCT_CHK1, ((typeof(typ))mstrct_addr(id, MSTRCT_TID))[flat], \
 ({asm(""::"r"(flat)); (typeof(typ))mstrct_base(sizeof(*typ), id, mstrct_reset(id, MSTRCT_TID), MSTRCT_TID); \
-MSTRCT_PRAG0}) [({mstrct_check(id, sizeof(typ), lin, flat, MSTRCT_TID); MSTRCT_PRAG1})]))
+MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, flat, MSTRCT_TID); MSTRCT_PRAG0})]))
 
 #define MSTRCT_CLEAN(cnt) struct mstrct_arc; \
 MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_pass){})) MSTRCT_CAT2(mstrct_clean_, cnt)   \

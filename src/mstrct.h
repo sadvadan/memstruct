@@ -162,7 +162,7 @@ __attribute__((common)) mstrct_unit mstrctx[MSTRCT_TNO + 1], mstrcty[MSTRCT_TNO 
 __attribute__((common)) mstrct_usize *mstrctfixed[MSTRCT_TNO + 1]; static mstrct_usize **restrict mstrct_fixed = mstrctfixed;
 
 typedef union {mstrct_uhalf id; mstrct_uhalf tid;} mstrct_pass;
-typedef struct __attribute__((packed)) {mstrct_unit id; mstrct_uhalf tid;} mstrct_pack;
+typedef struct __attribute__((packed)) {mstrct_uhalf tid; mstrct_unit id;} mstrct_pack;
 typedef struct {mstrct_uhalf src; mstrct_uhalf tid;} mstrct_mail;
 
 struct mstrct_arc {}; typedef struct mstrct_arc mstrct_arc; static struct {} mstrct_tid; 
@@ -351,12 +351,12 @@ asm volatile (" " : "+m" (*(mstrct_fixed[MSTRCT_TID] + name._id + 1)));   \
 #define MSTRCT_$40(name, n, typ, store, cnt)   \
 store MSTRCT_T1(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name  \
 static inline void __attribute__((constructor(102))) MSTRCT_CAT2(mstrct$, cnt)(void) { \
-  name._id = mstrct_put(&(name.dim[0].a), name._id, sizeof(name.dim[0].a), 0, 0); \
+  __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a), 0, sizeof(name.dim[0].a), 0, 0); \
 }
 
 #define MSTRCT_$41(name, n, typ, auto, cnt) \
 MSTRCT_T1(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name; MSTRCT_CLEAN(cnt);   \
-name._id = mstrct_put(&(name.dim[0].a), name._id, sizeof(name.dim[0].a), MSTRCT_TID, 0)
+__builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a), 0, sizeof(name.dim[0].a), MSTRCT_TID, 0)
 
 #define MSTRCT_$42(name, n, typ, do, cnt) MSTRCT_T0(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name
 
@@ -365,8 +365,8 @@ name._id = mstrct_put(&(name.dim[0].a), name._id, sizeof(name.dim[0].a), MSTRCT_
 #define MSTRCT_$33(name, _, typ)          mstrct_span(sizeof(typ), (mstrct_unit)name, 1, MSTRCT_TID)
 
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)
-#define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), \
-                                          MSTRCT_FLAT(name.dim[0].a, n), name.typ[0], MSTRCT_LIN(name))
+#define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (MSTRCT_FLAT(name.dim[0].a, n) +  \
+                                          __builtin_choose_expr(sizeof(name.i), name.i, 0)), name.typ[0], MSTRCT_LIN(name))
 #define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name._id);}))
 #define MSTRCT_$22(name, do)              mstrctbox[MSTRCT_TID] = name._id
 #define MSTRCT_$23(name, _)               mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id,MSTRCT_TID), MSTRCT_TID)
@@ -383,7 +383,7 @@ MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, flat, MSTRCT_TID); MSTRCT_
 
 #define MSTRCT_CLEAN(cnt) struct mstrct_arc; \
 MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_pass){})) MSTRCT_CAT2(mstrct_clean_, cnt)   \
-__attribute__((cleanup(mstrct_set))) = {.tid = mstrcty[MSTRCT_TID], .id = MSTRCT_ARC * (1 + MSTRCT_TID)}; \
+__attribute__((cleanup(mstrct_set))) = {.id = MSTRCT_ARC * (1 + MSTRCT_TID), .tid = mstrcty[MSTRCT_TID]}; \
 typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG0
 
 

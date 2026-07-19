@@ -6,8 +6,8 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int,, arr,);                                   // declare simple memstruct
-  M(malloc(40), arr, 10);
+  m(arr, 1, int, do);                                   // declare simple memstruct
+  M(arr, malloc, 40);
   m(arr,0) = 47;                                   // assign arr[0]
 
   // === Level 0: continue after error (default behavior) ===
@@ -17,7 +17,7 @@ int main(void) {
     printf("Continued after OOB: x = %d (expected : base value)\n", x);
 
     // Use-after-free simulation
-    M(free, arr);
+    M(arr, free);
     x = m(arr,0);                                  // UAF -> print error, continue
     printf("default behavior: Continued after UAF\n");
   #endif
@@ -26,7 +26,7 @@ int main(void) {
   #if defined(MSTRCT_SOFT)
     printf("soft mode - OOB prints line no of err site.\n");
     int x = m(arr,15);                             // OOB
-    M(free, arr);
+    M(arr, free);
     printf("continued after OOB. x = %d\n", x);
   #endif
 
@@ -35,7 +35,7 @@ int main(void) {
     printf("hard mode - trap() at OOB site; line no = 0.\n");
     int x = m(arr,15);                             // OOB
     printf("This line should NOT be reached in HARD mode: x = %d\n", x);
-    M(free, arr);                                  // this is not reached
+    M(arr, free);                                  // this is not reached
   #endif
 
   return 0;

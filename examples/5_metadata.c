@@ -3,17 +3,16 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int,, var,);                       // var[][1]
-  M(malloc(48), var, 12);              // var[12][1]
+  m(var, 1, int, do);                       // var[][1]
+  M(var, malloc, 48);              // var[12][1]
   m(var,0) = 10;                       // define var[0][0]
 
-  printf("ptr_ID: %d\n",               m(var,enum));
-  printf("ptr_base_addr: %p\n",        m(var,void));
-  printf("arr_byte_size: %lu\n",      m(var,sizeof));
+  printf("ptr_ID: %d\n",               m(var,auto));
+  printf("ptr_base_addr: %p\n",        &m(var));
   printf("arr_index_span: %lu\n",     m(var,_));
   printf("value of 1st element: %d\n", m(var));
 
-  M(free, var);
+  M(var, free);
   return 0;
 }
 

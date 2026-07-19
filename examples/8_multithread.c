@@ -14,15 +14,15 @@ void* native_thread(void *arg) {
   M(arg);
 
   // thread's own global:
-  M(int,, view, );
-  M(malloc(1000*sizeof(int)), view, 1000);
+  m(view, 1, int, do);
+  M(view, malloc, 1000*sizeof(int));
 
   for (int i = 0; i < 1000; i++) {
   // access (for read) 1000 elems of (global) shared
-    m(view,i) = m(arg,int,i);
+    m(view,i) = m(arg,i,int);
   }
 
-  M(free, view);
+  M(view, free);
   printf("Thread(I) %d done\n", mstrct_tid); // thread ID
   return 0;
 }
@@ -33,7 +33,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 void* library_thread(void *arg) {
   M(arg);
 
-  M(int,, view, );
+  m(view, 1, int, do);
   // alias (for write) 1000 elems of (global) shared
   M(m(arg,int,void), view, 1000);
 

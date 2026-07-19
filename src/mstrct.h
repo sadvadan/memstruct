@@ -361,8 +361,8 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 #define MSTRCT_$42(name, n, typ, do, cnt) MSTRCT_T0(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name
 
 #define MSTRCT_$3(name, n, typ)           MSTRCT_CAT2(MSTRCT_$3, MSTRCT_QUAL(n))(name, n, typ)
-#define MSTRCT_$30(name, n, typ)          MSTRCT_DATA((mstrct_unit)name, 0, MSTRCT_FLAT(typ *, n), typ, __LINE__)
-#define MSTRCT_$33(name, _, typ)          mstrct_span(sizeof(typ), (mstrct_unit)name, 1, MSTRCT_TID)
+#define MSTRCT_$30(name, n, typ)          MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ*,n), (typ*)0, __LINE__)
+#define MSTRCT_$33(name, _, typ)          mstrct_span(sizeof(typ), (mstrct_unit)(mstrct_usize)name, 1, MSTRCT_TID)
 
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)
 #define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (MSTRCT_FLAT(name.dim[0].a, n) +  \
@@ -383,7 +383,7 @@ MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, flat, MSTRCT_TID); MSTRCT_
 
 #define MSTRCT_CLEAN(cnt) struct mstrct_arc; \
 MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_pass){})) MSTRCT_CAT2(mstrct_clean_, cnt)   \
-__attribute__((cleanup(mstrct_set))) = {.id = MSTRCT_ARC * (1 + MSTRCT_TID), .tid = mstrcty[MSTRCT_TID]}; \
+__attribute__((cleanup(mstrct_set))) = {.id = mstrcty[MSTRCT_TID], .tid = MSTRCT_ARC * (1 + MSTRCT_TID)}; \
 typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG0
 
 

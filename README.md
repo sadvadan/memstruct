@@ -5,7 +5,7 @@ C + memstruct = performance + memory safety
 
 ## Features
 
-- **Code size**    - memstruct is a 370 LoC single header-file library with no external dependencies.
+- **Code size**    - memstruct is a 330 LoC single header-file library with no external dependencies.
 - **Memory safety**- covers UAF, NULL deref, OOB (multi-dim), leaks, double free & memory sharing, for both array & non-array types.
 - **Thread safety**- provides single-write memory & read-only share. complements libs like pthread when atomics/locks are needed.
 - **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed at >O0.
@@ -20,18 +20,21 @@ C + memstruct = performance + memory safety
     `mstrct.h` in your file.
 - **Declare and allocate** a memstruct:
 
-    declaration prototype (4 args): `M(ptr_type, ptr_qualifier, name, optional_static_indexes)`
+    declaration: `m(name, static_index, type)`
 
-    allocation prototype (3 args): `M(any_allocator, name, dynamic_index)`
-    ```
-    M(int, const, foo,);        // declare simple foo as (int *const)[][1]
-    M(auto, foo, 3);            // allocate on-stack as int[3][1] or simply int[3]
-    M(auto, foo, (1,2,3));      // or allocate on-stack as int[3] = {1,2,3} (initializer list)
+    allocation on heap: `M(name, allocator_name, allocator_args...)`
 
-    M(int, , bar, (2,5,7));     // declare multidim bar as (int *)[][2][5][7]
-    M(malloc(2800), bar, 10);   // allocate bar on-heap as (int *)[10][2][5][7]
+    declaration + allocation on stack or global: `m(name, static_index, type, storage)`
     ```
-- **Re-allocate** memory: same as allocation, `M(re_allocator, name, dynamic_index)`.
+    m(foo, 1, int);             // declare simple foo as (int *const)[][1]
+    M(foo, malloc, 48);         // allocate on-heap as int[][1] + int[12][] = int[12][1], i.e. simply int[12]
+
+    m(bar, 10, int, auto);      // declare and allocate on-stack an int[10]
+
+    m(baz, (2,5,7), int);       // declare multidim baz as (int *)[][2][5][7]
+    M(baz, malloc, 2800);       // allocate bar on-heap as (int *)[10][2][5][7]
+    ```
+- **Re-allocate** memory: same as allocation.
 
 - **Read / write** memory: `m(name,(i,j...)) is eqv to name[i][j]...`
     ```
@@ -41,23 +44,21 @@ C + memstruct = performance + memory safety
      ```
 - **Metadata** access:
      ```
-    m(foo,sizeof)               // foo byte size
-
-    m(foo,void)                 // foo base addr
+    &m(foo)                     // foo base addr
 
     m(foo,_)                    // foo index span
 
-    m(foo,enum)                 // foo ID
+    m(foo,auto)                 // foo ID
 
     m(foo)                      // foo first element
      ```
-- **Share** memory: simply pass around the int ID `m(foo,enum)`.
+- **Share** memory: simply pass around the int ID `m(foo,auto)`.
     ```
-    m(bar,enum) = m(foo,enum);  // bar now shares memory with foo 
+    m(bar,auto) = m(foo,auto);  // bar now shares memory with foo 
     
-    func(m(foo,enum), args);    // share read-write memory with callee
+    func(m(foo,auto), args);    // share read-write memory with callee
 
-    func(m(foo,sizeof), args);  // read-only memory (or share other metadata)
+    func(m(foo,_), args);       // read-only memory (or share other metadata)
      ```
 - **index** arithmetic:
      ```
@@ -76,6 +77,8 @@ C + memstruct = performance + memory safety
     M(munmap, bar);               // mmapped memory
      ```
 - **Get errno**: `m()` generates memory related errno's (1-6). thread safe.
+
+- **Other features**: mostly thread safety related API, refer doc (link below).
 
 
 ## Documentation 

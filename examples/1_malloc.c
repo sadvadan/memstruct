@@ -5,7 +5,7 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  m(foo, 1, int, do);  // (int * const)[][1]
+  m(foo, 1, int);  // (int * const)[][1]
 
   M(foo, malloc, 48); // int[][1] + int[12][] -> int[12][1], on-heap
 

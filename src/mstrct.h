@@ -346,24 +346,26 @@ asm volatile (" " : "+m" (*(mstrct_fixed[MSTRCT_TID] + name._id + 1)));   \
 
 #define MSTRCT_$$0() mstrcterrno[MSTRCT_TID]
 
-#define MSTRCT_$4(name, n, typ, store)    MSTRCT_CAT2(MSTRCT_$4, MSTRCT_QUAL(store))(name, n, typ, store, __COUNTER__)
+#define MSTRCT_$4(name, n, typ, store)    MSTRCT_CAT2(MSTRCT_$4, MSTRCT_QUAL(store))(name, n, typ, store)
 
-#define MSTRCT_$40(name, n, typ, store, cnt)   \
+#define MSTRCT_$40(name, n, typ, store) MSTRCT_$400(name, n, typ, store, __COUNTER__)
+#define MSTRCT_$400(name, n, typ, store, cnt)   \
 store MSTRCT_T1(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name  \
 static inline void __attribute__((constructor(102))) MSTRCT_CAT2(mstrct$, cnt)(void) { \
   __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a), 0, sizeof(name.dim[0].a), 0, 0); \
 }
 
-#define MSTRCT_$41(name, n, typ, auto, cnt) \
-MSTRCT_T1(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name; MSTRCT_CLEAN(cnt);   \
+#define MSTRCT_$41(name, n, typ, auto) MSTRCT_$411(name, n, typ, auto, __COUNTER__)
+#define MSTRCT_$411(name, n, typ, auto, cnt) MSTRCT_T1(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name; MSTRCT_CLEAN(cnt);   \
 __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a), 0, sizeof(name.dim[0].a), MSTRCT_TID, 0)
 
-#define MSTRCT_$42(name, n, typ, do, cnt) MSTRCT_T0(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name
+#define MSTRCT_$42(name, n, typ, do) MSTRCT_DATA((mstrct_unit)(mstrct_usize)name,0,MSTRCT_FLAT(typ*,n),(typ*)0,__LINE__)
+
+#define MSTRCT_$43(name, n, typ, _) ({MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ*,n), (typ*)0, __LINE__);})
 
 #define MSTRCT_$3(name, n, typ)           MSTRCT_CAT2(MSTRCT_$3, MSTRCT_QUAL(n))(name, n, typ)
-#define MSTRCT_$30(name, n, typ)          MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ*,n), (typ*)0, __LINE__)
-#define MSTRCT_$31(name, auto, typ)       ({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] +   \
-                                          (mstrct_unit)(mstrct_usize)name + 1))); (mstrct_unit)(mstrct_usize)name;})  
+#define MSTRCT_$30(name, n, typ)          MSTRCT_T0(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name
+#define MSTRCT_$32(name, do, tid)         ({(void *)(((mstrct_usize)MSTRCT_TID << 8*sizeof(mstrct_uhalf)) | (mstrct_usize)tid);})
 #define MSTRCT_$33(name, _, typ)          mstrct_span(sizeof(typ), (mstrct_unit)(mstrct_usize)name, 1, MSTRCT_TID)
 
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)

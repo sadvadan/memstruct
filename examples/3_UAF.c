@@ -2,7 +2,7 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  m(baz, (2,6), int, do); // declare simple int[][1]
+  m(baz, (2,6), int); // declare simple int[][1]
 
   {
     m(foo, 12, int, auto);                                             // allocate foo[12][]: net on-stack memory is foo[12][1]

@@ -22,7 +22,6 @@
  *
  * flags ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  *
- *  NMSTRCTS            disable stack temporal safety
  *  NMSTRCTH             disable heap temporal safety
  *  NMSTRCT                    disable spatial safety
  *  MSTRCT_SOFT                print err_site line_no
@@ -61,9 +60,7 @@
 #define _MSTRCT__                         1,1,1,3
 #define MSTRCT_EXPAND(...)                __VA_ARGS__
 
-#define MSTRCT_DEF1(a)                    #a
 #define MSTRCT_DEF2(a,b)                  a##b
-#define MSTRCT_CAT1(a)                    MSTRCT_DEF1(a)
 #define MSTRCT_CAT2(a,b)                  MSTRCT_DEF2(a,b)
 #define MSTRCT_CAT3(a,b,c)                MSTRCT_CAT2(a, MSTRCT_CAT2(b,c))
 
@@ -90,7 +87,6 @@
 #define MSTRCT_QUAL1(arg)                 MSTRCT_DO(_MSTRCT_##arg)
 #define MSTRCT_QUAL0(arg)                 0
 
-
 #define MSTRCT_ARG_COUNT(...)             MSTRCT(10 __VA_OPT__(,) ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #define MSTRCT_DO(...)                    MSTRCT_ARG6(__VA_ARGS__, 4, 3, 2, 1, 0)
 #define MSTRCT_ARG6(a,b,c,d,e,f,...)      f
@@ -104,7 +100,6 @@
 
 #define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NMSTRCT)
 #define MSTRCT_CHK2                       MSTRCT_ARG_COUNT(NMSTRCTH)
-#define MSTRCT_CHK3                       MSTRCT_ARG_COUNT(NMSTRCTS)
 
 // util
 #define MSTRCT_TID                        ((mstrct_uhalf)__builtin_choose_expr(sizeof(mstrct_tid), mstrct_tid, 0))
@@ -155,7 +150,7 @@
 #endif
 
 // containers
-typedef unsigned int mstrct_unit; typedef signed int mstrct_nit;   // 8,16,32,64b :: 2,2,4,4 B
+typedef unsigned int mstrct_unit; // 8,16,32,64b :: 2,2,4,4 B
 typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned short)0, (unsigned char)0)) mstrct_uhalf;
 typedef typeof(__builtin_choose_expr(sizeof(mstrct_unit) > 2, (unsigned long long)0, (unsigned long)0)) mstrct_utwice;
 
@@ -166,7 +161,6 @@ __attribute__((common)) mstrct_usize *mstrctfixed[MSTRCT_TNO + 1]; static mstrct
 
 typedef union {mstrct_uhalf id; mstrct_uhalf tid;} mstrct_pass;
 typedef struct __attribute__((packed)) {mstrct_uhalf tid; mstrct_unit id;} mstrct_pack;
-typedef struct {mstrct_uhalf src; mstrct_uhalf tid;} mstrct_mail;
 
 struct mstrct_arc {}; typedef struct mstrct_arc mstrct_arc; static struct {} mstrct_tid; 
 #define MSTRCT_ARC (!__builtin_types_compatible_p(typeof((mstrct_arc *)0), typeof((struct mstrct_arc *)0)))
@@ -307,35 +301,33 @@ mstrct_leak(void) {
 
 // evil macros
 
-#define MSTRCT_$$7(name, mstrct_mmap, mstrct_addr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset)  do {   \
+#define MSTRCT_$$8(name, mstrct_mmap, mstrct_addr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset)  do {   \
 char *ptr = (char*)mstrct_mmap(mstrct_addr, mstrct_byte, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset);   \
-__builtin_memset(&name, 0, sizeof(name)); \
-if (ptr == NULL || ptr == ((void*)-1)) {mstrct_error("ALLOC_FAIL", 3, __ LINE__, MSTRCT_TID);}  \
-name._id = mstrct_put(ptr, 0, mstrct_size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); \
+__builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr, name._id, mstrct_size);  \
 } while(0)
 
-#define MSTRCT_$$6(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr) do { \
+#define MSTRCT_$$7(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr) do { \
 char *ptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr);  \
-if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__,MSTRCT_TID);} \
-mstrct_put(ptr, name._id, mstrct_new_size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); \
+MSTRCT_HELP(ptr, name._id, mstrct_size); \
 } while(0)
    
-#define MSTRCT_$$5(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr) do {   \
+#define MSTRCT_$$6(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag) do {   \
 char *ptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr);  \
-if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);} \
-mstrct_put(ptr, name._id, mstrct_new_size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); \
+MSTRCT_HELP(ptr, name._id, mstrct_size); \
 } while(0)
- 
+
+#define MSTRCT_$$5(name, mstrct_custom, mstrct_size, mstrct_arg) do {   \
+char *ptr = (char *)mstrct_custom(mstrct_addr, mstrct_size, mstrct_arg); MSTRCT_HELP(ptr, name._id, mstrct_size);  \
+} while(0)
+
+
 #define MSTRCT_$$4(name, mstrct_realloc, mstrct_addr, mstrct_size) do {   \
-char *ptr = (char *)mstrct_realloc(mstrct_addr, (MSTRCT_TSIZ(name) * mstrct_n));  \
-if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);} \
-mstrct_put(ptr, name._id, mstrct_size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); \
+char *ptr = (char *)mstrct_realloc(mstrct_addr, mstrct_size); MSTRCT_HELP(ptr, name._id, mstrct_size);  \
+MSTRCT_HELP(ptr, name._id, mstrct_size); \
 } while(0)
 
 #define MSTRCT_$$3(name, mstrct_alloc, mstrct_size) do {   \
-char *ptr = (char *)mstrct_alloc(mstrct_size); __builtin_memset(&name, 0, sizeof(name));  \
-if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
-name._id = mstrct_put(ptr, name._id, mstrct_size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); \
+char *ptr = (char *)mstrct_alloc(mstrct_size); __builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr, name._id, mstrct_size); \
 } while(0)
 
 #define MSTRCT_$$2(name, mstrct_free) do {__builtin_choose_expr((sizeof(mstrct_free) == 1),   \
@@ -393,5 +385,8 @@ MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_p
 __attribute__((cleanup(mstrct_set))) = {.id = mstrcty[MSTRCT_TID], .tid = MSTRCT_ARC * (1 + MSTRCT_TID)}; \
 typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG0
 
+#define MSTRCT_HELP(ptr, id, size) \
+if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
+id = mstrct_put(ptr, id, size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); \
 
 #endif

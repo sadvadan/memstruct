@@ -172,21 +172,21 @@ _Static_assert(sizeof(void(*)(void)) == sizeof(void*), "M_ERR: code & data ptrs 
 
 // memstruct
 
-#define MSTRCT_T0(type, index, line, key) struct {  \
-  typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i; \
+#define MSTRCT_T0(type, index, line, key) union {typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) set; \
+struct {typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;  \
   mstrct_unit _id;   \
   /* typ[0] */ typeof(type) * const typ[0] __attribute__((packed)); \
   /* lin[0] */ struct {char a[line];} lin[0];   \
   /* dim[0] */ struct {char b; typeof(type) a[] index [1];} dim[0];   \
-}
+};}
 
-#define MSTRCT_T1(type, index, line, key) struct {  \
-  typeof(__builtin_choose_expr(key, (mstrct_size)0, (struct {}){})) i; \
+#define MSTRCT_T1(type, index, line, key) union {typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) set; \
+struct {typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;   \
   mstrct_unit _id;   \
   /* typ[0] */ typeof(type) * typ[0] __attribute__((packed)); \
   /* lin[0] */ struct {char a[line];} lin[0];   \
   /* dim[0] */ struct {typeof(type) a index [1];} dim[1];  \
-}
+};}
 
 __attribute__((alloc_size(1), noinline, unused, const)) static char*
 mstrct_base(mstrct_unit siz, mstrct_unit offset, char var, mstrct_uhalf tid) {
@@ -267,7 +267,7 @@ static inline void
 mstrct_set(void *ptr) {
   if (*(mstrct_uhalf *)ptr) {
     mstrct_pack p = *(mstrct_pack *)ptr; mstrct_uhalf tid = p.tid - 1;
-    for (mstrct_unit j = mstrcty[tid]; j <= p.id; j += 2) {
+    for (mstrct_unit j = mstrcty[tid]; j < p.id; j += 2) {
       *(mstrctfixed[tid] + j + 1) = 0; *(mstrctfixed[tid] + j) = (mstrct_usize)(mstrct_fixed[tid]);
       asm volatile (" " : "+m" (*(mstrct_fixed[tid] + j + 1)));
     }
@@ -371,7 +371,7 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)
 #define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (MSTRCT_FLAT(name.dim[0].a, n) +  \
                                           __builtin_choose_expr(sizeof(name.i), name.i, 0)), name.typ[0], MSTRCT_LIN(name))
-#define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name._id);}))
+#define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name.set);}))
 #define MSTRCT_$22(name, do)              mstrctbox[MSTRCT_TID] = name._id
 #define MSTRCT_$23(name, _)               mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id,MSTRCT_TID), MSTRCT_TID)
 

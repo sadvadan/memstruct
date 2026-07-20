@@ -22,6 +22,7 @@
  *
  * flags ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  *
+ *  MSTRCTM              enable locks/atomics support
  *  NMSTRCTH             disable heap temporal safety
  *  NMSTRCT                    disable spatial safety
  *  MSTRCT_SOFT                print err_site line_no
@@ -100,6 +101,7 @@
 
 #define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NMSTRCT)
 #define MSTRCT_CHK2                       MSTRCT_ARG_COUNT(NMSTRCTH)
+#define MSTRCT_MULT                       MSTRCT_ARG_COUNT(MSTRCTM)
 
 // util
 #define MSTRCT_TID                        ((mstrct_uhalf)__builtin_choose_expr(sizeof(mstrct_tid), mstrct_tid, 0))
@@ -120,8 +122,8 @@
 #define MSTRCT_UNIT                       mstrct_unit
 #define MSTRCT_SIZE(word)                 ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 #define MSTRCT_TSIZ(name)                 ((mstrct_unit)sizeof(*(name.typ[0])))
-#define MSTRCT_ELEM(type, i, d)           (*(typeof(type) *)0) MSTRCT_SUB(i) d
-#define MSTRCT_FLAT(typ, i, d)            ((mstrct_size)((mstrct_usize)&(MSTRCT_ELEM(typ,i,d)) / sizeof(MSTRCT_ELEM(typ,i,d))))
+#define MSTRCT_ELEM(type, i)              (*(typeof(type) *)0) MSTRCT_SUB(i) [0]
+#define MSTRCT_FLAT(typ, i)               ((mstrct_size)((mstrct_usize)&(MSTRCT_ELEM(typ,i)) / sizeof(MSTRCT_ELEM(typ,i))))
 
 #if defined(MSTRCT_MCU)
   #define MSTRCT_BLOCK                    1 // 1 KiB
@@ -337,7 +339,7 @@ char *ptr = (char *)mstrct_alloc(mstrct_size); __builtin_memset(&name, 0, sizeof
 asm volatile (" " : "+m" (*(mstrct_fixed[MSTRCT_TID] + name._id + 1)));   \
 } while(0)
 
-#define MSTRCT_$$1(ptr) mstrct_uhalf mstrct_tid = (mstrct_uhalf)((mstrct_usize)ptr) >> sizeof(mstrct_uhalf);
+#define MSTRCT_$$1(ptr) mstrct_uhalf mstrct_tid = (mstrct_uhalf)((mstrct_usize)ptr >> 8 * sizeof(mstrct_uhalf));
 
 #define MSTRCT_$$0() mstrcterrno[MSTRCT_TID]
 
@@ -354,17 +356,20 @@ static inline void __attribute__((constructor(102))) MSTRCT_CAT2(mstrct$, cnt)(v
 #define MSTRCT_$411(name, n, typ, auto, cnt) MSTRCT_T1(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name; MSTRCT_CLEAN(cnt);   \
 __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a), 0, sizeof(name.dim[0].a), MSTRCT_TID, 0)
 
-#define MSTRCT_$42(name, n, typ, do) MSTRCT_DATA((mstrct_unit)(mstrct_usize)name,0,MSTRCT_FLAT(typ*,n,),(typ*)0,__LINE__)
+#define MSTRCT_$42(name, n, typ, do) MSTRCT_CAT2(MSTRCT_$42, MSTRCT_MULT)(name, n, typ, do)
+#define MSTRCT_$420(name, n, typ, do)  \
+MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ[1], n), (&((typ){0})[0]), __LINE__)
 
-#define MSTRCT_$43(name, n, typ, _) ({MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ*,n,), (typ*)0, __LINE__);})
+#define MSTRCT_$43(name, n, typ, _) \
+({MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ[1], n), (&((typ){0})[0]), __LINE__);})
 
 #define MSTRCT_$3(name, n, typ)           MSTRCT_CAT2(MSTRCT_$3, MSTRCT_QUAL(n))(name, n, typ)
 #define MSTRCT_$30(name, n, typ)          MSTRCT_T0(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name
-#define MSTRCT_$32(name, do, tid)         ({(void *)(((mstrct_usize)MSTRCT_TID << 8*sizeof(mstrct_uhalf)) | (mstrct_usize)tid);})
+#define MSTRCT_$32(name, do, tid)         ((void *)(((mstrct_usize)(tid+1) << 8*sizeof(mstrct_uhalf)) | (mstrct_usize)MSTRCT_TID))
 #define MSTRCT_$33(name, _, typ)          mstrct_span(sizeof(typ), (mstrct_unit)(mstrct_usize)name, 1, MSTRCT_TID)
 
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)
-#define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (MSTRCT_FLAT(name.dim[0].a, n, [0]) +  \
+#define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (MSTRCT_FLAT(name.dim[0].a, n) +  \
                                           __builtin_choose_expr(sizeof(name.i), name.i, 0)), name.typ[0], MSTRCT_LIN(name))
 #define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name._ID);}))
 #define MSTRCT_$22(name, do)              mstrctbox[MSTRCT_TID] = name._id

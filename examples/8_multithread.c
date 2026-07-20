@@ -19,7 +19,7 @@ void* native_thread(void *arg) {
 
   for (int i = 0; i < 1000; i++) {
   // access (for read) 1000 elems of (global) shared
-    m(view,i) = m(arg,i,int,_);
+    m(view,i) = m(arg, i, int[], _);   // note the usage to get cross-thread read-only data
   }
 
   M(view, free);
@@ -29,6 +29,7 @@ void* native_thread(void *arg) {
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 // worker (writes shared global memory): mutex used
+#define MSTRCTM   // switching this flag to enable read-write feature in memstruct
 
 void* library_thread(void *arg) {
   M(arg);
@@ -36,7 +37,7 @@ void* library_thread(void *arg) {
   for (int i = 0; i < 1000; i++) {
   // protect write!
     pthread_mutex_lock(&mutex);
-    m(arg,i,int,do) = 2*i;
+    m(arg, i, int[], do) = 2*i;   // note the usage to get cross-thread read-write data
     pthread_mutex_unlock(&mutex);
   }
 

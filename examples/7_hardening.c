@@ -6,7 +6,7 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  m(arr, 1, int, do);                                   // declare simple memstruct
+  m(arr, 1, int);                                   // declare simple memstruct
   M(arr, malloc, 40);
   m(arr,0) = 47;                                   // assign arr[0]
 

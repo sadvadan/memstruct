@@ -1,10 +1,12 @@
 // create heap memory, assign value, do ptr arithmetic, free
+// note: to force index feature on a memstruct create the same
+// using under-parentheses index like (index):
 
 #include "../src/mstrct.h"
 
 int main(void) {
-  m(var, (1), int, do);                                    // int[][1]
-  M(var, malloc, 48);                             // int[][1] + int[12][] -> int[12][1], on-heap
+  m(var, (1), int);                                   // int[][1], with index featured
+  M(var, malloc, 48);                                 // int[][1] + int[12][] -> int[12][1], on-heap
   m(var,5) = 10;                                      // define var[5][0]
 
   printf("size of this memstruct should be 8. check: %zu\n", sizeof(var));

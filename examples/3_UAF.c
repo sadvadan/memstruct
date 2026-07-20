@@ -5,7 +5,7 @@ int main(void) {
   m(baz, (2,6), int); // declare simple int[][1]
 
   {
-    m(foo, 12, int, auto);                                             // allocate foo[12][]: net on-stack memory is foo[12][1]
+    m(foo, 12, int, auto);                                        // allocate foo[12][]: net on-stack memory is foo[12][1]
     m(foo,8) = 10;                                                // define foo[8][0], with checks
 
     printf("foo[8], with checks: %d\n", m(foo,8));                // fetch (with checks)

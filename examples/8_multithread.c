@@ -14,12 +14,12 @@ void* native_thread(void *arg) {
   M(arg);
 
   // thread's own global:
-  m(view, 1, int, do);
+  m(view, 1, int);
   M(view, malloc, 1000*sizeof(int));
 
   for (int i = 0; i < 1000; i++) {
   // access (for read) 1000 elems of (global) shared
-    m(view,i) = m(arg,i,int);
+    m(view,i) = m(arg,i,int,_);
   }
 
   M(view, free);
@@ -33,14 +33,10 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 void* library_thread(void *arg) {
   M(arg);
 
-  m(view, 1, int, do);
-  // alias (for write) 1000 elems of (global) shared
-  M(m(arg,int,void), view, 1000);
-
   for (int i = 0; i < 1000; i++) {
   // protect write!
     pthread_mutex_lock(&mutex);
-    m(view,i) = 2*i;
+    m(arg,i,int,do) = 2*i;
     pthread_mutex_unlock(&mutex);
   }
 
@@ -51,22 +47,21 @@ void* library_thread(void *arg) {
 int main(void) {
 
   // simple memstruct to hold (shared) memory
-  M(int,, shared,);
-  M(malloc(ARRAY_SIZE * sizeof(int)), shared, ARRAY_SIZE);
+  m(shared, 1, int);
+  M(shared, malloc, ARRAY_SIZE * sizeof(int));
 
   // initialize shared
   for (int i = 0; i < m(shared,_); i++)
     m(shared,i) = i;
 
   // allocate pthreads on stack
-  M(pthread_t,, threads,);
-  M(auto, threads, MSTRCT_TNO);
+  m(threads, MSTRCT_TNO, pthread_t, auto);
 
   printf("=== memstruct multithreading-I starts ===\n"); ///////////////////////////////////////////////////////////
 
   for (int i = 0; i < m(threads,_); i++) {
   // pass shared
-    pthread_create(&m(threads,i), NULL, native_thread, (void *)M(void, shared, i));
+    pthread_create(&m(threads,i), NULL, native_thread, m(shared, do, i));
   }
 
   for (int i = 0; i < m(threads,_); i++) {
@@ -83,7 +78,7 @@ int main(void) {
   printf("=== memstruct multithreading-II starts ===\n"); ///////////////////////////////////////////////////////////
 
   for (int i = 0; i < m(threads,_); i++) {
-    pthread_create(&m(threads,i), NULL, library_thread, (void *)M(void, shared, i));
+    pthread_create(&m(threads,i), NULL, library_thread, m(shared, do, i));
   }
 
   for (int i = 0; i < m(threads,_); i++) {
@@ -97,7 +92,7 @@ int main(void) {
 
   printf("multi-threading-II finished. Modified elements: %d / %d\n", count+1, ARRAY_SIZE);
 
-  M(free, shared);
+  M(shared, free);
   pthread_mutex_destroy(&mutex);
   return 0;
 }

@@ -40,6 +40,9 @@
  *  MSTRCT_BLOCK  reference metadata size (KiB units)
  *  MSTRCT_TNO (>=0)   no of multithreads (over main)
  *
+ * limitations ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *
+ *  currently not supported: harvard arch, big endian
  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 
 
@@ -172,17 +175,17 @@ _Static_assert(sizeof(void(*)(void)) == sizeof(void*), "M_ERR: code & data ptrs 
 
 // memstruct
 
-#define MSTRCT_T0(type, index, line, key) union {typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) set; \
-struct {typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;  \
-  mstrct_unit _id;   \
+#define MSTRCT_T0(type, index, line, key) union {typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) _ID; \
+struct {mstrct_unit _id;   \
+  typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;  \
   /* typ[0] */ typeof(type) * const typ[0] __attribute__((packed)); \
   /* lin[0] */ struct {char a[line];} lin[0];   \
   /* dim[0] */ struct {char b; typeof(type) a[] index [1];} dim[0];   \
 };}
 
-#define MSTRCT_T1(type, index, line, key) union {typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) set; \
-struct {typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;   \
-  mstrct_unit _id;   \
+#define MSTRCT_T1(type, index, line, key) union {typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) _ID; \
+struct {mstrct_unit _id;   \
+  typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;   \
   /* typ[0] */ typeof(type) * typ[0] __attribute__((packed)); \
   /* lin[0] */ struct {char a[line];} lin[0];   \
   /* dim[0] */ struct {typeof(type) a index [1];} dim[1];  \
@@ -371,7 +374,7 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)
 #define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (MSTRCT_FLAT(name.dim[0].a, n) +  \
                                           __builtin_choose_expr(sizeof(name.i), name.i, 0)), name.typ[0], MSTRCT_LIN(name))
-#define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name.set);}))
+#define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name._ID);}))
 #define MSTRCT_$22(name, do)              mstrctbox[MSTRCT_TID] = name._id
 #define MSTRCT_$23(name, _)               mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id,MSTRCT_TID), MSTRCT_TID)
 

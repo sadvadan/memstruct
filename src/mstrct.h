@@ -357,11 +357,11 @@ static inline void __attribute__((constructor(102))) MSTRCT_CAT2(mstrct$, cnt)(v
 __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a), 0, sizeof(name.dim[0].a), MSTRCT_TID, 0)
 
 #define MSTRCT_$42(name, n, typ, do) MSTRCT_CAT2(MSTRCT_$42, MSTRCT_MULT)(name, n, typ, do)
-#define MSTRCT_$420(name, n, typ, do)  \
-MSTRCT_DATA(mstrctbox[(mstrct_unit)(mstrct_usize)name], 0, MSTRCT_FLAT(typ[1], n), (&((typ){0})[0]), __LINE__)
+#define MSTRCT_$420(name, n, typ, do)  MSTRCT_DATA(mstrctbox[(mstrct_uhalf)(mstrct_usize)name], 0, MSTRCT_FLAT(typ[1], n), \
+(&((typ){0})[0]), __LINE__, (mstrct_uhalf)(mstrct_usize)name)
 
-#define MSTRCT_$43(name, n, typ, _) \
-({MSTRCT_DATA(mstrctbox[(mstrct_unit)(mstrct_usize)name], 0, MSTRCT_FLAT(typ[1], n), (&((typ){0})[0]), __LINE__);})
+#define MSTRCT_$43(name, n, typ, _) ({MSTRCT_DATA(mstrctbox[(mstrct_uhalf)(mstrct_usize)name], 0, MSTRCT_FLAT(typ[1], n),  \
+(&((typ){0})[0]), __LINE__, (mstrct_uhalf)(mstrct_usize)name);})
 
 #define MSTRCT_$3(name, n, typ)           MSTRCT_CAT2(MSTRCT_$3, MSTRCT_QUAL(n))(name, n, typ)
 #define MSTRCT_$30(name, n, typ)          MSTRCT_T0(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name
@@ -369,8 +369,8 @@ MSTRCT_DATA(mstrctbox[(mstrct_unit)(mstrct_usize)name], 0, MSTRCT_FLAT(typ[1], n
 #define MSTRCT_$33(name, _, typ)          mstrct_span(sizeof(typ), (mstrct_unit)(mstrct_usize)name, 1, MSTRCT_TID)
 
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)
-#define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (MSTRCT_FLAT(name.dim[0].a, n) +  \
-                                          __builtin_choose_expr(sizeof(name.i), name.i, 0)), name.typ[0], MSTRCT_LIN(name))
+#define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (__builtin_choose_expr(sizeof(name.i), name.i, 0) \
+                                          + MSTRCT_FLAT(name.dim[0].a, n)), name.typ[0], MSTRCT_LIN(name), MSTRCT_TID)
 #define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name._ID);}))
 #define MSTRCT_$22(name, do)              mstrctbox[MSTRCT_TID] = name._id
 #define MSTRCT_$23(name, _)               mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id,MSTRCT_TID), MSTRCT_TID)
@@ -380,10 +380,10 @@ MSTRCT_DATA(mstrctbox[(mstrct_unit)(mstrct_usize)name], 0, MSTRCT_FLAT(typ[1], n
 
 #define MSTRCT_$0()                       MSTRCT_TID
 
-#define MSTRCT_DATA(id, no_i, flat, typ, lin) \
-(__builtin_choose_expr((no_i && __builtin_constant_p(flat)) || !MSTRCT_CHK1, ((typeof(typ))mstrct_addr(id, MSTRCT_TID))[flat], \
-({asm(""::"r"(flat)); (typeof(typ))mstrct_base(sizeof(*typ), id, mstrct_reset(id, MSTRCT_TID), MSTRCT_TID); \
-MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, flat, MSTRCT_TID); MSTRCT_PRAG0})]))
+#define MSTRCT_DATA(id, no_i, flat, typ, lin, tid) \
+(__builtin_choose_expr((no_i && __builtin_constant_p(flat)) || !MSTRCT_CHK1, ((typeof(typ))mstrct_addr(id, tid))[flat], \
+({asm(""::"r"(flat)); (typeof(typ))mstrct_base(sizeof(*typ), id, mstrct_reset(id, tid), tid); \
+MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, flat, tid); MSTRCT_PRAG0})]))
 
 #define MSTRCT_CLEAN(cnt) struct mstrct_arc; \
 MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_pass){})) MSTRCT_CAT2(mstrct_clean_, cnt)   \

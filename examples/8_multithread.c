@@ -28,9 +28,9 @@ void* native_thread(void *arg) {
 }
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-// worker (writes shared global memory): mutex used
 #define MSTRCTM   // switching this flag to enable read-write feature in memstruct
 
+// worker (writes shared global memory): mutex used
 void* library_thread(void *arg) {
   M(arg);
 
@@ -100,23 +100,23 @@ int main(void) {
 }
 /* out (typical):
 === memstruct multithreading-I starts ===
-Thread(I) 0 done
-Thread(I) 1 done
-Thread(I) 4 done
-Thread(I) 3 done
-Thread(I) 7 done
-Thread(I) 5 done
 Thread(I) 2 done
+Thread(I) 1 done
+Thread(I) 3 done
+Thread(I) 8 done
 Thread(I) 6 done
+Thread(I) 7 done
+Thread(I) 4 done
+Thread(I) 5 done
 multi-threading-I finished. Modified elements: 10000 / 10000
 === memstruct multithreading-II starts ===
 Thread(II) 1 done
 Thread(II) 2 done
-Thread(II) 0 done
-Thread(II) 3 done
 Thread(II) 4 done
-Thread(II) 5 done
+Thread(II) 3 done
+Thread(II) 8 done
 Thread(II) 7 done
+Thread(II) 5 done
 Thread(II) 6 done
 multi-threading-II finished. Modified elements: 10000 / 10000
 */

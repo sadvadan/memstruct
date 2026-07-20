@@ -358,10 +358,10 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 
 #define MSTRCT_$42(name, n, typ, do) MSTRCT_CAT2(MSTRCT_$42, MSTRCT_MULT)(name, n, typ, do)
 #define MSTRCT_$420(name, n, typ, do)  \
-MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ[1], n), (&((typ){0})[0]), __LINE__)
+MSTRCT_DATA(mstrctbox[(mstrct_unit)(mstrct_usize)name], 0, MSTRCT_FLAT(typ[1], n), (&((typ){0})[0]), __LINE__)
 
 #define MSTRCT_$43(name, n, typ, _) \
-({MSTRCT_DATA((mstrct_unit)(mstrct_usize)name, 0, MSTRCT_FLAT(typ[1], n), (&((typ){0})[0]), __LINE__);})
+({MSTRCT_DATA(mstrctbox[(mstrct_unit)(mstrct_usize)name], 0, MSTRCT_FLAT(typ[1], n), (&((typ){0})[0]), __LINE__);})
 
 #define MSTRCT_$3(name, n, typ)           MSTRCT_CAT2(MSTRCT_$3, MSTRCT_QUAL(n))(name, n, typ)
 #define MSTRCT_$30(name, n, typ)          MSTRCT_T0(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name

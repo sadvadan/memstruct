@@ -50,6 +50,7 @@ int main(void) {
   // simple memstruct to hold (shared) memory
   m(shared, 1, int);
   M(shared, malloc, ARRAY_SIZE * sizeof(int));
+  m(shared, do);  // send ID to mailbox (for other threads to fetch)
 
   // initialize shared
   for (int i = 0; i < m(shared,_); i++)

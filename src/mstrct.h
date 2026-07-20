@@ -120,7 +120,7 @@
 #define MSTRCT_UNIT                       mstrct_unit
 #define MSTRCT_SIZE(word)                 ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 #define MSTRCT_TSIZ(name)                 ((mstrct_unit)sizeof(*(name.typ[0])))
-#define MSTRCT_ELEM(type, idx)            (*(typeof(type) *)0) MSTRCT_SUB(idx)
+#define MSTRCT_ELEM(type, idx)            (*(typeof(type) *)0) MSTRCT_SUB(idx) [0]
 #define MSTRCT_FLAT(typ, idx)             ((mstrct_size)((mstrct_usize)&(MSTRCT_ELEM(typ,idx)) / sizeof(MSTRCT_ELEM(typ,idx))))
 
 #if defined(MSTRCT_MCU)
@@ -375,8 +375,8 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 
 #define MSTRCT_$0()                       MSTRCT_TID
 
-#define MSTRCT_DATA(id, nidx, flat, typ, lin) \
-(__builtin_choose_expr((nidx && __builtin_constant_p(flat)) || !MSTRCT_CHK1, ((typeof(typ))mstrct_addr(id, MSTRCT_TID))[flat], \
+#define MSTRCT_DATA(id, no_i, flat, typ, lin) \
+(__builtin_choose_expr((no_i && __builtin_constant_p(flat)) || !MSTRCT_CHK1, ((typeof(typ))mstrct_addr(id, MSTRCT_TID))[flat], \
 ({asm(""::"r"(flat)); (typeof(typ))mstrct_base(sizeof(*typ), id, mstrct_reset(id, MSTRCT_TID), MSTRCT_TID); \
 MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, flat, MSTRCT_TID); MSTRCT_PRAG0})]))
 

@@ -71,7 +71,7 @@ int main() {
   m(greeting, 1, char);
   M(greeting, arena_alloc, &arena, 13 * sizeof(char), _Alignof(char));
 
-  strncpy(&m(greeting), "Hello Arena!", m(greeting,_));
+  strncpy((void *)&m(greeting), "Hello Arena!", m(greeting,_)); // note: (void *) is needed else memstruct won't allow sharing!
 
   // print the values to verify
   printf("Integer: %d\n", m(number,0));

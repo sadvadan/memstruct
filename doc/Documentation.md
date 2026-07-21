@@ -20,6 +20,8 @@ This document explains how to configure and use the memstruct.h library.
 
 - **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a thread-safe custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
 
+- **Philosophy:** safety and optimization escalate together. with each O level more static analysis kicks in and the safety and performance guarantees become stronger. also, 'pay what you use' to get extra features e.g. multithreading, ptr-arithmetic, finer diagnosis, etc.
+
 ## Features and design
 
 - Flags: opt-out, hardening, and MCU. Literals: metadata size, and max threads.

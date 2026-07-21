@@ -2,7 +2,6 @@
 # ![memstruct banner](../banner.svg) memstruct DOCUMENT
 
 This document explains how to configure and use the memstruct.h library.
-**[NOTE: this doc is currently outdated (API ref onws)]**
 
 ## Table of contents
 
@@ -188,6 +187,7 @@ This document explains how to configure and use the memstruct.h library.
         a) the ptr carries the coded ID that's duly instated by M(ptr) as thread ID,
             referenced by the succeeding thread body.
         b) this can only be used once in a thread, else duplicated declaration error ensues.
+            use m() to reset the value (see m() API ref).
 
 
     // DE-ALLOCATION
@@ -261,10 +261,26 @@ This document explains how to configure and use the memstruct.h library.
         foo = memstruct name
         i = sole index
 
+
     // GET multi-dim data, as L-value
     m(foo, (i, j, k,...)): 
         foo = memstruct name
         i, j, k,... = dynamic and/or static indexes
+
+
+    // GET the first element:
+    m(foo):
+        foo = memstruct name
+    note: this is same as m(foo,0).
+
+
+    // GET the current thread ID:
+    m():
+        result: a short int.
+    note:
+        a) this is an L-value, so whereas the main thread ID is unchangeable, m()
+            can be used to change other threads' IDs.
+        b) setting a thread's ID is best done with M(ptr), see its API ref.
 
 
     ```

@@ -87,7 +87,7 @@ This document explains how to configure and use the memstruct.h library.
 
     for on-stack & global memories, memstruct is declared and allocated in a single statement as: `m(name, 12, int, auto)`, `m(name, 12, char, static __thread)` etc. 
 
-- **Memory sharing:** a uint32_t sized metadata ID `m(foo,_)` is simply passed around. one may also share base_addr & span as `&m(base)` & `m(foo,auto)` directly. in multithreading, share the ID as: `m(foo,auto,TID)` where `TID` is a `short` equal to the thread id of the receiver thread.
+- **Memory sharing:** a int sized metadata ID `m(foo,_)` is simply passed around. one may also share base_addr & span as `&m(base)` & `m(foo,auto)` directly. in multithreading, share the ID as: `m(foo,auto,TID)` where `TID` is a `short` equal to the thread id of the receiver thread.
     ```
     m(bar,auto) = m(foo,auto); // makes bar safely refer the same memory as foo, but retain its type alias
 
@@ -272,32 +272,56 @@ This document explains how to configure and use the memstruct.h library.
 - **memstruct:**
     ```
     // memstruct layout
-    struct {
-        int32_t/int64_t/const/0_byte i;
-        uint32_t id;
-        type typ[0];
-        struct {char a[0/1];}   con[0];
-        struct {char a[line]; } lin[0];
-        struct {char a[]index[1];} dim[0];
-    } foo;
+
+    A.  standalone memstructs (do not carry the memory as field):
+
+        union {
+            typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) _ID;
+            struct {
+                mstrct_unit _id;
+                typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;
+                typeof(type) * const typ[0] __attribute__((packed)); \
+                struct {char a[line];} lin[0];   \
+                struct {char b; typeof(type) a[] index [1];} dim[0];   \
+            };
+        }
+
+    B.  integral memstructs (carry memory as a field):
+
+        union {
+            typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) _ID;
+            struct {
+                mstrct_unit _id;
+                typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;
+                typeof(type) * const typ[0] __attribute__((packed)); \
+                struct {char a[line];} lin[0];   \
+                struct {typeof(type) a index [1];} dim[1];  \
+            };
+        }
 
     // field description:
-        foo.i: current array index
+
+        foo.ID: union field used in clobbering foo.id & foo.i together during ID sharing
         foo.id: metadata ID
+        foo.i: current array index (suports index arithmetic)
         typeof(foo.typ[0]): pointer type
-        sizeof(foo.con[0]): 1 if ptr is *const type & total memory size is fixed, 0 if not
         sizeof(foo.lin[0]): line number where foo was declared
-        dim[0]: holds geometry of - static indexes [index] and dynamic index []
+        typeof(dim[0].a): holds geometry of - static indexes [index] and dynamic index []
 
     // GET current index
     foo.i 
         foo = memstruct name
-        i = field in foo containiing current int32_t index
+        i = field in foo containiing current int index
+    note:
+        a) to extend i to be long sized, redefine MSTRCT_UNIT locally as mstrct_size.
 
     // GET metadata ID
-    foo.id
+    foo._id
         foo = memstruct name
-        id = field in foo containiing metadata uint32_t ID
+        _id = field in foo containiing metadata uint ID
+    note:
+        a) accessing _id is discouraged. use m(foo,auto) instead.
+
     ```
 
 ##  Troubleshooting

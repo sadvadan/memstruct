@@ -253,8 +253,8 @@ mstrct_alloc(mstrct_uhalf tid, char heap) {
 }
 
 static inline mstrct_unit
-mstrct_put(void *arr, mstrct_unit is_id, mstrct_usize size, mstrct_uhalf tid, mstrct_unit hash) {
-  mstrct_unit id; if (!is_id) {id = mstrct_alloc(tid, hash);} else id = is_id;
+mstrct_put(void *arr, mstrct_unit exist, mstrct_usize size, mstrct_uhalf tid, mstrct_unit hash) {
+  mstrct_unit id; if (!exist) {id = mstrct_alloc(tid, hash);} else id = exist;
   *(void **)((mstrct_fixed[tid]) + id) = arr;
   if (hash) {
     *(typeof(__builtin_choose_expr(MSTRCT_STEP == 2, (mstrct_usize *)0, (mstrct_utwice *)0)))(mstrct_fixed[tid] + id + 1) =
@@ -305,31 +305,30 @@ mstrct_leak(void) {
 
 #define MSTRCT_$$8(name, mstrct_mmap, mstrct_addr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset)  do {   \
 char *ptr = (char*)mstrct_mmap(mstrct_addr, mstrct_byte, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset);   \
-__builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr, name._id, mstrct_size);  \
+__builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr, name._id, mstrct_size, 1);  \
 } while(0)
 
 #define MSTRCT_$$7(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr) do { \
 char *ptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr);  \
-MSTRCT_HELP(ptr, name._id, mstrct_size); \
+MSTRCT_HELP(ptr, name._id, mstrct_size, 0); \
 } while(0)
    
 #define MSTRCT_$$6(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag) do {   \
 char *ptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr);  \
-MSTRCT_HELP(ptr, name._id, mstrct_size); \
+MSTRCT_HELP(ptr, name._id, mstrct_size, 0); \
 } while(0)
 
-#define MSTRCT_$$5(name, mstrct_custom, mstrct_size, mstrct_arg) do {   \
-char *ptr = (char *)mstrct_custom(mstrct_addr, mstrct_size, mstrct_arg); MSTRCT_HELP(ptr, name._id, mstrct_size);  \
+#define MSTRCT_$$5(name, mstrct_custom, mstrct_addr, mstrct_size, mstrct_arg) do {   \
+char *ptr = (char *)mstrct_custom(mstrct_addr, mstrct_size, mstrct_arg); MSTRCT_HELP(ptr, name._id, mstrct_size, 1);  \
 } while(0)
 
 
 #define MSTRCT_$$4(name, mstrct_realloc, mstrct_addr, mstrct_size) do {   \
-char *ptr = (char *)mstrct_realloc(mstrct_addr, mstrct_size); MSTRCT_HELP(ptr, name._id, mstrct_size);  \
-MSTRCT_HELP(ptr, name._id, mstrct_size); \
+char *ptr = (char *)mstrct_realloc(mstrct_addr, mstrct_size); MSTRCT_HELP(ptr, name._id, mstrct_size, 0);  \
 } while(0)
 
 #define MSTRCT_$$3(name, mstrct_alloc, mstrct_size) do {   \
-char *ptr = (char *)mstrct_alloc(mstrct_size); __builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr, name._id, mstrct_size); \
+char *ptr = (char *)mstrct_alloc(mstrct_size); __builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr,name._id,mstrct_size,1); \
 } while(0)
 
 #define MSTRCT_$$2(name, mstrct_free) do {__builtin_choose_expr((sizeof(mstrct_free) == 1),   \
@@ -375,9 +374,8 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 #define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name._ID);}))
 #define MSTRCT_$23(name, _)               mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id,MSTRCT_TID), MSTRCT_TID)
 
-#define MSTRCT_$1(name) \
-(*(typeof(name.typ[0]))mstrct_base(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id, MSTRCT_TID), MSTRCT_TID))
-
+#define MSTRCT_$1(name)                   (*(typeof(name.typ[0]))mstrct_base(MSTRCT_TSIZ(name), name._id,   \
+                                          mstrct_reset(name._id, MSTRCT_TID), MSTRCT_TID))
 #define MSTRCT_$0()                       MSTRCT_TID
 
 #define MSTRCT_DATA(id, no_i, flat, typ, lin, tid) \
@@ -390,8 +388,8 @@ MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_p
 __attribute__((cleanup(mstrct_set))) = {.id = mstrcty[MSTRCT_TID], .tid = MSTRCT_ARC * (1 + MSTRCT_TID)}; \
 typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG0
 
-#define MSTRCT_HELP(ptr, id, size) \
+#define MSTRCT_HELP(ptr, id, size, key) \
 if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
-id = mstrct_put(ptr, id, size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); \
+mstrct_unit temp = mstrct_put(ptr, 0, size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); if (key) id = temp;  \
 
 #endif

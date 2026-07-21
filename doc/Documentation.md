@@ -16,7 +16,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Overview
 
-- **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system suited to compiler optimizations facilitating either fully compile-time or heavily elided / auto-hoisted / pipelined checks. also, UAF & `NULL` checks are folded within OOB check. memstruct subscribes thread safe (locks/atomics free, single-write & read-share) semantics to make multi-threading feasible in bare metal while also complementing external libraries (pthread etc) on 64-bit builds.
+- **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system suited to compiler optimizations facilitating either fully compile-time or heavily elided / auto-hoisted / pipelined checks. also, UAF & `NULL` checks are folded within OOB check. memstruct provides thread safe (locks/atomics free, single-write & read-share) semantics to make safe multi-threading feasible in bare metal while also complementing external libraries (pthread etc) on 64-bit builds.
 
 - **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a thread-safe custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
 
@@ -30,7 +30,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Guard-rails: non-idiomatic usage and puns warned through linter (gcc & clang) and compiler (gcc only).
 
-- Works across TUs: int `m(foo,enum)` (memory ID) passed around to share memory.
+- Works across TUs: int `m(foo,auto)` (memory ID) passed around to share memory.
 
 - Thread safety: inherently thread safe using exclusive-writer / shared-read framework (no locks or atomics). this is more than sufficient, but if locks / atomics are really needed, use external libraries (e.g. pthread) and protect reads and writes as usual.
 
@@ -38,7 +38,7 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Limitations
 
-- doesn't support Harvard architecture. and, MSVC.
+- doesn't support Harvard architecture. and, MSVC, Big Endian.
 
 - no GC: every allocation must have a de-allocation (dup-de-allocations -> no-op though).
 
@@ -46,11 +46,10 @@ This document explains how to configure and use the memstruct.h library.
 
 ## Configuration
 
-- In source, optionally include `#define FLAG` to disable spatial, heap-temporal or stack-temporal checks. disable locally like so: `#define FLAG` `unsafe code here` `#undef FLAG`. the flags are:
+- In source, optionally include `#define [FLAG]` to disable spatial or temporal checks. disable locally like so: `#define [FLAG]` `unsafe code here` `#undef [FLAG]`. the flags are:
     ```
     NMSTRCT      disable spatial safety
     NMSTRCTH     disable heap temporal safety
-    NMSTRCTS     disable stack temporal safety
     ```
 
 - Include `#define MSTRCT_SOFT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
@@ -62,13 +61,13 @@ This document explains how to configure and use the memstruct.h library.
 
 - Include MCU flag: `#define MSTRCT_MCU` for MCU programming.
 
-- Define literal `MSTRCT_TNO` (number of maximum simultaneous threads over and above main; default: 0) if required.
+- Define literal `MSTRCT_TNO` (number of maximum simultaneous threads over and above main; default: 0) if required. if locks/atomics etc are needed, `#define MSTRCTM` to enable read-write share.
 
-- Define literal `MSTRCT_BLOCK` (reference metadata size in bytes) if required. or, define thread-specific mstrctblock[thread_ID]. 
+- Define literal `MSTRCT_BLOCK` (reference metadata size in bytes) if required. or, define thread/core-specific `mstrctblock[thread_ID]`. 
 
 - Include `mstrct.h`.
 
-- Alternatively, instead of directives in the source, use flags `-DFLAG` directly in makefile.
+- Alternatively, instead of directives in the source, use flags `-D[FLAG]` directly in makefile.
 
 ## Usage
 
@@ -78,25 +77,21 @@ This document explains how to configure and use the memstruct.h library.
 
     b) the dynamic part `foo[ I ][ ][ ]..` where the single index (may or may not be literal) i is dynamically allocated.
 
-    a memstruct is declared as `M(type, const, foo, (J,K..))` where `(J,K,..)` is a typical multi-dim static index. dynamic index `I` is placed during allocation later as e.g. `M(malloc(48), foo, I)`.
+    a standalone memstruct is declared as `m(name, (J,K..), type)` where `(J,K,..)` is a typical multi-dim static index. dynamic index `I` is implicitly calculated from total allocation size later as e.g. `I=12` in `M(name, malloc, 48)`.
 
-    for most purposes, the array is a simple 1-D array so declare memstruct as e.g. `M(type, volatile, foo, )` or `M(type, volatile foo, 1)`, then allocate as e.g. `M(auto, foo, I)`, and access as `m(foo,i)`.
+    for most purposes, the array is a simple 1-D array, so declare memstruct as e.g. `m(name, 1, type)`, then allocate as e.g. `M(name, calloc, 48)`, and access as `m(foo,i)`.
 
-    if you only need a statically indexed array then declare memstruct as e.g. `M(type, const, foo, (J,K...))`, then allocate as e.g. `M(auto, foo, 1)` and later access as `m(foo,(0,j,k..))` or `m(foo, (,j,k..))`.
+    for non-array types, declare the memstruct as e.g. `M(name, 1, struct alpha)`, then allocate as e.g. `M(name, malloc, 4)`, and access as `m(foo)`.
 
-    in gcc, indexes J,K, etc are allowed to be dynamic. but subscribing to the dynamic vs static split is portable between clang and gcc. also note that compile time OOB warning for the static component is generated by the compiler itself at the behest of memstruct.
+    for on-stack & global memories, memstruct is declared and allocated in a single statement as: `m(name, 12, int, auto)`, `m(name, 12, char, static __thread)` etc. 
 
-    to make use of initializer list in 1-D arrays, first declare a memstruct as e.g. `M(int, const, foo, )` then `M(malloc(16), foo, (1,2,5,7))` where `{1,2,5,7}` becomes the initializer list with its cardinality as the mono-span. 
-
-    for non-array types, declare the memstruct as e.g. `M(struct alpha, volatile, foo, )`, then allocate as e.g. `M(auto, alpha, 1)`, and access as `m(foo)`.
-
-- **Memory sharing:** a uint32_t sized metadata ID `m(foo,enum)` is simply passed around. one may also share base_addr & size as `m(base foo)` & `m(size foo)` directly.
+- **Memory sharing:** a uint32_t sized metadata ID `m(foo,_)` is simply passed around. one may also share base_addr & span as `&m(base)` & `m(foo,auto)` directly. in multithreading, share the ID as: `m(foo,auto,TID)` where `TID` is a `short` equal to the thread id of the receiver thread.
     ```
-    bar.id = foo.id; // makes bar safely refer the same memory as foo, but retain its type alias
+    m(bar,auto) = m(foo,auto); // makes bar safely refer the same memory as foo, but retain its type alias
 
-    callee_function(m(id foo), other_args); // callee is given foo.id safely to do whatever
+    callee_function(m(foo,auto), other_args); // callee is given foo.id safely to do whatever (single thread)
 
-    callee_function(foo.id, other_args); // use this if the callee doesn't need to change metadata (mostly they don't) e.g. by resizing or de-allocating the memory. or for consistency, stick with the above
+    pthread_create(&m(threads,i), NULL, native_thread, m(foo, auto, i)); // a pthread example of multithreaded sharing
     ```
 - **Safe access of data:** 
 
@@ -108,7 +103,7 @@ This document explains how to configure and use the memstruct.h library.
     m(foo,5) = 10;
 
     // multi-dim array types
-    m(bar,5,7,2) = 10;
+    m(bar,(5,7,2)) = 10;
      ```
 - **Raw access (w/o checks) of data:** 
 
@@ -118,8 +113,9 @@ This document explains how to configure and use the memstruct.h library.
 
 - **Pointer arithmetic:**
 
-    not ptr arithmetic per se, but the (flat) array index is accessible as `foo.i` as L-value and can be incremented / decremented / set to a value.
+    not ptr arithmetic per se, but the (flat) array index is accessible as `foo.i` as L-value and can be incremented / decremented / set to a value. notice the () around the static index to force index feature.
      ```
+    m(foo, (1), int);               // parentheses force index feature in foo
     foo.i++;                        // increment array index
      ```
 - **memstruct declaration:** declare a memstruct foo as `M(ptr_type, foo, multi_dim_index)`.

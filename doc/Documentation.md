@@ -169,26 +169,44 @@ This document explains how to configure and use the memstruct.h library.
 
 - `M()`/`m()` **macro:**
     ```
+    // get errno:
+    M():
+        generates the current error number (thread safe).
+        list (err strings and errnos):
+          "BAD" (ILLEGAL_ACCESS) ........................ 1
+          "OOB" (BOUNDS_CHECK_FAIL) ..................... 2
+          "ALLOC_FAIL" .................................. 3
+          "DE_ALLOC_FAIL" ............................... 4
+          "META_OVF" (METADATA_OVERFLOW)................. 5
+          "TID_OVF" (THREAD_ID_OVERFLOW)................. 6
+         
+    // define thread ID of the current thread:
+    M(ptr):
+        ptr is a void * received from the parent thread.
+    note:
+        a) the ptr carries the coded ID that's duly instated by M(ptr) as thread ID,
+            referenced by the succeeding thread body.
+        b) this can only be used once in a thread, else duplicated declaration error ensues.
 
     // DE-ALLOCATION
-    M(de_allocator, foo):
+    M(foo, de_allocator):
         foo = memstruct name
         de_allocator = name of the de-allocator, e.g. free, munmap, etc.
     note:
         a) any custom de-allocator matching the API of either free(...) or munmap(...) is supported
-        b) allocator-de_allocator mismatch is handled by OS, not memstruct
-        c) the operation is idempotent: multiple de-allocations are redundant.
-        d) the macro performs sanity check; user doesn't need to do it. 
+        b) the operation is idempotent: multiple de-allocations are redundant.
+        c) the macro performs sanity check; user doesn't need to do it. 
 
-    // ALLOCATION/ RE-ALLOCATION of block-or-static-scoped array over dynamic range i 
-    M(storage, foo, i):
+    // ALLOCATION/ RE-ALLOCATION on-heap: 
+    M(foo, allocator_or_reallocator, args...):
         foo = memstruct name
-        i = dynamic range of the array (static indexes are optionally declared in memstruct) 
-        storage (keyword) = static / __thread static / auto
     note:
         a) the macro performs sanity check; user doesn't need to do it. 
+        b) custom allocators and re-allocators are supported. the only criterion is
+            that an allocator must take 1, 3 or 6 args whereas a re-allocator must 2, 4 or 5.
+        c) calloc version that takes 1 arg is therefre allowed, not the one that takes 2.
 
-    // ALLOCATION/ RE-ALLOCATION of fixed size block-or-static-scoped array with initializers
+    // ALLOCATION of fixed size block-or-static-scoped array with initializers
     M(storage, foo, (a,...)):
         foo = memstruct name
         (a,...) = initializer list {a,...} 

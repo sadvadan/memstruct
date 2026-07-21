@@ -2,7 +2,7 @@
 # ![memstruct banner](../banner.svg) memstruct DOCUMENT
 
 This document explains how to configure and use the memstruct.h library.
-**[NOTE: this doc is currently significantly outdated]**
+**[NOTE: this doc is currently outdated (API ref onws)]**
 
 ## Table of contents
 
@@ -20,7 +20,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a thread-safe custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
 
-- **Philosophy:** safety and optimization escalate together. with each O level more static analysis kicks in and the safety and performance guarantees become stronger. also, 'pay what you use' to get extra features e.g. multithreading, ptr-arithmetic, finer diagnosis, etc.
+- **Philosophy:** safety and optimization escalate together. with each O level more static analysis kicks in and the safety and performance guarantees become stronger. also, 'pay what you use' to unlock extra features e.g. locks, ptr-arithmetic, finer diagnosis, etc.
 
 ## Features and design
 
@@ -115,67 +115,55 @@ This document explains how to configure and use the memstruct.h library.
 
 - **Pointer arithmetic:**
 
-    not ptr arithmetic per se, but the (flat) array index is accessible as `foo.i` as L-value and can be incremented / decremented / set to a value. notice the () around the static index to force index feature.
+    not ptr arithmetic per se, but the (flat) array index is accessible as `foo.i` as L-value and can be incremented / decremented / set to a value. notice the () around the static index to force the index feature into existence.
      ```
     m(foo, (1), int);               // parentheses force index feature in foo
     foo.i++;                        // increment array index
      ```
-- **memstruct declaration:** declare a memstruct foo as `M(ptr_type, foo, multi_dim_index)`.
+- **memstruct declaration:** declare a memstruct foo as `m(foo, static_index, data_type)`. if the memory is non-heap, declare + allocate as `m(foo, range, data_type, storage)`. if the index (or range) is enclosed with (), foo.i as index is added.
     ```
     // int[][1]
-    M(long int *,foo,);             // or: M(long int *,foo,,1)
-    M(long int *,foo,) = {0};       // declare & make foo.id = foo.i = 0
+    m(foo, 1, long int);            // or: M(long int *,foo,,1)
+    m(foo, (1), long int) = {0};    // declare & make foo.id = foo.i = 0
 
     // char[][2][5]
-    M(char * const,foo,,2,5);
+    M(foo, (2,5), char);
 
     // valid as struct field and other nested types
     ```
-- **Allocate / re-allocate:** memory to a memstruct `M(storage, foo, single_index)`. sanity checks (e.g. `if (ptr == NULL)`) are done internally, and need not be repeated by user.
+- **Allocate / re-allocate:** heap memory to a memstruct `M(foo, your_allocator_or_reallocator, args...)`. sanity checks (e.g. `if (ptr == NULL)`) are done internally, and need not be repeated by user.
     ```
-    /* memstruct supports custom allocators (should return base ptr) */
+    /* memstruct supports custom allocators / re-allocators (check API section below) */
 
-    M(malloc(80),foo,10);           // allocate 80 heap bytes as type[10][
+    M(foo, malloc, 80);
 
-    M(realloc(m(base foo), 60), foo, 15) // re-allocate
+    M(foo, realloc, &m(foo), 60)
 
-    M(mremap(m(base bar), 48, 44, MREMAP_MAYMOVE), bar, 11); // re-allocate
-
-    M(auto,foo,10);                 // allocate type[10][ on-stack
-
-    M(static,foo,10);               // allocate type[10][ on-static
-
-    M(auto,foo,(1,));               // allocate, initialize 1st elem as 1
-
-    M(static,foo,(1,3,4));          // allocate, initialize 1st 3 elems as {1,3,4}
-
-    /* initiaizer list is only for auto / static arrays having static-only indexes */
+    M(bar, mremap, &m(bar), 48, 44, MREMAP_MAYMOVE)
     ```
 - **Metadata** access: `m(metadata foo)`.
      ```
-    uint64_t temp = m(size, foo);   // byte size as R value
+    char *temp = &m(base);          // base addr
 
-    char *temp = m(base foo);       // base addr as R value
+    int temp = m(foo,_);            // index span
 
-    int64_t temp = m(span foo);     // index span as R value
-
-    uint32_t temp = m(id foo);      // memory ID as R value
+    int temp = m(foo,auto);         // memory ID
 
     foo_type temp = m(foo);         // same as m(foo, 0)
      ```
 - **De**-allocate: double de-allocs are redundant (later elided by compiler). custom de-allocators supported. de-allocation failure check is done internally, and need not be repeated by user.
      ```
-    M(free, foo);                   // on-heap memory
+    M(foo, free);                   // on-heap memory
 
-    M(munmap, foo);                 // mmapped memory
+    M(foo, munmap);                 // mmapped memory
      ```
     during de-allocation, size is `NULL`-ed (and base addr changed to a safe zone) so that double frees become redundant. NOTE: user knows best when to free a memory, but in complex CFGs - or when in doubt - it's advisable to over-use the de-allocators, as redundant frees get anyways **elided by the compiler**, rather than corrupt memory.
 
-- **Loop optimization**: in general, at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for later checks. to strictly force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(span foo); i++)` where `m(span foo)` = index_span_size, and expression `i < m(span foo)` is the strictest OOB check (resulting in elision of within-the-loop checks). further, `m(span foo)` is evaluated only once as it calls a `const` attribute function. 
+- **Loop optimization**: in general, at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for later checks. to strictly force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(foo,_); i++)` where `m(foo,_)` = index_span_size, and expression `i < m(foo,_)` is the strictest OOB check (resulting in elision of within-the-loop checks). further, `m(foo,_)` is evaluated only once as it calls a `const` attribute function. 
 
-- **MCU implementation**: a) define `MSTRCT_MCU`. b) define `MSTRCT_PRINT()` and `MSTRCT_ALLOC()` macros in your code to replace `printf()` and `mstrct_alloc()`. c) if needed, define functions `mstrct_realloc()` and `mstrct_mremap()` as re_allocators. d) refer `mstrct.h` to match API of these macros and functions. e) allocators / de-allocators are drop in. f) custom design `on_exit()` for heap leak, or leave it as dummy (sweep the metadata section at end?).
+- **MCU implementation**: a) define `MSTRCT_MCU`. b) define `MSTRCT_PRINT()` and `MSTRCT_ALLOC()` macros in your code to replace `printf()` and `mstrct_alloc()`. c) refer `mstrct.h` to match API of these macros and functions.
 
-## API reference
+## API reference (NOTE: OUTDATED)
 
 - `M()`/`m()` **macro:**
     ```

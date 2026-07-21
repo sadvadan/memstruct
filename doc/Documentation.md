@@ -328,13 +328,13 @@ This document explains how to configure and use the memstruct.h library.
 
 - I disabled checks with e.g. `#define NMSTRCT` but the metadata is still getting stored in the heap arena
 
-    the metadata layer is the trade-off against performance plus memory-safety that memstruct made in design. the memory layer is for spatial safety, whereas temporal safety gets sparingly injected in the code. taken together, these make a program provably memory safe yet on par with raw C in speed and flexibility.
+    feature, not bug: the metadata layer is a trade-off against performance + memory-safety that memstruct made in design to make a program provably memory safe yet on par with raw C in speed and flexibility.
 
 - Memstruct is catching all the bugs but the program isn't panicking
 
     this is a feature at hardening level 0 (default): after generating the error message the program continues with default "safe" values. you may set the hardening level to HARD (`#define MSTRCT_HARD`) to cause segfault at the site after error print. 
 
-    at the default level, the line number of the declaration site of the erring memstruct (not the erring site itself) is printed. to print the line number of the erring site set the level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number (and `BAD` irrespective of error) but since it segfaults at the error site, the line number can be recovered in post-analysis. HARD generates the least binary footprint (for the unhappy path), followed by the default level and then SOFT (which is well suited for development phase). the default level is the sweet spot, and caters to fail-safe design (no crashes, also a thread-safe err_no `mstrct_errno` to handle error if needed).
+    at the default level, the line number of the declaration site of the erring memstruct (not the erring site itself) is printed. to print the line number of the erring site set the level to SOFT (`#define MSTRCT_SOFT`). HARD, on the other hand, prints 0 for the line number (and `BAD` irrespective of error) but since it segfaults at the error site, the line number can be recovered in post-analysis. HARD generates the least binary footprint (for the unhappy path), followed by the default level and then SOFT (which is well suited for development phase). the default level is the sweet spot, and caters to fail-safe design (no panics; + has the thread-safe `mstrct_errno` to handle error if needed).
 
 - How to check what `m()` and `M()` macro abstractions are expanding into?
     
@@ -342,7 +342,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Memstruct is good at denying raw accesses to its own memories. but how to know (quickly) if raw accesses have been used for memories unrelated to memstruct in a project?
 
-    search `[` or `]` in your editor to quickly find if `[]`-idiom is used. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]`, and therefore in a memstruct conforming file no `[]` should be found.
+    search `[` or `]` in your editor to quickly find if `[]`-idiom is used. in fact, `m()` & `M()` symbols are meant to eliminate `[` & `]`, and therefore in a memstruct conforming file no `[]` should be found. further, raw dereferences directly on memstructs, or punning, generates compile time error (gcc only).
 
 - Under which scenarios safety can be by-passed (via flags)?
     
@@ -354,7 +354,9 @@ This document explains how to configure and use the memstruct.h library.
 
     "any legacy or 3rd party code that is not an allocator / de-allocator / re-allocator but still modifies the size or base address of a *shared* memory -- **is considered unsafe**."
 
-    with the above criterion accounted for, empirically proven safety of legacy C code is acknowledged and no re-writes are necessary (simply share `m(base foo)` & `m(size foo)`). however, if one were authoring a `C` library today, one may use `m(id foo)` to safely share memory while intending to modify base address and size.
+    with the above criterion accounted for, empirically proven safety of legacy C code is acknowledged and no re-writes are necessary (simply share `&m(foo)` & `m(foo,_)`). however, if one were authoring a `C` library today, one may use `m(foo,auto)` to safely share memory while intending to modify base address and size.
+
+    also note that `&m(base)` is constrained by the library to only allow access to one element (existing at the address), and naive sharing with legacy code will generate compile or runtime fault. therefore, share it with indirection: `(void *)&m(foo)`.
 
     in summary:
 
@@ -364,13 +366,11 @@ This document explains how to configure and use the memstruct.h library.
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 
-    e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NMSTRCTH` and `#undef NMSTRCTH` (see test #9). tradeoff: no temporal safety (UAF) for individual sub-arrays.
-
-    **NOTE**: safety suppression is deliberate and best left to user discretion, but e.g. in the arena example it is advisable to make a custom sub-array dummy de-allocator to avoid unnecessary unsafe sections. remember, allocators and de-allocators are drop-in in memstruct.
+    e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NMSTRCTH` and `#undef NMSTRCTH` or even better devise a dummy de-allocator for sub-allocation (see test #9).
 
 - Does memstruct resuse memory IDs or is it just monotonically increasing?
     
-    memstruct reuses IDs for static memories; for heap and stack located memories, fresh IDs are issued. as discussed earlier, every 1024th ID is printed so that an ever increasing ID count tells upon unsafe program design.
+    memstruct reuses IDs for on-stack memories; for heap, static and global located memories, fresh IDs are issued. as discussed before, every 1024th ID is printed so that an ever increasing ID count tells upon unsafe program design.
 
 - When is the LTS release?
 

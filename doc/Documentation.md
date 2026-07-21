@@ -169,7 +169,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - `M()`/`m()` **macro:**
     ```
-    // get errno:
+    // GET errno:
     M():
         generates the current error number (thread safe).
         list (err strings and errnos):
@@ -180,13 +180,15 @@ This document explains how to configure and use the memstruct.h library.
           "META_OVF" (METADATA_OVERFLOW)................. 5
           "TID_OVF" (THREAD_ID_OVERFLOW)................. 6
          
-    // define thread ID of the current thread:
+
+    // THREAD ID declaration for the current thread:
     M(ptr):
         ptr is a void * received from the parent thread.
     note:
         a) the ptr carries the coded ID that's duly instated by M(ptr) as thread ID,
             referenced by the succeeding thread body.
         b) this can only be used once in a thread, else duplicated declaration error ensues.
+
 
     // DE-ALLOCATION
     M(foo, de_allocator):
@@ -197,6 +199,7 @@ This document explains how to configure and use the memstruct.h library.
         b) the operation is idempotent: multiple de-allocations are redundant.
         c) the macro performs sanity check; user doesn't need to do it. 
 
+
     // ALLOCATION/ RE-ALLOCATION on-heap: 
     M(foo, allocator_or_reallocator, args...):
         foo = memstruct name
@@ -206,87 +209,63 @@ This document explains how to configure and use the memstruct.h library.
             that an allocator must take 1, 3 or 6 args whereas a re-allocator must 2, 4 or 5.
         c) calloc version that takes 1 arg is therefre allowed, not the one that takes 2.
 
-    // ALLOCATION of fixed size block-or-static-scoped array with initializers
-    M(storage, foo, (a,...)):
+
+    // DECLARATION & ALLOCATION on stack, static, or global segment:
+    m(foo, range, data_type, storage_class):
         foo = memstruct name
-        (a,...) = initializer list {a,...} 
-        storage (keyword) = static / __thread static / auto
+        range = numbers of elements 
+        data_type = type of elements
+        storage (keyword) = static / static __thread / auto / left_empty_for_global
     note:
-        a) initializer list (a,...) goes to populate static range in foo.
-            there is no dynamic index (i.e. is zero).
-        b) initializer (a) gives compile time error, to avoid mistaking as dynamic range i.
-            use (a,) instead if only the first element is to be initialized (with value a).
-        c) the macro performs sanity check; user doesn't need to do it. 
+        a) this syntax both declares and allocates foo.
+        b) to declare and allocate static memory at function scope, use the following syntax:
+            static m(f00, range, data_type, auto).
+        c) static memories at global scope, however, follow the standard template:
+            m(foo, range, data_type, static).
+        d) the resulting memstruct isn't standalone: the memory is one of its fields. the rest
+            memstruct behavior, and the API, remains same.
 
-    // ALLOCATION/ RE-ALLOCATION of not-block-nor-static-scoped array over dynamic range i 
-    M(allocator, foo, i):
+
+    // DECLARATION of standalone memstructs: 
+    m(foo, static_index, data_type):
         foo = memstruct name
-        i = dynamic range of the array 
-        allocator = your C std or custom allocator
+        static_index = staic index in the format of plain number or a set of no's in () e.g. (2,4,3) 
+        data_type = type of elements, e.g. int etc
     note:
-        a) alloca, as it isn't block scoped, is also supported by this syntax
-        b) any preceding cast e.g. (char *) etc for the allocator is not only
-            not required, but will also produce comptime pre-processor error
-        c) realloc and mremap result in the update of the existing metadata
-        d) whereas memstruct is allocator and de-allocator agnostic, custom
-            re-allocators must be user implemented as:
-            mstrct_realloc(...) and mstrct_mremap(...) to suit dev intent.
-        e) the macro performs sanity check; user doesn't need to do it. 
+        a) the static index can be multi-dimensional, but the corresponding
+            dynamic index is a single number implicitly deduced from the total
+            size divided by the static size.
+        b) usually arrays are 1-D. in such cases let the static index be 1.
+        c) the type qualifiers e.g. *const, *restrict, *atomic and *volatile
+            have been deemed unnecessary and not considered in the API. the
+            reason is: a memstruct isn't a named access to a memory and the
+            accesses are already direct and optimized.
 
-    // MEMSTRUCT declaration, simple (static range = 1)
-    M(type, foo, ):          // OR, M(type, foo, , 1) 
-        type = ptr type, e.g. const int * volatile, etc
-        foo = (new) memstruct name
-    note:
-        a) memstruct can be declared as field inside structs
-        b) nested declarations, too; remember, memstruct is just a C struct
 
-    // MEMSTRUCT declaration, non-array type (static range = 0)
-    M(type, foo,, 0):
-        type = ptr type, e.g. const int * volatile, etc
-        foo = (new) memstruct name
-    note:
-        a) memstruct declared thus has 4 bytes size
-        b) access the type as m(foo); address as m(base foo)
-    
-    // MEMSTRUCT declaration for static range (j,k,...)
-    M(type, foo, , j, k,...):
-        type = ptr type, e.g. const int * volatile, etc
-        foo = (new) memstruct name
-        j,k,... = static range of foo 
-    note:
-        a) memstruct can be declared as field inside structs
-        b) nested declarations, too; remember, memstruct is just a C struct
- 
-    // GET metadata
-    m(metadata foo):
-        metadata keyword = base / size / span
+    // GET span as R-value
+    m(foo, _):
+        _ = metadata keyword for span
         foo = memstruct name
-    returns: 
-        a) base -> char * base_address
-        b) size -> uint64_t byte_size
-        c) span -> int64_t index_span such that foo.i < span
+        returns: a ptr sized signed number
 
-    // GET data, simple (static index defaults as 0), as L-value
+
+    // GET ID as L-value
+    m(foo, auto):
+        auto = metadata keyword for memory ID
+        foo = memstruct name
+        returns: an int sized unsigned number
+
+
+    // GET 1-D data, as L-value
     m(foo, i): 
         foo = memstruct name
-        i = sole (dynamic) index
+        i = sole index
 
-    // GET data (at dynamic index i and static indexes j,k,...), as L-value
-    m(foo, i, j, k,...): 
+    // GET multi-dim data, as L-value
+    m(foo, (i, j, k,...)): 
         foo = memstruct name
-        i = sole (dynamic) index
-        j, k,... = static indexes
+        i, j, k,... = dynamic and/or static indexes
 
-    // GET data (when there's only static indexes j,k,...), as L-value
-    m(foo, ,j,k,...): 
-        foo = memstruct name
-        j, k,... = compile-time known indexes
-    note: 
-        a) this optimized path fallbacks to m(foo,0,j,k..) if -
-            a.1) any indexes are dynamic, or
-            a.2) type isn't *const
-        b) m(foo, ) is same as m(foo, , 0) i.e. the 1st element in any array
 
     ```
 

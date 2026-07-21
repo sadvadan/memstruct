@@ -161,7 +161,9 @@ This document explains how to configure and use the memstruct.h library.
 
 - **Loop optimization**: in general, at >O0 memstruct hoists OOB checks and at worst only a (pipelined) cmp op remains for later checks. to strictly force total elision in loops, e.g., change the syntax in `for (int i = 0; i < 50; i++)` to `for (int i = 0; i < m(foo,_); i++)` where `m(foo,_)` = index_span_size, and expression `i < m(foo,_)` is the strictest OOB check (resulting in elision of within-the-loop checks). further, `m(foo,_)` is evaluated only once as it calls a `const` attribute function. 
 
-- **MCU implementation**: a) define `MSTRCT_MCU`. b) define `MSTRCT_PRINT()` and `MSTRCT_ALLOC()` macros in your code to replace `printf()` and `mstrct_alloc()`. c) refer `mstrct.h` to match API of these macros and functions.
+- **MCU implementation**: a) define `MSTRCT_MCU`. b) define `MSTRCT_PRINT()` and `MSTRCT_ALLOC()` macros in your code to replace `printf()` and `mstrct_alloc()`. c) refer `mstrct.h` to match API of these macros and functions. d) make use of memstruct's locks/atomics free multi-threading as discussed below.
+
+- **Multithreading:** to share memory use `m(foo, auto, TID)` instead of `m(foo, auto)` used in single-thread contexts. here, `TID` is a `short` representing the destination thread ID (see example 8). `m(foo, auto, TID)` is a ptr which on the thread side is utilized as `m(ptr, i, array_type, _)` for accessing the shared memory as read-only. this supports the single-writer + shared-read framework. additionally, in case read-write access to a shared memory is needed, use `#define MSTRCTM` to unlock the syntax `m(ptr, i, array_type, do)` enabling read-write access to the shared memory. note: wrapping such code with mutextes/locks etc is user's resposobility as memstruct's thread safety guarantee is upto memstruct's thread safety model only.
 
 ## API reference (NOTE: OUTDATED)
 

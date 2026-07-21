@@ -9,9 +9,9 @@ C + memstruct = performance + memory safety
 - **Memory safety**- covers UAF, NULL deref, OOB (multi-dim), leaks, double free & memory sharing, for both array & non-array types.
 - **Thread safety**- provides single-write memory & read-only share. complements libs like pthread when atomics/locks are needed.
 - **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed at >O0.
-- **User ease**    - convenience macro `m()` / `M()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
+- **User ease**    - convenience macro `m()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
 - **Robustness**   - linter (gcc & clang) and compile-time (gcc only) warning for bad grammar, puns, and hatches.
-- **Target**       - gcc, clang | -std=gnu99 &ONWS | 8-64 bit CPUs. batteries included: opt-out, hardening, and MCU flags.
+- **Target**       - gcc, clang | -std=gnu99 &ONWS | 8-64 bit CPUs. batteries included: opt-out, hardening, threading and MCU flags.
 
 ## Quick Start
 
@@ -44,13 +44,13 @@ C + memstruct = performance + memory safety
      ```
 - **Metadata** access:
      ```
+    m(foo)                      // foo first element
+
     &m(foo)                     // foo base addr
 
     m(foo,_)                    // foo index span
 
     m(foo,auto)                 // foo ID
-
-    m(foo)                      // foo first element
      ```
 - **Share** memory: simply pass around the int ID `m(foo,auto)`.
     ```
@@ -60,7 +60,7 @@ C + memstruct = performance + memory safety
 
     func(m(foo,_), args);       // read-only memory (or share other metadata)
      ```
-- **index** arithmetic:
+- **index** arithmetic: declare an indexed memstruct (see, doc).
      ```
     foo.i++;                    // array index increment
 
@@ -72,11 +72,11 @@ C + memstruct = performance + memory safety
 
     prototype: `M(any_de_allocator, name)`
      ```
-    M(free, foo);                 // on-heap memory
+    M(foo, free);                // on-heap memory
 
-    M(munmap, bar);               // mmapped memory
+    M(bar, munmap);              // mmapped memory
      ```
-- **Get errno**: `m()` generates memory related errno's (1-6). thread safe.
+- **Get errno**: `M()` generates memory related errno's (1-6). thread safe.
 
 - **Other features**: mostly thread safety related API, refer doc (link below).
 

@@ -365,14 +365,14 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 
 #define MSTRCT_$3(name, n, typ)           MSTRCT_CAT2(MSTRCT_$3, MSTRCT_QUAL(n))(name, n, typ)
 #define MSTRCT_$30(name, n, typ)          MSTRCT_T0(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name
-#define MSTRCT_$32(name, do, tid)         ((void *)(((mstrct_usize)(tid+1) << 8*sizeof(mstrct_uhalf)) | (mstrct_usize)MSTRCT_TID))
+#define MSTRCT_$31(name, auto, tid)       ({mstrctbox[MSTRCT_TID] = name._id; (void *)(((mstrct_usize)(tid+1) \
+                                          << 8*sizeof(mstrct_uhalf)) | (mstrct_usize)MSTRCT_TID);})
 #define MSTRCT_$33(name, _, typ)          mstrct_span(sizeof(typ), (mstrct_unit)(mstrct_usize)name, 1, MSTRCT_TID)
 
 #define MSTRCT_$2(foo, n)                 MSTRCT_CAT2(MSTRCT_$2, MSTRCT_QUAL(n))(foo, n)
 #define MSTRCT_$20(name, n)               MSTRCT_DATA(name._id, sizeof(name.i), (__builtin_choose_expr(sizeof(name.i), name.i, 0) \
                                           + MSTRCT_FLAT(name.dim[0].a, n)), name.typ[0], MSTRCT_LIN(name), MSTRCT_TID)
 #define MSTRCT_$21(name, auto)            (*({asm volatile ("":"+m"(*(mstrct_fixed[MSTRCT_TID] + name._id +1))); &(name._ID);}))
-#define MSTRCT_$22(name, do)              mstrctbox[MSTRCT_TID] = name._id
 #define MSTRCT_$23(name, _)               mstrct_span(MSTRCT_TSIZ(name), name._id, mstrct_reset(name._id,MSTRCT_TID), MSTRCT_TID)
 
 #define MSTRCT_$1(name) \

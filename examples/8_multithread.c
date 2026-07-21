@@ -28,7 +28,7 @@ void* native_thread(void *arg) {
 }
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-#define MSTRCTM   // switching this flag to enable read-write feature in memstruct
+#define MSTRCTM   // switching this flag to enable read-write shared memory in memstruct
 
 // worker (writes shared global memory): mutex used
 void* library_thread(void *arg) {
@@ -50,7 +50,6 @@ int main(void) {
   // simple memstruct to hold (shared) memory
   m(shared, 1, int);
   M(shared, malloc, ARRAY_SIZE * sizeof(int));
-  m(shared, do);  // send ID to mailbox (for other threads to fetch)
 
   // initialize shared
   for (int i = 0; i < m(shared,_); i++)
@@ -62,8 +61,8 @@ int main(void) {
   printf("=== memstruct multithreading-I starts ===\n"); ///////////////////////////////////////////////////////////
 
   for (int i = 0; i < m(threads,_); i++) {
-  // pass shared
-    pthread_create(&m(threads,i), NULL, native_thread, m(shared, do, i));
+  // create threads, share shared
+    pthread_create(&m(threads,i), NULL, native_thread, m(shared, auto, i));
   }
 
   for (int i = 0; i < m(threads,_); i++) {
@@ -80,7 +79,7 @@ int main(void) {
   printf("=== memstruct multithreading-II starts ===\n"); ///////////////////////////////////////////////////////////
 
   for (int i = 0; i < m(threads,_); i++) {
-    pthread_create(&m(threads,i), NULL, library_thread, m(shared, do, i));
+    pthread_create(&m(threads,i), NULL, library_thread, m(shared, auto, i));
   }
 
   for (int i = 0; i < m(threads,_); i++) {

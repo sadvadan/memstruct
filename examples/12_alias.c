@@ -8,8 +8,8 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int,, var, );
-  M(malloc(48), var, 12);
+  m(var, 1, int);
+  M(var, malloc, 48);
   m(var,5) = 10;
 
   // case 1: uncomment below: compile-time err!
@@ -25,7 +25,7 @@ int main(void) {
   int a = 7; asm volatile (" " : "+r" (a) : : ); // deliberately make 'a' runtime
   int *tem = (&m(var,2) + a); *tem = 13; printf("printf to make use of modified memory: %d\n", *tem);
 
-  M(free, var);
+  M(var, free);
   printf("test_12 complete.\n");
   return 0;
 }

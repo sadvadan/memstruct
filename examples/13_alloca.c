@@ -3,9 +3,11 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  M(int, const, foo, ); // declare safe type int[][1]
+  m(foo, 1, int); // declare safe type int[][1]
 
-  M(alloca(48), foo, 12); // map foo -> int[12][1] on-heap
+#define NMSTRCTH  // suppress leak warning (alloca memories end at function scope automatically)
+  M(foo, alloca, 48); // map foo -> int[12][1] on-heap
+#undef NMSTRCTH
 
   m(foo,5) = 10; // define int[5][0]
 

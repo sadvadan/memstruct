@@ -347,7 +347,7 @@ asm volatile (" " : "+m" (*(mstrct_fixed[MSTRCT_TID] + name._id + 1)));   \
 
 #define MSTRCT_$40(name, n, typ, store) MSTRCT_$400(name, n, typ, store, __COUNTER__)
 #define MSTRCT_$400(name, n, typ, store, cnt)   \
-store MSTRCT_T1(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name  \
+store MSTRCT_T1(typ, MSTRCT_SUB(n), __LINE__, MSTRCT_PAREN(n)) name; \
 static inline void __attribute__((constructor(102))) MSTRCT_CAT2(mstrct$, cnt)(void) { \
   __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a), 0, sizeof(name.dim[0].a), 0, 0); \
 }

@@ -10,8 +10,7 @@
 // worker (writes its own local/global memory, reads global: no locks, atomics etc
 void* native_thread(void *arg) {
 
-  // IMPORTANT: write this at top of scope to set thread ID for the thread:
-  M(arg);
+  M(arg); // IMPORTANT: write this here to set thread ID for the thread:
 
   // thread's own global:
   m(view, 1, int);

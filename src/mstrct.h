@@ -304,31 +304,32 @@ mstrct_leak(void) {
 // evil macros
 
 #define MSTRCT_$$8(name, mstrct_mmap, mstrct_addr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset)  do {   \
-char *ptr = (char*)mstrct_mmap(mstrct_addr, mstrct_byte, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset);   \
-__builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr, name._id, mstrct_size, 1);  \
+char *ptr = (char*)mstrct_mmap(mstrct_addr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset);   \
+__builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr, name._id, mstrct_size, 0);  \
 } while(0)
 
 #define MSTRCT_$$7(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr) do { \
 char *ptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr);  \
-MSTRCT_HELP(ptr, name._id, mstrct_size, 0); \
+MSTRCT_HELP(ptr, name._id, mstrct_new_size, name._id); \
 } while(0)
    
 #define MSTRCT_$$6(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag) do {   \
-char *ptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr);  \
-MSTRCT_HELP(ptr, name._id, mstrct_size, 0); \
+char *ptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag);  \
+MSTRCT_HELP(ptr, name._id, mstrct_new_size, name._id); \
 } while(0)
 
-#define MSTRCT_$$5(name, mstrct_custom, mstrct_addr, mstrct_size, mstrct_arg) do {   \
-char *ptr = (char *)mstrct_custom(mstrct_addr, mstrct_size, mstrct_arg); MSTRCT_HELP(ptr, name._id, mstrct_size, 1);  \
+#define MSTRCT_$$5(name, mstrct_custom, mstrct_addr, mstrct_size, mstrct_arg) do { /* arena allocators fit here */   \
+char *ptr = (char *)mstrct_custom(mstrct_addr, mstrct_size, mstrct_arg); __builtin_memset(&name, 0, sizeof(name));   \
+MSTRCT_HELP(ptr, name._id, mstrct_size, 0);  \
 } while(0)
 
 
 #define MSTRCT_$$4(name, mstrct_realloc, mstrct_addr, mstrct_size) do {   \
-char *ptr = (char *)mstrct_realloc(mstrct_addr, mstrct_size); MSTRCT_HELP(ptr, name._id, mstrct_size, 0);  \
+char *ptr = (char *)mstrct_realloc(mstrct_addr, mstrct_size); MSTRCT_HELP(ptr, name._id, mstrct_size, name._id);  \
 } while(0)
 
 #define MSTRCT_$$3(name, mstrct_alloc, mstrct_size) do {   \
-char *ptr = (char *)mstrct_alloc(mstrct_size); __builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr,name._id,mstrct_size,1); \
+char *ptr = (char *)mstrct_alloc(mstrct_size); __builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr,name._id,mstrct_size,0); \
 } while(0)
 
 #define MSTRCT_$$2(name, mstrct_free) do {__builtin_choose_expr((sizeof(mstrct_free) == 1),   \
@@ -390,6 +391,6 @@ typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG0
 
 #define MSTRCT_HELP(ptr, id, size, key) \
 if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
-mstrct_unit temp = mstrct_put(ptr, 0, size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); if (key) id = temp;  \
+mstrct_unit temp = mstrct_put(ptr, key, size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); if (!key) id = temp;  \
 
 #endif

@@ -25,7 +25,7 @@ This document explains how to configure and use the memstruct library.
 
 - Flags: opt-out, hardening, and MCU. Literals: metadata size, and max threads.
 
-- Supports: MCU, x86-64 | gcc, clang : GNU C99 & ONWS | custom allocators & de-allocators.
+- Supports: 8-64 bit CPUs | gcc, clang : GNU C99 & ONWS | custom allocators & de-allocators.
 
 - Single‑header: no separate `.c` file needed. no external dependencies. MCU support.
 

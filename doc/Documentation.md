@@ -1,7 +1,7 @@
 
 # ![memstruct banner](../banner.svg) memstruct DOCUMENT
 
-This document explains how to configure and use the memstruct.h library.
+This document explains how to configure and use the memstruct library.
 
 ## Table of contents
 
@@ -33,7 +33,7 @@ This document explains how to configure and use the memstruct.h library.
 
 - Works across TUs: int `m(foo,auto)` (memory ID) passed around to share memory.
 
-- Thread safety: inherently thread safe using exclusive-writer / shared-read framework (no locks or atomics). this is more than sufficient, but if locks / atomics are really needed, use external libraries (e.g. pthread) and protect reads and writes as usual.
+- Thread safety: inherently thread safe using exclusive-writer / shared-read framework (no locks or atomics). this is more than sufficient, but if locks / atomics are really needed, use external libraries (e.g. pthread) and protect critical section as usual.
 
 - Health monitoring: except for on-stack memories, memory IDs aren't recycled. an unboundedly increasing ID score (printed evry 1024 allocs in SOFT mode) indicates poor design for long running applications.
 

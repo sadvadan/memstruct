@@ -35,7 +35,7 @@ This document explains how to configure and use the memstruct library.
 
 - Thread safety: inherently thread safe using exclusive-writer / shared-read framework (no locks or atomics). this is more than sufficient, but if locks / atomics are really needed, use external libraries (e.g. pthread) and protect critical section as usual.
 
-- Health monitoring: except for on-stack memories, memory IDs aren't recycled. an unboundedly increasing ID score (printed evry 1024 allocs in SOFT mode) indicates poor design for long running applications.
+- Health monitoring: except for on-stack memories, memory IDs aren't recycled. an unboundedly increasing ID score (printed every 1024 allocs in SOFT mode) is likely indicative of poor temporal layout in a program (=> heap fragmentation, etc).
 
 ## Limitations
 

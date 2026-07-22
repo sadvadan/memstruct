@@ -192,7 +192,7 @@ mstrct_base(mstrct_unit siz, mstrct_unit offset, char var, mstrct_uhalf tid) {
   (void)siz; asm volatile (" " : "+m" (var)); return (char *)(*((mstrct_fixed[tid]) + offset));
 }
 
-static inline char*
+__attribute__((noinline, pure)) static char*
 mstrct_addr(mstrct_unit offset, mstrct_uhalf tid) {return (char *)(*((mstrct_fixed[tid]) + offset));}
 
 static inline mstrct_usize
@@ -303,8 +303,8 @@ mstrct_leak(void) {
 
 // evil macros
 
-#define MSTRCT_$$8(name, mstrct_mmap, mstrct_addr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset)  do {   \
-char *ptr = (char*)mstrct_mmap(mstrct_addr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset);   \
+#define MSTRCT_$$8(name, mstrct_mmap, mstrct_ptr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset)  do {   \
+char *ptr = (char*)mstrct_mmap(mstrct_ptr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset);   \
 __builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(ptr, name._id, mstrct_size, 0);  \
 } while(0)
 
@@ -318,14 +318,14 @@ char *ptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_s
 MSTRCT_HELP(ptr, name._id, mstrct_new_size, name._id); \
 } while(0)
 
-#define MSTRCT_$$5(name, mstrct_custom, mstrct_addr, mstrct_size, mstrct_arg) do { /* arena allocators fit here */   \
-char *ptr = (char *)mstrct_custom(mstrct_addr, mstrct_size, mstrct_arg); __builtin_memset(&name, 0, sizeof(name));   \
+#define MSTRCT_$$5(name, mstrct_custom, mstrct_ptr, mstrct_size, mstrct_arg) do { /* arena allocators fit here */   \
+char *ptr = (char *)mstrct_custom(mstrct_ptr, mstrct_size, mstrct_arg); __builtin_memset(&name, 0, sizeof(name));   \
 MSTRCT_HELP(ptr, name._id, mstrct_size, 0);  \
 } while(0)
 
 
-#define MSTRCT_$$4(name, mstrct_realloc, mstrct_addr, mstrct_size) do {   \
-char *ptr = (char *)mstrct_realloc(mstrct_addr, mstrct_size); MSTRCT_HELP(ptr, name._id, mstrct_size, name._id);  \
+#define MSTRCT_$$4(name, mstrct_realloc, mstrct_ptr, mstrct_size) do {   \
+char *ptr = (char *)mstrct_realloc(mstrct_ptr, mstrct_size); MSTRCT_HELP(ptr, name._id, mstrct_size, name._id);  \
 } while(0)
 
 #define MSTRCT_$$3(name, mstrct_alloc, mstrct_size) do {   \

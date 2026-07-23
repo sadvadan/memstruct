@@ -132,8 +132,8 @@
   #include <stdio.h>
   #include <stdlib.h>
   #define MSTRCT_PRINT                    printf
-  #define MSTRCT_ALLOC                    malloc
-  #define MSTRCT_BLOCK                    (10 * 1024) // 10 MiB
+  #define MSTRCT_ALLOC(byte, i)           malloc(byte)   // i is for MCU
+  #define MSTRCT_BLOCK                    (10 * 1024)    // 10 MiB
   typedef unsigned long mstrct_usize;     typedef signed long mstrct_size; // 64b :: 8B
 #endif
 
@@ -279,7 +279,7 @@ mstrct_init(void) {
   if (mstrctfixed[0] == 0) {void *space;
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
       if (mstrctbox[i] == 0) mstrctbox[i] = MSTRCT_BLOCK;
-      space = MSTRCT_ALLOC(1024 * mstrctbox[i]);
+      space = MSTRCT_ALLOC(1024 * mstrctbox[i], i); // MCU: use i in .ld to assign custom memory areas
       if (space == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
       mstrct_fixed[i] = space; mstrctx[i] = 2; *(mstrctfixed[i] + 1) = (1024 * mstrctbox[i]);
       mstrcty[i] = (*(mstrctfixed[i]+1) / sizeof(mstrct_usize));

@@ -207,7 +207,7 @@ This document explains how to configure and use the memstruct library.
         a) the macro performs sanity check; user doesn't need to do it. 
         b) custom allocators and re-allocators are supported. the only criterion is
             that an allocator must take 1, 3 or 6 args whereas a re-allocator must 2, 4 or 5.
-        c) calloc version that takes 1 arg is therefre allowed, not the one that takes 2.
+        c) calloc version that takes 1 arg is therefore allowed, not the one that takes 2.
 
 
     // DECLARATION & ALLOCATION on stack, static, or global segment:

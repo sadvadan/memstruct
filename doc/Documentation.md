@@ -47,11 +47,7 @@ This document explains how to configure and use the memstruct library.
 
 ## Configuration
 
-- In source, optionally include `#define [FLAG]` to disable spatial or temporal checks. disable locally like so: `#define [FLAG]` `unsafe code here` `#undef [FLAG]`. the flags are:
-    ```
-    NMSTRCT      disable spatial safety
-    NMSTRCTH     disable heap temporal safety
-    ```
+- In source, optionally include `#define NMSTRCT` to disable checks. disable locally like so: `#define NMSTRCT` `unsafe code here` `#undef NMSTRCT`.
 
 - Include `#define MSTRCT_SOFT` or `#define MSTRCT_HARD` to choose custom hardening level of error reporting.
     ```
@@ -110,7 +106,7 @@ This document explains how to configure and use the memstruct library.
 
     `(&m(foo,0))[i]` is an example of attempted raw access of data: such puns are warned at compile-time. memstruct-returned addresses carry dummy alloc_size compile-time metadata to deny raw memory access.
 
-    raw access for legitimate reasons is, as discussed before, e.g. `#define NMSTRCT` `unsafe code here` `#undef NMSTRCT` for disabling spatial safety locally.
+    raw access for legitimate reasons is, as discussed before, e.g. `#define NMSTRCT` `unsafe code here` `#undef NMSTRCT` for disabling safety locally.
 
 - **Pointer arithmetic:**
 
@@ -363,7 +359,7 @@ This document explains how to configure and use the memstruct library.
 
 ##  Troubleshooting
 
-- I disabled checks with e.g. `#define NMSTRCT` but the metadata is still getting stored in the heap arena
+- I disabled checks with `#define NMSTRCT` but the metadata is still getting stored in the heap arena
 
     feature, not bug: the metadata layer is a trade-off against performance + memory-safety that memstruct made in design to make a program provably memory safe yet on par with raw C in speed and flexibility.
 
@@ -403,7 +399,7 @@ This document explains how to configure and use the memstruct library.
 
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 
-    e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NMSTRCTH` and `#undef NMSTRCTH` or even better devise a dummy de-allocator for sub-allocation (see test #9).
+    e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NMSTRCT` and `#undef NMSTRCT` or even better devise a dummy de-allocator for sub-allocation (see test #9).
 
 - Does memstruct resuse memory IDs or is it just monotonically increasing?
     

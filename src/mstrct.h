@@ -22,12 +22,11 @@
  *
  * flags ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  *
- *  MSTRCTM              enable locks/atomics support
- *  NMSTRCTH             disable heap temporal safety
- *  NMSTRCT                    disable spatial safety
+ *  MSTRCT_MCU                        enable MCU mode
+ *  MSTRCTM                       allow locks/atomics
+ *  NMSTRCT                     disable memory safety
  *  MSTRCT_SOFT                print err_site line_no
  *  MSTRCT_HARD                segfault at error site
- *  MSTRCT_MCU                        enable MCU mode
  *
  * MCU APIs ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  *
@@ -99,8 +98,7 @@
                                           _Pragma("GCC diagnostic ignored \"-Wunused-local-typedefs\"")  \
                                           _Pragma("GCC diagnostic ignored \"-Woverride-init\"")
 
-#define MSTRCT_CHK1                       MSTRCT_ARG_COUNT(NMSTRCT)
-#define MSTRCT_CHK2                       MSTRCT_ARG_COUNT(NMSTRCTH)
+#define MSTRCT_CHK                        MSTRCT_ARG_COUNT(NMSTRCT)
 #define MSTRCT_MULT                       MSTRCT_ARG_COUNT(MSTRCTM)
 
 // util
@@ -115,7 +113,7 @@
 #define MSTRCT_ISID0(id)                  0
 #define MSTRCT_ISID1(id)                  (id)
 
-#define MSTRCT_STEP                       (MSTRCT_CHK2 ? (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize)) : 2)
+#define MSTRCT_STEP                       (MSTRCT_CHK ? (1 + sizeof(mstrct_utwice) / sizeof(mstrct_usize)) : 2)
 #define MSTRCT_SHIFT                      (8*(sizeof(mstrct_utwice) - sizeof(mstrct_unit) - sizeof(mstrct_uhalf)  \
                                           * MSTRCT_ARG_COUNT(MSTRCT_MCU)))
 
@@ -289,7 +287,7 @@ mstrct_init(void) {
 
 __attribute__((destructor)) static inline void
 mstrct_leak(void) {
-  if (MSTRCT_CHK2 && mstrctfixed[0] != (mstrct_usize *)7) {
+  if (MSTRCT_CHK && mstrctfixed[0] != (mstrct_usize *)7) {
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
       for (mstrct_unit j = 2; j <= mstrctx[i]; j += MSTRCT_STEP) {
         if (*(mstrct_utwice *)(mstrctfixed[i] + j + 1) != 0) {
@@ -380,7 +378,7 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 #define MSTRCT_$0()                       MSTRCT_TID
 
 #define MSTRCT_DATA(id, no_i, flat, typ, lin, tid) \
-(__builtin_choose_expr((no_i && __builtin_constant_p(flat)) || !MSTRCT_CHK1, ((typeof(typ))mstrct_addr(id, tid))[flat], \
+(__builtin_choose_expr((no_i && __builtin_constant_p(flat)) || !MSTRCT_CHK, ((typeof(typ))mstrct_addr(id, tid))[flat], \
 ({asm(""::"r"(flat)); (typeof(typ))mstrct_base(sizeof(*typ), id, mstrct_reset(id, tid), tid); \
 MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, flat, tid); MSTRCT_PRAG0})]))
 
@@ -391,6 +389,6 @@ typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG0
 
 #define MSTRCT_HELP(ptr, id, size, key) \
 if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
-mstrct_unit temp = mstrct_put(ptr, key, size, MSTRCT_TID, (MSTRCT_CHK2 ? __LINE__ : 0)); if (!key) id = temp;  \
+mstrct_unit temp = mstrct_put(ptr, key, size, MSTRCT_TID, (MSTRCT_CHK ? __LINE__ : 0)); if (!key) id = temp;  \
 
 #endif

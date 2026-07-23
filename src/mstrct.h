@@ -227,7 +227,7 @@ mstrct_check(mstrct_unit id, mstrct_unit type_size, mstrct_unit line, mstrct_siz
 }
 
 // prototypes for free() & munmap()                                                                                   
-typedef void (*mstrct_free_proto)(void *); typedef char (*mstrct_munmap_proto)(void *, mstrct_usize);
+typedef void (*mstrct_free_proto)(void *); typedef int (*mstrct_munmap_proto)(void *, mstrct_usize);
 
 static inline void
 mstrct_dealloc_0(void *fun, mstrct_unit id, mstrct_uhalf tid) {

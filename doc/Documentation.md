@@ -226,6 +226,16 @@ This document explains how to configure and use the memstruct library.
             of memstruct behavior, and the API, remains same.
 
 
+    // GET cross-thread data:
+    m(ptr, index, array_type, access_type):
+        ptr = ptr received from source thread (through m(foo,auto,TID) syntax; see API ref)
+        array_type = type of array to interpret data with, e.g. int[] for an array of ints
+        access_type (keyword) = _ / do
+    note:
+        a) use "_" for read-only access, "do" for read-write access.
+        b) before read-write access enable the same with: #define MSTRCTM.
+ 
+
     // DECLARATION of standalone memstructs: 
     m(foo, static_index, data_type):
         foo = memstruct name
@@ -242,6 +252,15 @@ This document explains how to configure and use the memstruct library.
             accesses are already direct and optimized.
 
 
+    // SHARE cross-thread data: 
+    m(foo, auto, TID):
+        foo = memstruct name whose memory is being shared
+        auto = keyword 
+        TID = short-int sized thread ID with which data is being shared
+    note:
+        a) this applies to multi-threaded sharing, for single-threaded see m(foo,auto) API.
+ 
+
     // GET span as R-value
     m(foo, _):
         _ = metadata keyword for span
@@ -249,11 +268,13 @@ This document explains how to configure and use the memstruct library.
         returns: a ptr sized signed number
 
 
-    // GET ID as L-value
+    // SHARE ID as L-value
     m(foo, auto):
         auto = metadata keyword for memory ID
         foo = memstruct name
-        returns: an int sized unsigned number
+        returns: an short-int sized unsigned number
+    note:
+        a) this applies to single-threaded sharing, for multithreaded see m(foo,auto,TID) API.
 
 
     // GET 1-D data, as L-value
@@ -268,7 +289,7 @@ This document explains how to configure and use the memstruct library.
         i, j, k,... = dynamic and/or static indexes
 
 
-    // GET the first element:
+    // GET the first element as L value:
     m(foo):
         foo = memstruct name
     note: this is same as m(foo,0).

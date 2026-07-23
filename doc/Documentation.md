@@ -223,7 +223,7 @@ This document explains how to configure and use the memstruct library.
         c) static memories at global scope, however, follow the standard template:
             m(foo, range, data_type, static).
         d) the resulting memstruct isn't standalone: the memory is one of its fields. the rest
-            memstruct behavior, and the API, remains same.
+            of memstruct behavior, and the API, remains same.
 
 
     // DECLARATION of standalone memstructs: 

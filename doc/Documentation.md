@@ -82,7 +82,7 @@ This document explains how to configure and use the memstruct library.
 
     for on-stack & global memories, memstruct is declared and allocated in a single statement as: `m(name, 12, int, auto)`, `m(name, 12, char, static __thread)` etc. 
 
-- **Memory sharing:** a int sized metadata ID `m(foo,auto)` is simply passed around. one may also share base_addr & span as `&m(base)` & `m(foo,_)` directly. in multithreading, share the ID as: `m(foo,auto,TID)` where `TID` is a `short` equal to the thread id of the receiver thread.
+- **Memory sharing:** an int sized metadata ID `m(foo,auto)` is simply passed around. one may also share base_addr & span as `&m(base)` & `m(foo,_)` directly. in multithreading, share the ID as: `m(foo,auto,TID)` where `TID` is a `short` equal to the thread id of the receiver thread.
     ```
     m(bar,auto) = m(foo,auto); // makes bar safely refer the same memory as foo, but retain its type alias
 
@@ -158,7 +158,7 @@ This document explains how to configure and use the memstruct library.
 
 - **MCU implementation**: a) define `MSTRCT_MCU`. b) define `MSTRCT_PRINT()` and `MSTRCT_ALLOC(bytes, i)` macros in your code; leverage `i` in `MSTRCT_ALLOC` to define custom memory areas in .ld for each metadata block, if needed. c) refer `mstrct.h` to match API of these macros. d) make use of memstruct's locks/atomics free multi-threading as discussed below.
 
-- **Multithreading:** to share memory use `m(foo, auto, TID)` instead of `m(foo, auto)` used in single-thread contexts. here, `TID` is a `short` representing the destination thread ID (see example 8). `m(foo, auto, TID)` is a ptr which on the thread side is utilized as `m(ptr, i, array_type, _)` for accessing the shared memory as read-only. this supports the single-writer + shared-read framework. additionally, in case read-write access to a shared memory is needed, use `#define MSTRCTM` to unlock the syntax `m(ptr, i, array_type, do)` enabling read-write access to the shared memory. note: wrapping such code with mutextes/locks etc is user's resposobility as memstruct's thread safety guarantee is upto memstruct's thread safety model only.
+- **Multithreading:** to share memory use `m(foo, auto, TID)` instead of `m(foo, auto)` used in single-thread contexts. here, `TID` is a `short` representing the destination thread ID (see example 8). `m(foo, auto, TID)` is a ptr which on the thread side is utilized as `m(ptr, i, array_type, _)` for accessing the shared memory as read-only. this supports the single-writer + shared-read framework. additionally, in case read-write access to a shared memory is needed, use `#define MSTRCTM` to unlock the syntax `m(ptr, i, array_type, do)` enabling read-write access to the shared memory. note: wrapping such code with mutexes/locks etc is user's resposobility as memstruct's thread safety guarantee is upto memstruct's thread safety model only.
 
 ## API reference
 

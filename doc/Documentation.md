@@ -136,6 +136,21 @@ This document explains how to configure and use the memstruct library.
 
     M(bar, mremap, &m(bar), 48, 44, MREMAP_MAYMOVE)
     ```
+    note: alloca also follows the above syntax (see example #13).
+
+- **Declare and allocate:** stack / static / heap memory. (note: only gcc, not clang, allows VLA)
+    ```
+    m(foo, 12, int, auto);          // declare & allocate 12-int array on-stack
+
+    static m(foo, 12, int, auto);   // declare & allocate 12-int static array in block-scope
+
+    m(foo, 12, int, static);        // declare & allocate 12-int static array in global-scope
+
+    m(foo, 12, int, );              // declare & allocate 12-int global array in global-scope
+
+    /* initiaizer lists can be used, albeit with an awkward memstruct field "dim" reference */
+    m(foo, 4, int, auto) = {.dim[0].a = {1,2,3,4}};
+    ```
 - **Metadata** access: `m(metadata foo)`.
      ```
     char *temp = &m(base);          // base addr

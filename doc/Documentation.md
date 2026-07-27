@@ -82,7 +82,7 @@ This document explains how to configure and use the memstruct library.
 
     for on-stack & global memories, memstruct is declared and allocated in a single statement as: `m(name, 12, int, auto)`, `m(name, 12, char, static __thread)` etc. 
 
-- **Memory sharing:** a int sized metadata ID `m(foo,_)` is simply passed around. one may also share base_addr & span as `&m(base)` & `m(foo,auto)` directly. in multithreading, share the ID as: `m(foo,auto,TID)` where `TID` is a `short` equal to the thread id of the receiver thread.
+- **Memory sharing:** a int sized metadata ID `m(foo,auto)` is simply passed around. one may also share base_addr & span as `&m(base)` & `m(foo,_)` directly. in multithreading, share the ID as: `m(foo,auto,TID)` where `TID` is a `short` equal to the thread id of the receiver thread.
     ```
     m(bar,auto) = m(foo,auto); // makes bar safely refer the same memory as foo, but retain its type alias
 

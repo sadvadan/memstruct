@@ -416,7 +416,7 @@ This document explains how to configure and use the memstruct library.
 
     e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NMSTRCT` and `#undef NMSTRCT` or even better devise a dummy de-allocator for sub-allocation (see test #9).
 
-- Does memstruct resuse memory IDs or is it just monotonically increasing?
+- Does memstruct re-use memory IDs or is it just monotonically increasing?
     
     memstruct reuses IDs for on-stack memories; for heap, static and global located memories, fresh IDs are issued. as discussed before, every 1024th ID is printed so that an ever increasing ID count tells upon unsafe program design.
 

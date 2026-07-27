@@ -310,8 +310,8 @@ This document explains how to configure and use the memstruct library.
     m():
         result: a short int.
     note:
-        a) this is an L-value, so whereas the main thread ID is unchangeable, m()
-            can be used to change other threads' IDs.
+        a) this is an L-value, so it can be used to change the current thread's
+            ID. note: the main thread ID is immutable (=0) and can't be changed.
         b) setting a thread's ID is best done with M(ptr), see its API ref.
 
 

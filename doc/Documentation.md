@@ -334,7 +334,7 @@ This document explains how to configure and use the memstruct library.
             };
         }
 
-    B.  integral memstructs (carry memory as a field):
+    B.  integral memstructs (carry memory in a field):
 
         union {
             typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) _ID;
@@ -349,8 +349,8 @@ This document explains how to configure and use the memstruct library.
 
     // field description:
 
-        foo.ID: union field used in clobbering foo.id & foo.i together during ID sharing
-        foo.id: metadata ID
+        foo._ID: union field used in clobbering foo._id & foo.i together during ID sharing
+        foo._id: metadata ID
         foo.i: current array index (suports index arithmetic)
         typeof(foo.typ[0]): pointer type
         sizeof(foo.lin[0]): line number where foo was declared

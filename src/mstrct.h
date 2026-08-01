@@ -190,7 +190,7 @@ mstrct_base(mstrct_unit siz, mstrct_unit offset, char var, mstrct_uhalf tid) {
   (void)siz; asm volatile (" " : "+m" (var)); return (char *)(*((mstrct_fixed[tid]) + offset));
 }
 
-__attribute__((noinline, pure)) static char*
+__attribute__((always_inline)) static inline char*
 mstrct_addr(mstrct_unit offset, mstrct_uhalf tid) {return (char *)(*((mstrct_fixed[tid]) + offset));}
 
 static inline mstrct_usize

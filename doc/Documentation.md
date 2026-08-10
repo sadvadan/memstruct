@@ -422,10 +422,10 @@ This document explains how to configure and use the memstruct library.
 
 - When is the LTS release?
 
-    one may use the latest memstruct.h (always passes the test suite!) directly. the test coverage is complete. however, memstruct is being evaluated in an actual ongoing project against potential edge cases. GitHub release will follow this slow evaluation phase.
+    one may use the latest mstrct.h (always passes the test suite!) directly. the test coverage is complete. however, memstruct is being evaluated in an actual ongoing project against potential edge cases. GitHub release will follow this slow evaluation phase.
 
 
-    NOTE: as memstruct is being used in a real world project, LTS for memstruct project itself is guaranteed.
+    NOTE: as memstruct is being used in a real world project, upkeep for memstruct project itself is guaranteed.
 
 - I found what seems to be a bug/deficiency in memstruct
 

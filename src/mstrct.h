@@ -278,11 +278,11 @@ mstrct_init(void) {
     for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {
       if (mstrctbox[i] == 0) mstrctbox[i] = MSTRCT_BLOCK;
       space = MSTRCT_ALLOC(1024 * mstrctbox[i], i); // MCU: use i in .ld to assign custom memory areas
-      if (space == NULL) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
+      if (space == 0) {mstrct_error("ALLOC_FAIL", 3, 0, MSTRCT_TID); __builtin_trap();}
       mstrct_fixed[i] = space; mstrctx[i] = 2; *(mstrctfixed[i] + 1) = (1024 * mstrctbox[i]);
       mstrcty[i] = (*(mstrctfixed[i]+1) / sizeof(mstrct_usize));
     }
-  } if (mstrct_fixed[0] == NULL) {for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[i] = mstrctfixed[i];}}
+  } if (mstrct_fixed[0] == 0) {for (mstrct_uhalf i = 0; i <= MSTRCT_TNO; i++) {mstrct_fixed[i] = mstrctfixed[i];}}
 }
 
 __attribute__((destructor)) static inline void
@@ -388,7 +388,7 @@ __attribute__((cleanup(mstrct_set))) = {.id = mstrcty[MSTRCT_TID], .tid = MSTRCT
 typedef struct mstrct_arc mstrct_arc; MSTRCT_PRAG0
 
 #define MSTRCT_HELP(ptr, id, size, key) \
-if (ptr == NULL || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
+if (ptr == 0 || ptr == ((void *) -1)) {mstrct_error("ALLOC_FAIL", 3, __LINE__, MSTRCT_TID);}   \
 mstrct_unit temp = mstrct_put(ptr, key, size, MSTRCT_TID, (MSTRCT_CHK ? __LINE__ : 0)); if (!key) id = temp;  \
 
 #endif

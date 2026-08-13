@@ -378,9 +378,9 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 #define MSTRCT_$0()                       MSTRCT_TID
 
 #define MSTRCT_DATA(id, has_i, flat, typ, lin, tid) \
-(*({mstrct_size idx = flat; asm(""::"r"(idx)); char *addr = mstrct_base(sizeof(*typ), id, mstrct_reset(id,tid), tid); \
-&(__builtin_choose_expr((!has_i && __builtin_constant_p(idx)) || !MSTRCT_CHK, ((typeof(typ))addr)[idx],  \
-({(typeof(typ))addr; MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, idx, tid); MSTRCT_PRAG0})]));}))
+(*({mstrct_size i = flat; asm(""::"r"(i)); mstrct_uhalf t = tid; char *addr = mstrct_base(sizeof(*typ),id,mstrct_reset(id,t),t); \
+&(__builtin_choose_expr((!has_i && __builtin_constant_p(i)) || !MSTRCT_CHK, ((typeof(typ))addr)[i],  \
+({(typeof(typ))addr; MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, i, t); MSTRCT_PRAG0})]));}))
 
 #define MSTRCT_CLEAN(cnt) struct mstrct_arc; \
 MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_pass){})) MSTRCT_CAT2(mstrct_clean_, cnt)   \

@@ -92,7 +92,7 @@ This document explains how to configure and use the memstruct library.
     ```
 - **Safe access of data:** 
 
-    `m(foo,index)` is equivalent to `foo[index]`. or `m(foo,i,j,k..)` to `foo[ i ][ j ][ k ]..`
+    `m(foo,index)` is equivalent to `foo[index]`. or `m(foo,(i,j,k..))` to `foo[ i ][ j ][ k ]..`
 
     Read / write memory: `m(name,index) = value`.
     ```

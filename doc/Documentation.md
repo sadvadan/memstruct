@@ -17,7 +17,7 @@ This document explains how to configure and use the memstruct library.
 
 - **Working:** the 'safe ptr' (henceforth called memstruct) carries rich compile-time data in its type system suited to compiler optimizations facilitating either fully compile-time or heavily elided / auto-hoisted / pipelined checks. also, UAF & `NULL` checks are folded within OOB check. memstruct provides thread safe (locks/atomics free, single-write & read-share) semantics to make safe multi-threading feasible in bare metal while also complementing external libraries (pthread etc) on 64-bit builds.
 
-- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a thread-safe custom heap arena. `m/M` effectively eliminates the usage of `[/]` in safe code so there is no language level abstraction overhead.
+- **API:** `m/M` macro, with 1 symbol overload, provides the unified API -- including access to metadata stored in a thread-safe custom heap arena. `m/M` effectively eliminates the usage of `[/]` (also the dereferencing `*`) in safe code so there is no language level abstraction overhead. *cleaner code*: further, sanity checks during allocations / de-allocations e.g. `if(ptr) == NULL` are performed internally, and need not be repeated by the user.
 
 - **Philosophy:** safety and optimization escalate together. with each O level more static analysis kicks in and the safety and performance guarantees become stronger. also, 'pay what you use' to unlock extra features e.g. locks, ptr-arithmetic, finer diagnosis, etc.
 

@@ -20,19 +20,19 @@ C + memstruct = performance + memory safety
     `mstrct.h` in your file.
 - **Declare and allocate** a memstruct:
 
-    declaration: `m(name, static_index, type)`
+    standalone declaration: `m(name, static_index, type)`
 
-    allocation on heap: `M(name, allocator_name, allocator_args...)`
+    later allocation on heap: `M(name, allocator_name, allocator_args...)`
 
-    declaration + allocation on stack or global: `m(name, static_index, type, storage)`
+    combined (declaration + allocation on stack or global): `m(name, static_index, type, storage)`
     ```
-    m(foo, 1, int);             // declare simple foo as (int *const)[][1]
+    m(foo, 1, int);             // declare simple foo as int[][1]
     M(foo, malloc, 48);         // allocate on-heap as int[][1] + int[12][] = int[12][1], i.e. simply int[12]
 
     m(bar, 10, int, auto);      // declare and allocate on-stack an int[10]
 
-    m(baz, (2,5,7), int);       // declare multidim baz as (int *)[][2][5][7]
-    M(baz, malloc, 2800);       // allocate bar on-heap as (int *)[10][2][5][7]
+    m(baz, (2,5,7), int);       // declare multidim baz as int[][2][5][7]
+    M(baz, malloc, 2800);       // allocate bar on-heap as int[10][2][5][7]
     ```
 - **Re-allocate** memory: same as allocation.
 

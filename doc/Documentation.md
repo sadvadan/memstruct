@@ -74,13 +74,13 @@ This document explains how to configure and use the memstruct library.
 
     b) the dynamic part `foo[ I ][ ][ ]..` where the single index (may or may not be literal) i is dynamically allocated.
 
-    a standalone memstruct is declared as `m(name, (J,K..), type)` where `(J,K,..)` is a typical multi-dim static index. dynamic index `I` is implicitly calculated from total allocation size later as e.g. `I=12` in `M(name, malloc, 48)`.
+    a standalone memstruct is declared as `m(foo, (J,K..), type)` where `(J,K,..)` is a typical multi-dim static index. dynamic index `I` is implicitly calculated from total allocation size later as e.g. `I=12` in `M(foo, malloc, 48)`.
 
-    for most purposes, the array is a simple 1-D array, so declare memstruct as e.g. `m(name, 1, type)`, then allocate as e.g. `M(name, calloc, 48)`, and access as `m(foo,i)`.
+    for most purposes, the array is a simple 1-D array, so declare memstruct as e.g. `m(name, 1, type)`, then allocate as e.g. `M(foo, calloc, 48)`, and access as `m(foo,i)`.
 
-    for non-array types, declare the memstruct as e.g. `M(name, 1, struct alpha)`, then allocate as e.g. `M(name, malloc, 4)`, and access as `m(foo)`.
+    for non-array types, declare the memstruct as e.g. `M(foo, 1, struct alpha)`, then allocate as e.g. `M(foo, malloc, 4)`, and access as `m(foo)`.
 
-    for on-stack & global memories, memstruct is declared and allocated in a single statement as: `m(name, 12, int, auto)`, `m(name, 12, char, static __thread)` etc. 
+    for on-stack & global memories, memstruct is declared and allocated in a single statement as: `m(foo, 12, int, auto)`, `m(foo, 12, char, static __thread)` etc. 
 
 - **Memory sharing:** an int sized metadata ID `m(foo,auto)` is simply passed around. one may also share base_addr & span as `&m(base)` & `m(foo,_)` directly. in multithreading, share the ID as: `m(foo,auto,TID)` where `TID` is a `short` equal to the thread id of the receiver thread.
     ```

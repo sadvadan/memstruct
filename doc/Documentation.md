@@ -76,7 +76,7 @@ This document explains how to configure and use the memstruct library.
 
     a standalone memstruct is declared as `m(foo, (J,K..), type)` where `(J,K,..)` is a typical multi-dim static index. dynamic index `I` is implicitly calculated from total allocation size later as e.g. `I=12` in `M(foo, malloc, 48)`.
 
-    for most purposes, the array is a simple 1-D array, so declare memstruct as e.g. `m(name, 1, type)`, then allocate as e.g. `M(foo, calloc, 48)`, and access as `m(foo,i)`.
+    for most purposes, the array is a simple 1-D array, so declare memstruct as e.g. `m(foo, 1, type)`, then allocate as e.g. `M(foo, calloc, 48)`, and access as `m(foo,i)`.
 
     for non-array types, declare the memstruct as e.g. `M(foo, 1, struct alpha)`, then allocate as e.g. `M(foo, malloc, 4)`, and access as `m(foo)`.
 
@@ -113,6 +113,7 @@ This document explains how to configure and use the memstruct library.
     not ptr arithmetic per se, but the (flat) array index is accessible as `foo.i` as L-value and can be incremented / decremented / set to a value. notice the () around the static index to force the index feature into existence.
      ```
     m(foo, (1), int);               // parentheses force index feature in foo
+    M(foo, malloc, 32);             // allocate memory      
     foo.i++;                        // increment array index
      ```
 - **memstruct declaration:** declare a memstruct foo as `m(foo, static_index, data_type)`. if the memory is non-heap, declare + allocate as `m(foo, range, data_type, storage)`. if the index (or range) is enclosed with (), foo.i as index is added.

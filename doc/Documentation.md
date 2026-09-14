@@ -269,8 +269,10 @@ This document explains how to configure and use the memstruct library.
         foo = memstruct name whose memory is being shared
         auto = keyword 
         TID = short-int sized thread ID with which data is being shared
+        returns: a void* ptr coded with memory & thread ID
     note:
         a) this applies to multi-threaded sharing, for single-threaded see m(foo,auto) API.
+        b) returned ptr used to fetch inter-thread data (using API m(ptr, index, array_type, access_type)).
  
 
     // GET span as R-value

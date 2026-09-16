@@ -415,6 +415,12 @@ This document explains how to configure and use the memstruct library.
 
     there is no contradiction: memory safety is like the *fabric* of space-time: in empirically proven safe C code, the programmer held the fabric together; going forward, memstruct does it on the behalf of programmer.
 
+- How does memstruct deal with Strings?
+
+    memstruct treats strings as `char` arrays (a terminal `\0` isn't necessary), so instead of functions like `strncpy()` the user may directly use `memcpy()`. again, length is immediately available as `m(foo,_)` metadata, so functions like `strlen()` aren't needed at all and performance is much better too.
+
+    legacy codebases using `string.h` are okay too, if the guidelines in the last FAQ are adhered with.
+
 - How to allocate memory with spatial checks enabled but temporal checks disabled?
 
     e.g. in arena allocation one may want spatial safety for sub-allocations but not temporal safety as single de-allocation covers whole arena. so, wrap each sub-allocation with e.g. `#define NMSTRCT` and `#undef NMSTRCT` or even better devise a dummy de-allocator for sub-allocation (see test #9).

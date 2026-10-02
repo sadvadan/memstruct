@@ -152,7 +152,7 @@ This document explains how to configure and use the memstruct library.
     /* initiaizer lists can be used, albeit with an awkward memstruct field "dim" reference */
     m(foo, 4, int, auto) = {.dim[0].a = {1,2,3,4}};
     ```
-- **Metadata** access: `m(metadata foo)`.
+- **Metadata** access:
      ```
     char *temp = &m(base);          // base addr
 

@@ -154,13 +154,13 @@ This document explains how to configure and use the memstruct library.
     ```
 - **Metadata** access:
      ```
-    char *temp = &m(base);          // base addr
+    foo_type temp = m(foo);         // same as m(foo,0)
+
+    char *temp = &m(foo);           // base addr
 
     int temp = m(foo,_);            // index span
 
     int temp = m(foo,auto);         // memory ID
-
-    foo_type temp = m(foo);         // same as m(foo, 0)
      ```
 - **De**-allocate: double de-allocs are redundant (later elided by compiler). custom de-allocators supported. de-allocation failure check is done internally, and need not be repeated by user.
      ```

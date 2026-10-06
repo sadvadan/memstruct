@@ -1,4 +1,4 @@
-// create safe ptr, map onto heap memory, free
+// create on-stack memory with alloca
 
 #include "../src/mstrct.h"
 
@@ -6,7 +6,7 @@ int main(void) {
   m(foo, 1, int);       // declare safe type int[][1]
 
 #define NMSTRCT         // suppress leak warning (alloca memories end at function scope automatically)
-  M(foo, alloca, 48);   // map foo -> int[12][1] on-heap
+  M(foo, alloca, 48);   // map foo -> int[12][1] on-stack
 #undef NMSTRCT
 
   m(foo,5) = 10;        // define int[5][0]

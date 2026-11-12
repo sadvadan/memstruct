@@ -1,13 +1,13 @@
 // verify err handling behavior based on hardening flag
 // one by one uncomment / comment MSTRCT_SOFT and MSTRCT_HARD
 
-#define MSTRCT_SOFT
+//#define MSTRCT_SOFT
 //#define MSTRCT_HARD
 #include "../src/mstrct.h"
 
 int main(void) {
-  m(arr, 1, int);                                   // declare simple memstruct
-  M(arr, malloc, 40);
+  m(arr, 1, int);                                  // declare arr as int[][1]
+  M(arr, malloc, 40);                              // allocate arr as int[10][1]
   m(arr,0) = 47;                                   // assign arr[0]
 
   // === Level 0: continue after error (default behavior) ===

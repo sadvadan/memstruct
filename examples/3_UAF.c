@@ -2,28 +2,37 @@
 #include "../src/mstrct.h"
 
 int main(void) {
-  m(baz, (2,6), int); // declare simple int[][1]
+  m(baz, (2,6), int);                                             // declare int[][2][6]
+  m(tor, 1, int);                                                 // declare int[][1]
 
   {
-    m(foo, 12, int, auto);                                        // allocate foo[12][]: net on-stack memory is foo[12][1]
-    m(foo,8) = 10;                                                // define foo[8][0], with checks
+    m(foo, 12, int, auto);                                        // declare & allocate foo[12][1] on-stack
+    m(foo,8) = 10;                                                // define foo[8][0]
 
-    printf("foo[8], with checks: %d\n", m(foo,8));                // fetch (with checks)
-    m(baz, auto) = m(foo, auto);
+    m(bar, 12, int, auto);                                        // declare & allocate bar[12][1] on-stack
+    m(bar,8) = 12;                                                // define bar[8][0]
+
+
+    m(baz, auto) = m(foo, auto);                                  // share memory of foo with baz
     m(baz,(0,1,2)) = 537;
+    printf("baz[0][1][2], inner block: %d\n", m(baz,(0,1,2)));    // fetch
     
-    printf("bar[0][1][2], with checks: %d\n", m(baz,(0,1,2)));    // fetch (with checks)
+    m(tor, auto) = m(bar, auto);                                  // share memory of bar with tor
+    printf("tor[8], inner block: %d\n", m(bar,8));                // fetch
   }
 
-  printf("foo[8], with checks: %d\n", m(baz,8));                  // fetch (with checks): generates UAF report!
+  printf("baz[0][1][2], outer block: %d\n", m(baz,(0,1,2)));      // fetch : generates UAF report!
+  printf("tor[8], outer block: %d\n", m(tor,8));                  // fetch : generates UAF report!
 
   return 0;
 }
 /* out
-foo[8], with checks: 10
-bar[0][1][2], with checks: 537
+baz[0][1][2], inner block: 537
+tor[8], inner block: 12
 M_BAD/3_UAF.c/5
-foo[8], with checks: 0 [garbage, in DEFAULT MODE]
+baz[0][1][2], outer block: 0  [garbage, in DEFAULT MODE]
+M_BAD/3_UAF.c/6
+tor[8], outer block: 0        [garbage, in DEFAULT MODE]
 */
 
 

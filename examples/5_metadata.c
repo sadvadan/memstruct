@@ -5,7 +5,7 @@
 int main(void) {
   m(var, 1, int);                      // var[][1]
   M(var, malloc, 48);                  // var[12][1]
-  m(var,0) = 10;                       // define var[0][0]
+  m(var,0) = 10;                       // define var[0]
 
   printf("ptr_ID: %d\n",               m(var,auto));
   printf("ptr_base_addr: %p\n",        &m(var));

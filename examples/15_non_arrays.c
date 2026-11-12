@@ -25,5 +25,5 @@ size of a non-array memstruct foo should be 4. check: 4
 value of foo = 10, addr of foo: 0x55d140c80010
 
 size of a non-array memstruct bar should be 4 (memstruct) + 2*4 (struct) = 12. check: 12
-value of bar = {.a = 5, .b = 0x6f} , addr of bar = 0x55d12b9be070
+value of bar = {.a = 5, .b = 111} , addr of bar = 0x55d12b9be070
 */

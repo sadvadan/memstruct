@@ -1,5 +1,4 @@
 // multithreading
-#define MSTRCT_SOFT
 #define MSTRCT_TNO 8 // IMPORTANT: define it above #include mstrct.h
 #include "../src/mstrct.h"
 #include <pthread.h>

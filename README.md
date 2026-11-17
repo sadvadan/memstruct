@@ -30,7 +30,7 @@ C + memstruct = performance + memory safety
 
     later allocation (on heap):
 
-    `M(name, allocator_name, allocator_args...)`
+    `M(name, allocator_name, allocator_args)`
 
     ```
     m(foo, 1, int);             // declare simple foo as int[][1]

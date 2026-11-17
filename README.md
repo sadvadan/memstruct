@@ -21,12 +21,15 @@ C + memstruct = performance + memory safety
 - **Declare and allocate** a memstruct:
 
     standalone declaration:
+
     `m(name, static_index, type)`
 
     combined (declaration + allocation on stack or global):
+
     `m(name, static_index, type, storage)`
 
     later allocation (on heap):
+
     `M(name, allocator_name, allocator_args...)`
 
     ```

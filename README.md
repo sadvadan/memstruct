@@ -20,11 +20,14 @@ C + memstruct = performance + memory safety
     `mstrct.h` in your file.
 - **Declare and allocate** a memstruct:
 
-    standalone declaration: `m(name, static_index, type)`
+    standalone declaration:
+    `m(name, static_index, type)`
 
-    combined (declaration + allocation on stack or global): `m(name, static_index, type, storage)`
+    combined (declaration + allocation on stack or global):
+    `m(name, static_index, type, storage)`
 
-    later allocation (on heap): `M(name, allocator_name, allocator_args...)`
+    later allocation (on heap):
+    `M(name, allocator_name, allocator_args...)`
 
     ```
     m(foo, 1, int);             // declare simple foo as int[][1]
@@ -45,7 +48,7 @@ C + memstruct = performance + memory safety
      ```
 - **Metadata** access:
      ```
-    m(foo)                      // foo first element; same as m(foo,o)
+    m(foo)                      // foo first element; same as m(foo,0)
 
     &m(foo)                     // foo base addr
 
@@ -60,7 +63,7 @@ C + memstruct = performance + memory safety
     func(m(foo,auto), args);    // share read-write memory with callee
 
      ```
-- **index** arithmetic: declare an indexed memstruct (see, doc).
+- **index** arithmetic: declare an indexed memstruct (see, detailed doc).
      ```
     foo.i++;                    // array index increment
 

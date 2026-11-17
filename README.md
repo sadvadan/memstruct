@@ -5,12 +5,12 @@ C + memstruct = performance + memory safety
 
 ## Features
 
-- **Code size**    - memstruct is a 330 LoC single header-file library with no external dependencies.
+- **Code size**    - memstruct is a 326 LoC single header-file library with no external dependencies.
 - **Memory safety**- covers UAF, NULL deref, OOB (multi-dim), leaks, double free & memory sharing, for both array & non-array types.
-- **Thread safety**- provides single-write memory & read-only share. complements libs like pthread when atomics/locks are needed.
-- **Performance**  - compile-time / largely elided / hoisted / pipelined runtime checks to match native C speed at >O0.
+- **Thread safety**- provides single-write & read-only share. complements libs like pthread when atomics/locks are needed.
+- **Performance**  - compile-time / largely-elided / hoisted / pipelined checks to match native C speed at >O0.
 - **User ease**    - convenience macro `m()`, substituting e.g. `foo[i]` aka `*(foo + i)` with `m(foo,i)`.
-- **Robustness**   - linter (gcc & clang) and compile-time (gcc only) warning for bad grammar, puns, and hatches.
+- **Robustness**   - linter (gcc & clang) and compile-time (gcc only) warning for bad memstruct grammar, puns, and hatches.
 - **Target**       - gcc, clang | -std=gnu99 &ONWS | 8-64 bit CPUs. batteries included: opt-out, hardening, threading and MCU flags.
 
 ## Quick Start
@@ -22,14 +22,15 @@ C + memstruct = performance + memory safety
 
     standalone declaration: `m(name, static_index, type)`
 
-    later allocation on heap: `M(name, allocator_name, allocator_args...)`
-
     combined (declaration + allocation on stack or global): `m(name, static_index, type, storage)`
+
+    later allocation (on heap): `M(name, allocator_name, allocator_args...)`
+
     ```
     m(foo, 1, int);             // declare simple foo as int[][1]
     M(foo, malloc, 48);         // allocate on-heap as int[][1] + int[12][] = int[12][1], i.e. simply int[12]
 
-    m(bar, 10, int, auto);      // declare and allocate on-stack an int[10]
+    m(bar, 10, int, auto);      // declare and allocate on-stack an int[10][1], i.e. simply int[10]
 
     m(baz, (2,5,7), int);       // declare multidim baz as int[][2][5][7]
     M(baz, malloc, 2800);       // allocate bar on-heap as int[10][2][5][7]
@@ -38,13 +39,13 @@ C + memstruct = performance + memory safety
 
 - **Read / write** memory: `m(name,(i,j...)) is eqv to name[i][j]...`
     ```
-    m(foo,5) = 10;              // 1-D memstruct
+    m(foo,5) = 10;              // 1-D memstruct; foo[5] = 10 with safety
 
-    m(bar,(5,7,2)) = 10;        // multidim memstruct
+    m(bar,(5,7,2)) = 10;        // multidim memstruct; bar[5][7][2] = 10 with safety
      ```
 - **Metadata** access:
      ```
-    m(foo)                      // foo first element
+    m(foo)                      // foo first element; same as m(foo,o)
 
     &m(foo)                     // foo base addr
 
@@ -58,7 +59,6 @@ C + memstruct = performance + memory safety
     
     func(m(foo,auto), args);    // share read-write memory with callee
 
-    func(m(foo,_), args);       // read-only memory (or share other metadata)
      ```
 - **index** arithmetic: declare an indexed memstruct (see, doc).
      ```
@@ -78,10 +78,10 @@ C + memstruct = performance + memory safety
      ```
 - **Get errno**: `M()` generates memory related errno's (1-6). thread safe.
 
-- **Other features**: mostly thread safety related API, refer doc (link below).
+- **Other features**: mostly thread safety related API, refer detailed doc (link below).
 
 
-## Documentation 
+## Detailed documentation 
 - See: [Documentation](doc/Documentation.md)
 
 ## License

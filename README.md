@@ -76,7 +76,7 @@ C + memstruct = performance + memory safety
      ```
 - **De**-allocate memstruct: double de-allocation is idempotent (gets elided!).
 
-    prototype: `M(any_de_allocator, name)`
+    prototype: `M(name, de_allocator_name)`
      ```
     M(foo, free);                // on-heap memory
 

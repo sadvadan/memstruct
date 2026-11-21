@@ -376,10 +376,10 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
                                           mstrct_reset(name._id, MSTRCT_TID), MSTRCT_TID))
 #define MSTRCT_$0()                       MSTRCT_TID
 
-#define MSTRCT_DATA(id, _static, flat, typ, lin, tid)   \
-(*({mstrct_size mstrct_i = flat; &(__builtin_choose_expr((__builtin_constant_p(mstrct_i < _static) && (mstrct_i < _static)) ||   \
-!MSTRCT_CHK, ((typeof(typ))mstrct_addr(id,tid))[mstrct_i], ({(typeof(typ))mstrct_base(sizeof(*typ),id,mstrct_reset(id,tid),tid); \
-MSTRCT_PRAG1}) [({mstrct_check(id, sizeof(*typ), lin, mstrct_i, tid); MSTRCT_PRAG0})]));}))
+#define MSTRCT_DATA(id, _static, flat, typ, lin, tid)  (*({mstrct_size mstrct_i = flat; mstrct_usize mstrct_t = sizeof(*typ); \
+&(__builtin_choose_expr((__builtin_constant_p(mstrct_i < _static) && (mstrct_i < _static / mstrct_t)) || !MSTRCT_CHK,   \
+((typeof(typ)) mstrct_addr(id, tid)) [mstrct_i], ({(typeof(typ)) mstrct_base(mstrct_t, id, mstrct_reset(id, tid), tid); \
+MSTRCT_PRAG1}) [({mstrct_check(id, mstrct_t, lin, mstrct_i, tid); MSTRCT_PRAG0})]));}))
 
 #define MSTRCT_CLEAN(cnt) struct mstrct_arc; \
 MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_pass){})) MSTRCT_CAT2(mstrct_clean_, cnt)   \

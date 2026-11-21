@@ -121,7 +121,8 @@
 #define MSTRCT_SIZE(word)                 ((((mstrct_utwice)(word)) << MSTRCT_SHIFT) >> MSTRCT_SHIFT)
 #define MSTRCT_TSIZ(name)                 ((mstrct_unit)sizeof(*(name.typ[0])))
 #define MSTRCT_ELEM(type, i)              (*(typeof(type) *)0) MSTRCT_SUB(i) [0]
-#define MSTRCT_FLAT(typ, i)               ((mstrct_size)((mstrct_usize)&(MSTRCT_ELEM(typ,i)) / sizeof(MSTRCT_ELEM(typ,i))))
+#define MSTRCT_FLAT(typ, i)               ({mstrct_size mstrct_i = i; (mstrct_size)((mstrct_usize)&(MSTRCT_ELEM(typ, mstrct_i)) \
+                                          / sizeof(MSTRCT_ELEM(typ, mstrct_i)));})
 
 #if defined(MSTRCT_MCU)
   #define MSTRCT_BLOCK                    1 // 1 KiB
@@ -300,37 +301,37 @@ mstrct_leak(void) {
 
 // evil macros
 
-#define MSTRCT_$$8(name, mstrct_mmap, mstrct_ptr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset)  do {   \
-char *mstrctptr = (char*)mstrct_mmap(mstrct_ptr, mstrct_size, mstrct_prot, mstrct_flag, mstrct_fd, mstrct_ofset);   \
-__builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(mstrctptr, name._id, mstrct_size, 0);  \
+#define MSTRCT_$$8(name, mmap, ptr, size, prot, flag, fd, ofset)  do {   \
+char *mstrctptr = (char*)mmap(ptr, size, prot, flag, fd, ofset);   \
+__builtin_memset(&name, 0, sizeof(name)); MSTRCT_HELP(mstrctptr, name._id, size, 0);  \
 } while(0)
 
-#define MSTRCT_$$7(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr) do { \
-char *mstrctptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag, mstrct_new_addr);  \
-MSTRCT_HELP(mstrctptr, name._id, mstrct_new_size, name._id); \
+#define MSTRCT_$$7(name, mremap, old_addr, old_size, new_size, flag, new_addr) do { \
+char *mstrctptr = (char *)mremap(old_addr, old_size, new_size, flag, new_addr);  \
+MSTRCT_HELP(mstrctptr, name._id, new_size, name._id); \
 } while(0)
    
-#define MSTRCT_$$6(name, mstrct_mremap, mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag) do {   \
-char *mstrctptr = (char *)mstrct_mremap(mstrct_old_addr, mstrct_old_size, mstrct_new_size, mstrct_flag);  \
-MSTRCT_HELP(mstrctptr, name._id, mstrct_new_size, name._id); \
+#define MSTRCT_$$6(name, mremap, old_addr, old_size, new_size, flag) do {   \
+char *mstrctptr = (char *)mremap(old_addr, old_size, new_size, flag);  \
+MSTRCT_HELP(mstrctptr, name._id, new_size, name._id); \
 } while(0)
 
-#define MSTRCT_$$5(name, mstrct_custom, mstrct_ptr, mstrct_size, mstrct_arg) do { /* arena allocators fit here */   \
-char *mstrctptr = (char *)mstrct_custom(mstrct_ptr, mstrct_size, mstrct_arg); __builtin_memset(&name, 0, sizeof(name));   \
-MSTRCT_HELP(mstrctptr, name._id, mstrct_size, 0);  \
+#define MSTRCT_$$5(name, custom, ptr, size, arg) do { /* arena allocators fit here */   \
+char *mstrctptr = (char *)custom(ptr, size, arg); __builtin_memset(&name, 0, sizeof(name));   \
+MSTRCT_HELP(mstrctptr, name._id, size, 0);  \
 } while(0)
 
 
-#define MSTRCT_$$4(name, mstrct_realloc, mstrct_ptr, mstrct_size) do {   \
-char *mstrctptr = (char *)mstrct_realloc(mstrct_ptr, mstrct_size); MSTRCT_HELP(mstrctptr, name._id, mstrct_size, name._id);  \
+#define MSTRCT_$$4(name, realloc, ptr, size) do {   \
+char *mstrctptr = (char *)realloc(ptr, size); MSTRCT_HELP(mstrctptr, name._id, size, name._id);  \
 } while(0)
 
-#define MSTRCT_$$3(name, mstrct_alloc, mstrct_size) do {   \
-char *mstrctptr = (char *)mstrct_alloc(mstrct_size); __builtin_memset(&name, 0, sizeof(name));  \
-MSTRCT_HELP(mstrctptr, name._id, mstrct_size, 0);} while(0)
+#define MSTRCT_$$3(name, alloc, size) do { /* malloc, calloc */   \
+char *mstrctptr = (char *)alloc(size); __builtin_memset(&name, 0, sizeof(name));  \
+MSTRCT_HELP(mstrctptr, name._id, size, 0);} while(0)
 
-#define MSTRCT_$$2(name, mstrct_free) do {__builtin_choose_expr((sizeof(mstrct_free) == 1),   \
-(mstrct_dealloc_0(mstrct_free, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(mstrct_free, (name._id), __LINE__, MSTRCT_TID))); \
+#define MSTRCT_$$2(name, free) do {__builtin_choose_expr((sizeof(free) == 1),   \
+(mstrct_dealloc_0(free, (name._id), MSTRCT_TID)), (mstrct_dealloc_1(free, (name._id), __LINE__, MSTRCT_TID))); \
 *(mstrct_utwice *)(mstrct_fixed[MSTRCT_TID] + name._id + 1) = 0;  \
 *(mstrct_fixed[MSTRCT_TID] + name._id) = (mstrct_usize)(mstrct_fixed[MSTRCT_TID]); \
 } while(0)
@@ -376,10 +377,9 @@ __builtin_memset(&name, 0, sizeof(name)); name._id = mstrct_put(&(name.dim[0].a)
 #define MSTRCT_$0()                       MSTRCT_TID
 
 #define MSTRCT_DATA(id, has_i, flat, typ, lin, tid)   \
-(*({mstrct_size mstrct_i = flat; mstrct_uhalf mstrct_t = tid; &(__builtin_choose_expr( \
-(__builtin_constant_p(mstrct_i) && !has_i) || !MSTRCT_CHK, ((typeof(typ)) mstrct_addr(id, mstrct_t)) [mstrct_i],  \
-({(typeof(typ)) mstrct_base(sizeof(*typ), id, mstrct_reset(id, mstrct_t), mstrct_t); MSTRCT_PRAG1})  \
-[({mstrct_check(id, sizeof(*typ), lin, mstrct_i, mstrct_t); MSTRCT_PRAG0})]));}))
+(*({&(__builtin_choose_expr((__builtin_constant_p(flat) && !has_i) || !MSTRCT_CHK, ((typeof(typ)) mstrct_addr(id, tid)) [flat],  \
+({(typeof(typ)) mstrct_base(sizeof(*typ), id, mstrct_reset(id, tid), tid); MSTRCT_PRAG1})  \
+[({mstrct_check(id, sizeof(*typ), lin, flat, tid); MSTRCT_PRAG0})]));}))
 
 #define MSTRCT_CLEAN(cnt) struct mstrct_arc; \
 MSTRCT_PRAG2 typeof(__builtin_choose_expr(MSTRCT_ARC, (mstrct_pack){}, (mstrct_pass){})) MSTRCT_CAT2(mstrct_clean_, cnt)   \

@@ -251,7 +251,7 @@ This document explains how to configure and use the memstruct library.
     // DECLARATION of standalone memstructs: 
     m(foo, static_index, data_type):
         foo = memstruct name
-        static_index = staic index in the format of plain number or a set of no's in () e.g. (2,4,3) 
+        static_index = static index in the format of plain number or a set of no's in () e.g. (2,4,3) 
         data_type = type of elements, e.g. int etc
     note:
         a) the static index can be multi-dimensional, but the corresponding
@@ -324,31 +324,13 @@ This document explains how to configure and use the memstruct library.
     ```
     // memstruct layout
 
-    A.  standalone memstructs (do not carry the memory as field):
-
-        union {
-            typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) _ID;
-            struct {
-                mstrct_unit _id;
-                typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;
-                typeof(type) * const typ[0] __attribute__((packed)); \
-                struct {char a[line];} lin[0];   \
-                struct {char b; typeof(type) a[] index [1];} dim[0];   \
-            };
-        }
-
-    B.  integral memstructs (carry memory in a field):
-
-        union {
-            typeof(__builtin_choose_expr(key, (mstrct_utwice)0, (mstrct_unit)0)) _ID;
-            struct {
-                mstrct_unit _id;
-                typeof(__builtin_choose_expr(key, (MSTRCT_UNIT)0, (struct {}){})) i;
-                typeof(type) * const typ[0] __attribute__((packed)); \
-                struct {char a[line];} lin[0];   \
-                struct {typeof(type) a index [1];} dim[1];  \
-            };
-        }
+        union {typeof(__builtin_choose_expr(has_paren, (mstrct_utwice)0, (mstrct_unit)0)) _ID; struct {mstrct_unit _id;   \
+          typeof(__builtin_choose_expr(has_paren && (arg_count == 1), (mstrct_unit)0, (struct {}){})) i;   \
+          /* typ[0] */ typeof(type) * typ[0] __attribute__((packed)); \
+          /* lin[0] */ struct {char a[line];} lin[0];   \
+          /* arr[?] */ struct {typeof(type) a index;} arr[has_arr];  \
+          /* dim[0] */ struct {char b; char a empty index [1];} dim[0];  \
+        };}
 
     // field description:
 
@@ -357,14 +339,15 @@ This document explains how to configure and use the memstruct library.
         foo.i: current array index (suports index arithmetic)
         typeof(foo.typ[0]): pointer type
         sizeof(foo.lin[0]): line number where foo was declared
-        typeof(dim[0].a): holds geometry of - static indexes [index] and dynamic index []
+        typeof(arr[0].a): holds (optionally) memory
+        typeof(dim[0].a): holds geometry of - static indexes [index] and (optionally) dynamic index []
 
     // GET current index
     foo.i 
         foo = memstruct name
         i = field in foo containiing current int index
     note:
-        a) to extend i to be long sized, redefine MSTRCT_UNIT locally as mstrct_size.
+        current index is available only for 1-D arrays defined using index within (), e.g. m(foo, (5), int) etc.
 
     // GET metadata ID
     foo._id

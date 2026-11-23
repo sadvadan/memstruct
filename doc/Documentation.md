@@ -339,7 +339,7 @@ This document explains how to configure and use the memstruct library.
         foo.i: current array index (suports index arithmetic)
         typeof(foo.typ[0]): pointer type
         sizeof(foo.lin[0]): line number where foo was declared
-        typeof(arr[0].a): holds (optionally) memory
+        sizeof(foo.arr[0].b): tells if the array size is fixed; typeof(arr[0].a): holds (optionally) memory
         typeof(dim[0].a): holds geometry of - static indexes [index] and (optionally) dynamic index []
 
     // GET current index

@@ -5,7 +5,7 @@ C + memstruct = performance + memory safety
 
 ## Features
 
-- **Code size**    - memstruct is a 326 LoC single header-file library with no external dependencies.
+- **Code size**    - memstruct is a 320 LoC single header-file library with no external dependencies.
 - **Memory safety**- covers UAF, NULL deref, OOB (multi-dim), leaks, double free & memory sharing, for both array & non-array types.
 - **Thread safety**- provides single-write & read-only share. complements libs like pthread when atomics/locks are needed.
 - **Performance**  - compile-time / largely-elided / hoisted / pipelined checks to match native C speed at >O0.

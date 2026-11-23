@@ -370,8 +370,8 @@ MSTRCT_DATA(name._id, sizeof(name.dim[0].b), MSTRCT_FLAT(name.dim[0].a, name.i, 
 
 #define MSTRCT_DATA(id, arr_typ, flat, typ, lin, tid) \
 (*({mstrct_size mstrct_i = flat; mstrct_usize mstrct_t = sizeof(*typ); mstrct_uhalf mstrct_d = tid;   \
-&(__builtin_choose_expr((arr_typ == 2) || !MSTRCT_CHK, ((typeof(typ)) mstrct_addr(id, mstrct_d)) [mstrct_i],   \
-({(typeof(typ)) mstrct_base(mstrct_t, id, mstrct_reset(id, mstrct_d), mstrct_d); MSTRCT_PRAG1}) \
+&(__builtin_choose_expr((__builtin_constant_p(mstrct_i) && arr_typ == 2) || !MSTRCT_CHK, ((typeof(typ)) mstrct_addr(id,mstrct_d))\
+[mstrct_i], ({(typeof(typ)) mstrct_base(mstrct_t, id, mstrct_reset(id, mstrct_d), mstrct_d); MSTRCT_PRAG1}) \
 [({mstrct_check(id, mstrct_t, lin, mstrct_i, mstrct_d); MSTRCT_PRAG0})]));}))
 
 #define MSTRCT_CLEAN(cnt) struct mstrct_arc; \
